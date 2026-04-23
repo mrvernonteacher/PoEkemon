@@ -2,19 +2,19 @@
 // 1. ENGINE CONFIG
 // ==========================================
 const TILE_SIZE = 40;
-const VIEW_WIDTH = 15; // How many tiles wide the canvas is
-const VIEW_HEIGHT = 10; // How many tiles tall the canvas is
+const VIEW_WIDTH = 15;
+const VIEW_HEIGHT = 10;
 
 let gameState = {
     playerCharacter: null,
-    playerTeam: [],
+    playerTeam: [],       // Array of objects (Max 6)
+    pokedexCaught: [],    // Array of just IDs ever caught
     badges: [],
     currentUnit: 1,
     currentEnemy: null,
     isTrainerBattle: false
 };
 
-// Player starts dead center of the 50x50 map
 let playerPos = { x: 25, y: 25 };
 
 // ==========================================
@@ -44,63 +44,47 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
 };
 
 // ==========================================
-// 3. UI & MAP NAVIGATION (THE CAMERA)
+// 3. MAP NAVIGATION (CAMERA)
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const map = unitMaps[gameState.currentUnit];
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate Camera Offset (keeps player centered)
     let offsetX = playerPos.x - Math.floor(VIEW_WIDTH / 2);
     let offsetY = playerPos.y - Math.floor(VIEW_HEIGHT / 2);
-
-    // Clamp camera to map edges so we don't draw outside the array
     offsetX = Math.max(0, Math.min(offsetX, MAP_WIDTH - VIEW_WIDTH));
     offsetY = Math.max(0, Math.min(offsetY, MAP_HEIGHT - VIEW_HEIGHT));
 
-    // Draw only the visible portion of the map
     for (let y = 0; y < VIEW_HEIGHT; y++) {
         for (let x = 0; x < VIEW_WIDTH; x++) {
-            let mapY = offsetY + y;
-            let mapX = offsetX + x;
-            let tile = map[mapY][mapX];
-
-            if (tile === 0) ctx.fillStyle = "#e2e2e2"; // Path
-            if (tile === 1) ctx.fillStyle = "#78c850"; // Grass
-            if (tile === 2) ctx.fillStyle = "#ff6b6b"; // Gym
-            if (tile === 3) ctx.fillStyle = "#2d4c1e"; // Wall/Tree
-
+            let tile = map[offsetY + y][offsetX + x];
+            if (tile === 0) ctx.fillStyle = "#e2e2e2"; 
+            if (tile === 1) ctx.fillStyle = "#78c850"; 
+            if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
+            if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
             ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
     }
-
-    // Calculate Player's position relative to the camera window
-    const screenPlayerX = (playerPos.x - offsetX) * TILE_SIZE;
-    const screenPlayerY = (playerPos.y - offsetY) * TILE_SIZE;
-    
-    window.drawCharacterSprite(ctx, screenPlayerX, screenPlayerY, TILE_SIZE);
+    const px = (playerPos.x - offsetX) * TILE_SIZE;
+    const py = (playerPos.y - offsetY) * TILE_SIZE;
+    window.drawCharacterSprite(ctx, px, py, TILE_SIZE);
 };
 
 window.addEventListener('keydown', (e) => {
     if (!document.getElementById('screen-map').classList.contains('active')) return;
     let nx = playerPos.x, ny = playerPos.y;
-    
     if (['ArrowUp', 'w'].includes(e.key)) ny--;
     if (['ArrowDown', 's'].includes(e.key)) ny++;
     if (['ArrowLeft', 'a'].includes(e.key)) nx--;
     if (['ArrowRight', 'd'].includes(e.key)) nx++;
 
     const map = unitMaps[gameState.currentUnit];
-    // Check bounds and collisions
     if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
         playerPos.x = nx; playerPos.y = ny;
         window.drawMap();
-        
-        // Triggers
         if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
         if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
     }
@@ -117,17 +101,22 @@ window.showScreen = function(name) {
         target.classList.remove('hidden');
         target.classList.add('active');
     }
-    
     if (name === 'map') {
         const region = waltoniaRegions[gameState.currentUnit];
-        const label = document.getElementById('map-label');
-        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region.name}`;
+        document.getElementById('map-label').textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
         setTimeout(window.drawMap, 50);
     }
 };
 
 window.saveGame = function() { localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState)); };
-window.loadGame = function() { const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); if (saved) gameState = JSON.parse(saved); };
+window.loadGame = function() { 
+    const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); 
+    if (saved) {
+        gameState = JSON.parse(saved);
+        // Ensure pokedex array exists for older saves
+        if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
+    }
+};
 window.toggleSettings = function() { document.getElementById('settings-overlay').classList.toggle('hidden'); };
 window.resetGame = function() { if (confirm("Reset progress?")) { localStorage.removeItem('PoEkemon_Waltonia_Save'); location.reload(); } };
 
@@ -136,7 +125,8 @@ window.selectStarter = function(char, id) {
     const mon = poekedex.find(p => p.id === id);
     if (mon) {
         gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp }];
-        playerPos = { x: 25, y: 25 }; // Reset to center
+        gameState.pokedexCaught.push(id); // Add starter to lifetime dex
+        playerPos = { x: 25, y: 25 }; 
         window.saveGame();
         window.showScreen('map');
     }
@@ -146,14 +136,18 @@ window.onload = () => {
     window.loadGame();
     document.getElementById('btn-settings').onclick = window.toggleSettings;
     document.getElementById('btn-map').onclick = () => window.showScreen('map');
-    document.getElementById('btn-dex').onclick = () => window.showScreen('dex');
+    
+    document.getElementById('btn-dex').onclick = () => {
+        window.renderDex();
+        window.showScreen('dex');
+    };
 
     if (!gameState.playerTeam || gameState.playerTeam.length === 0) window.showScreen('characterSelect');
     else window.showScreen('map');
 };
 
 // ==========================================
-// 5. COMBAT LOGIC (Kept exactly as it was)
+// 5. COMBAT & CAPTURE LOGIC
 // ==========================================
 window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
@@ -200,7 +194,7 @@ window.enemyTurn = function() {
         if (gameState.playerTeam[0].currentHP <= 0) {
             alert("Fainted!");
             gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP;
-            playerPos = { x: 25, y: 25 }; // Send back to center on blackout
+            playerPos = { x: 25, y: 25 }; 
             window.showScreen('map');
         } else {
             document.getElementById('action-menu').classList.remove('hidden');
@@ -210,6 +204,7 @@ window.enemyTurn = function() {
 
 window.attemptCapture = function() {
     document.getElementById('action-menu').classList.add('hidden');
+    // For simplicity right now, pull first question
     const questions = questionBank[gameState.currentUnit];
     const q = questions[Math.floor(Math.random() * questions.length)];
     
@@ -224,9 +219,23 @@ window.attemptCapture = function() {
         btn.onclick = () => {
             if (i === q.ans) {
                 alert("Correct! You caught " + gameState.currentEnemy.name + "!");
-                gameState.playerTeam.push({ ...gameState.currentEnemy, maxHP: gameState.currentEnemy.hp });
-                window.saveGame();
-                window.showScreen('map');
+                
+                const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp };
+                
+                // Add to lifetime Pokedex
+                if (!gameState.pokedexCaught.includes(newCatch.id)) {
+                    gameState.pokedexCaught.push(newCatch.id);
+                }
+
+                if (gameState.playerTeam.length < 6) {
+                    // Room in party
+                    gameState.playerTeam.push(newCatch);
+                    window.saveGame();
+                    window.showScreen('map');
+                } else {
+                    // Party Full! Trigger Release Menu
+                    window.showReleaseMenu(newCatch);
+                }
             } else {
                 alert("Incorrect! It broke free!");
                 window.enemyTurn();
@@ -242,4 +251,98 @@ window.updateHP = function() {
     const pHP = (gameState.playerTeam[0].currentHP / gameState.playerTeam[0].maxHP) * 100;
     document.getElementById('enemy-hp').style.width = eHP + "%";
     document.getElementById('player-hp').style.width = pHP + "%";
+};
+
+// ==========================================
+// 6. PARTY LIMITS & DEX RENDERING
+// ==========================================
+window.showReleaseMenu = function(newCatch) {
+    const overlay = document.getElementById('release-overlay');
+    const grid = document.getElementById('release-grid');
+    grid.innerHTML = ''; 
+
+    // Generate buttons for current party
+    gameState.playerTeam.forEach((mon, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'starter-btn';
+        btn.style.borderColor = '#c8102e'; 
+        btn.innerHTML = `<strong>${mon.name}</strong><br>HP: ${mon.hp}<br><em>Release</em>`;
+        btn.onclick = () => {
+            if (confirm(`Are you sure you want to release ${mon.name} and add ${newCatch.name}?`)) {
+                gameState.playerTeam[index] = newCatch;
+                window.saveGame();
+                overlay.classList.add('hidden');
+                window.showScreen('map');
+            }
+        };
+        grid.appendChild(btn);
+    });
+
+    // Wire up the cancel button
+    document.getElementById('release-new-btn').onclick = () => {
+        alert(`${newCatch.name} was released back into the wild.`);
+        overlay.classList.add('hidden');
+        window.saveGame(); // Save Pokedex addition even if released
+        window.showScreen('map');
+    };
+
+    overlay.classList.remove('hidden');
+};
+
+window.renderDex = function() {
+    // 1. Render Party (Max 6)
+    const partyGrid = document.getElementById('party-grid');
+    partyGrid.innerHTML = '';
+    
+    gameState.playerTeam.forEach((mon, index) => {
+        const card = document.createElement('div');
+        card.className = 'party-card';
+        const isActive = (index === 0);
+        
+        card.innerHTML = `
+            <h4>${mon.name}</h4>
+            <p>Type: ${mon.type}</p>
+            <p>HP: ${mon.currentHP} / ${mon.maxHP}</p>
+            ${isActive ? '<span class="active-badge">ACTIVE FIGHTER</span>' : `<button class="deploy-btn" onclick="deployMon(${mon.id})">Deploy</button>`}
+        `;
+        partyGrid.appendChild(card);
+    });
+
+    // 2. Render Lifetime Pokedex Record
+    const dexGrid = document.getElementById('dex-grid');
+    dexGrid.innerHTML = '';
+    
+    poekedex.forEach(mon => {
+        // Starters (Unit 0) or regular? Let's show all.
+        const hasCaught = gameState.pokedexCaught.includes(mon.id);
+        
+        const card = document.createElement('div');
+        card.className = `dex-entry ${hasCaught ? 'captured' : ''}`;
+        
+        if (hasCaught) {
+            card.innerHTML = `
+                <h4>${mon.name}</h4>
+                <p>${mon.type}</p>
+            `;
+        } else {
+            card.innerHTML = `
+                <h4>???</h4>
+                <p>Unit ${mon.unit}</p>
+            `;
+        }
+        dexGrid.appendChild(card);
+    });
+};
+
+window.deployMon = function(id) {
+    const index = gameState.playerTeam.findIndex(p => p.id === id);
+    if (index > 0) {
+        // Swap selected to index 0
+        const temp = gameState.playerTeam[0];
+        gameState.playerTeam[0] = gameState.playerTeam[index];
+        gameState.playerTeam[index] = temp;
+        
+        window.saveGame();
+        window.renderDex(); // Re-render to update UI badges
+    }
 };
