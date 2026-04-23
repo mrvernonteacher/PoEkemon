@@ -9,21 +9,31 @@
 <body>
     <div id="game-container">
         <header>
-    <h1>PoEkedex</h1>
-    <nav>
-        <button id="btn-map" class="nav-btn">Map</button>
-        <button id="btn-dex" class="nav-btn">Collection</button>
-        <button id="btn-settings" class="nav-btn">⚙️</button>
-    </nav>
-</header>
+            <h1>PoEkedex</h1>
+            <nav>
+                <button id="btn-map" class="nav-btn">Map</button>
+                <button id="btn-dex" class="nav-btn">Collection</button>
+                <button id="btn-settings" class="nav-btn">⚙️</button>
+            </nav>
+        </header>
 
-<div id="settings-overlay" class="hidden">
-    <div class="settings-content">
-        <h3>Settings</h3>
-        <button onclick="resetGame()" class="action-btn attack-btn">Reset Save Data</button>
-        <button onclick="toggleSettings()" class="nav-btn">Close</button>
-    </div>
-</div>
+        <div id="settings-overlay" class="hidden">
+            <div class="settings-content">
+                <h3>Settings</h3>
+                <button onclick="resetGame()" class="action-btn attack-btn">Reset Save Data</button>
+                <br><br>
+                <button onclick="toggleSettings()" class="nav-btn">Close</button>
+            </div>
+        </div>
+
+        <div id="release-overlay" class="hidden">
+            <div class="settings-content" style="width: 90%;">
+                <h3 style="color: #c8102e;">Party Full!</h3>
+                <p id="release-prompt" style="font-size: 8px; margin-bottom: 15px;">Choose a PoEkemon to set free:</p>
+                <div id="release-grid" class="character-grid"></div>
+                <button onclick="cancelCapture()" class="action-btn catch-btn" style="margin-top:15px; width:100%;">Set New Catch Free</button>
+            </div>
+        </div>
 
         <section id="screen-characterSelect" class="screen active">
             <h2>Select Your Instructor</h2>
@@ -36,21 +46,21 @@
                     <button class="starter-btn" onclick="selectStarter('MrV', 63)">Latchander</button>
                 </div>
                 <div class="character-card">
-                    <h3>Ms. G</h3>
+                    <h3>Mrs. G</h3>
                     <p class="theme-text">Aerospace Engineering</p>
-                    <button class="starter-btn" onclick="selectStarter('MsG', 64)">Liftander</button>
-                    <button class="starter-btn" onclick="selectStarter('MsG', 65)">Propellite</button>
-                    <button class="starter-btn" onclick="selectStarter('MsG', 66)">Turburtle</button>
+                    <button class="starter-btn" onclick="selectStarter('MrsG', 64)">Liftander</button>
+                    <button class="starter-btn" onclick="selectStarter('MrsG', 65)">Propellite</button>
+                    <button class="starter-btn" onclick="selectStarter('MrsG', 66)">Turburtle</button>
                 </div>
             </div>
         </section>
 
         <section id="screen-map" class="screen hidden">
-            <h2 id="map-label">Unit 1: Waltonia Path</h2>
+            <h2 id="map-label">Unit 1: The Leveraged Lowlands</h2>
             <div class="canvas-container">
                 <canvas id="gameCanvas" width="600" height="400"></canvas>
             </div>
-            <p class="controls-hint">WASD or Arrows to Move | Grass = Wild PoEkedex | Red = Gym</p>
+            <p class="controls-hint">WASD to Move | Green = Wild Encounters</p>
         </section>
 
         <section id="screen-battle" class="screen hidden">
@@ -60,26 +70,22 @@
                         <h3 id="enemy-name">???</h3>
                         <div class="hp-bar-bg"><div id="enemy-hp" class="hp-bar-fill"></div></div>
                     </div>
-                    <div id="enemy-sprite" class="placeholder-sprite"></div>
+                    <div class="placeholder-sprite"></div>
                 </div>
-
                 <div class="combatant player">
-                    <div id="player-sprite" class="placeholder-sprite player-placeholder">YOU</div>
+                    <div id="player-sprite" class="placeholder-sprite player-placeholder"></div>
                     <div class="stats-box">
                         <h3 id="player-mon-name">Your Mon</h3>
                         <div class="hp-bar-bg"><div id="player-hp" class="hp-bar-fill"></div></div>
                     </div>
                 </div>
             </div>
-
             <div class="battle-ui">
                 <div id="dialogue-box"></div>
-                
                 <div id="action-menu" class="hidden">
                     <button onclick="executeAttack()" class="action-btn attack-btn">Attack</button>
                     <button onclick="attemptCapture()" class="action-btn catch-btn">Capture</button>
                 </div>
-
                 <div id="question-container" class="hidden">
                     <p id="question-text"></p>
                     <div id="answer-grid"></div>
@@ -88,7 +94,10 @@
         </section>
 
         <section id="screen-dex" class="screen hidden">
-            <h2>PoEkedex Collection</h2>
+            <h2 style="color: #0033a0; margin-bottom: 10px;">Current Party (Max 6)</h2>
+            <div id="party-grid" class="party-grid"></div>
+            
+            <h2 style="color: #555; margin: 20px 0 10px 0;">PoEkedex Record</h2>
             <div id="dex-grid"></div>
         </section>
     </div>
