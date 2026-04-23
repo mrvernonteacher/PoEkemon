@@ -224,3 +224,37 @@ window.onload = () => {
         window.showScreen('map');
     }
 };
+// --- ADD THESE TO THE BOTTOM OF SCRIPT.JS ---
+
+window.toggleSettings = function() {
+    const settings = document.getElementById('settings-overlay');
+    settings.classList.toggle('hidden');
+};
+
+// Explicitly attaching the button listener for the settings icon
+document.getElementById('btn-settings').onclick = window.toggleSettings;
+
+window.resetGame = function() {
+    if (confirm("Are you sure? This will delete all your PoEkemon and progress!")) {
+        localStorage.removeItem('PoEkemon_Waltonia_Save');
+        location.reload();
+    }
+};
+
+// Ensure this matches your existing load logic
+window.onload = () => {
+    window.loadGame();
+    // Force character select if team is empty
+    if (!gameState.playerTeam || gameState.playerTeam.length === 0) {
+        window.showScreen('characterSelect');
+    } else {
+        window.showScreen('map');
+    }
+    
+    // Wire up navigation
+    document.getElementById('btn-map').onclick = () => window.showScreen('map');
+    document.getElementById('btn-dex').onclick = () => {
+        if (typeof renderDex === 'function') renderDex();
+        window.showScreen('dex');
+    };
+};
