@@ -61,11 +61,20 @@ window.drawMap = function() {
     for (let y = 0; y < VIEW_HEIGHT; y++) {
         for (let x = 0; x < VIEW_WIDTH; x++) {
             let tile = map[offsetY + y][offsetX + x];
-            if (tile === 0) ctx.fillStyle = "#e2e2e2"; 
-            if (tile === 1) ctx.fillStyle = "#78c850"; 
-            if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
-            if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
+            if (tile === 0) ctx.fillStyle = "#e2e2e2"; // Path
+            if (tile === 1) ctx.fillStyle = "#78c850"; // Grass
+            if (tile === 2) ctx.fillStyle = "#ff6b6b"; // Gym
+            if (tile === 3) ctx.fillStyle = "#2d4c1e"; // Wall/Tree
+            if (tile === 4) ctx.fillStyle = "#3498db"; // Clinic (Blue)
+            
             ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            
+            // Draw a cross on the clinic tile for visual clarity
+            if (tile === 4) {
+                ctx.fillStyle = "white";
+                ctx.fillRect(x * TILE_SIZE + 15, y * TILE_SIZE + 5, 10, 30);
+                ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 15, 30, 10);
+            }
         }
     }
     const px = (playerPos.x - offsetX) * TILE_SIZE;
@@ -85,8 +94,11 @@ window.addEventListener('keydown', (e) => {
     if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
         playerPos.x = nx; playerPos.y = ny;
         window.drawMap();
-        if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
-        if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
+        
+        // Triggers
+        if (map[ny][nx] === 4) window.triggerClinic();
+        else if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
+        else if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
     }
 });
 
@@ -113,7 +125,6 @@ window.loadGame = function() {
     const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); 
     if (saved) {
         gameState = JSON.parse(saved);
-        // Ensure pokedex array exists for older saves
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
     }
 };
@@ -125,7 +136,7 @@ window.selectStarter = function(char, id) {
     const mon = poekedex.find(p => p.id === id);
     if (mon) {
         gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp }];
-        gameState.pokedexCaught.push(id); // Add starter to lifetime dex
+        gameState.pokedexCaught.push(id); 
         playerPos = { x: 25, y: 25 }; 
         window.saveGame();
         window.showScreen('map');
@@ -147,7 +158,51 @@ window.onload = () => {
 };
 
 // ==========================================
-// 5. COMBAT & CAPTURE LOGIC
+// 5. CLINIC HEALING LOGIC
+// ==========================================
+window.triggerClinic = function() {
+    const questions = questionBank[gameState.currentUnit];
+    const q = questions[Math.floor(Math.random() * questions.length)];
+    
+    window.showScreen('battle');
+    
+    // Temporarily hide the battle stage graphics for the clinic overlay
+    document.querySelector('.battle-stage').style.display = 'none';
+    document.getElementById('action-menu').classList.add('hidden');
+    document.getElementById('dialogue-box').textContent = "Welcome to the Waltonia Clinic! Answer this review question correctly to fully heal your party.";
+    
+    const grid = document.getElementById('answer-grid');
+    grid.innerHTML = '';
+    document.getElementById('question-text').textContent = q.q;
+    
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = opt;
+        btn.onclick = () => {
+            // Restore standard battle view visibility
+            document.querySelector('.battle-stage').style.display = 'block';
+            
+            if (i === q.ans) {
+                gameState.playerTeam.forEach(mon => mon.currentHP = mon.maxHP);
+                window.saveGame();
+                alert("Correct! Your PoEkemon are fully healed.");
+            } else {
+                alert("Incorrect. Study your notes and try again!");
+            }
+            
+            // Push player off the clinic tile so it doesn't trigger infinitely
+            playerPos.y += 1; 
+            window.showScreen('map');
+        };
+        grid.appendChild(btn);
+    });
+    
+    document.getElementById('question-container').classList.remove('hidden');
+};
+
+// ==========================================
+// 6. COMBAT & CAPTURE LOGIC
 // ==========================================
 window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
@@ -161,7 +216,7 @@ window.startEncounter = function(unit, isGym) {
     document.getElementById('question-container').classList.add('hidden');
     
     window.showScreen('battle');
-    window.updateHP();
+    window.updateHP(); // This will handle the 33% capture lock
     
     const pSprite = document.getElementById('player-sprite');
     pSprite.innerHTML = '<canvas id="bCanvas" width="80" height="80"></canvas>';
@@ -171,8 +226,12 @@ window.startEncounter = function(unit, isGym) {
 
 window.executeAttack = function() {
     document.getElementById('action-menu').classList.add('hidden');
-    gameState.currentEnemy.currentHP -= 10;
-    document.getElementById('dialogue-box').textContent = `${gameState.playerTeam[0].name} used Applied Force!`;
+    
+    // Add randomness to damage (between 5 and 12)
+    const dmg = Math.floor(Math.random() * 8) + 5;
+    gameState.currentEnemy.currentHP -= dmg;
+    
+    document.getElementById('dialogue-box').textContent = `${gameState.playerTeam[0].name} dealt ${dmg} damage!`;
     window.updateHP();
 
     setTimeout(() => {
@@ -186,14 +245,15 @@ window.executeAttack = function() {
 };
 
 window.enemyTurn = function() {
-    gameState.playerTeam[0].currentHP -= 8;
-    document.getElementById('dialogue-box').textContent = `${gameState.currentEnemy.name} attacked back!`;
+    const dmg = Math.floor(Math.random() * 6) + 4;
+    gameState.playerTeam[0].currentHP -= dmg;
+    document.getElementById('dialogue-box').textContent = `${gameState.currentEnemy.name} attacked back for ${dmg} damage!`;
     window.updateHP();
 
     setTimeout(() => {
         if (gameState.playerTeam[0].currentHP <= 0) {
-            alert("Fainted!");
-            gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP;
+            alert("Your active PoEkemon fainted!");
+            gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; // Auto heal for now on blackout
             playerPos = { x: 25, y: 25 }; 
             window.showScreen('map');
         } else {
@@ -204,7 +264,6 @@ window.enemyTurn = function() {
 
 window.attemptCapture = function() {
     document.getElementById('action-menu').classList.add('hidden');
-    // For simplicity right now, pull first question
     const questions = questionBank[gameState.currentUnit];
     const q = questions[Math.floor(Math.random() * questions.length)];
     
@@ -219,21 +278,17 @@ window.attemptCapture = function() {
         btn.onclick = () => {
             if (i === q.ans) {
                 alert("Correct! You caught " + gameState.currentEnemy.name + "!");
-                
                 const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp };
                 
-                // Add to lifetime Pokedex
                 if (!gameState.pokedexCaught.includes(newCatch.id)) {
                     gameState.pokedexCaught.push(newCatch.id);
                 }
 
                 if (gameState.playerTeam.length < 6) {
-                    // Room in party
                     gameState.playerTeam.push(newCatch);
                     window.saveGame();
                     window.showScreen('map');
                 } else {
-                    // Party Full! Trigger Release Menu
                     window.showReleaseMenu(newCatch);
                 }
             } else {
@@ -247,21 +302,34 @@ window.attemptCapture = function() {
 };
 
 window.updateHP = function() {
-    const eHP = (gameState.currentEnemy.currentHP / gameState.currentEnemy.hp) * 100;
+    const eRatio = gameState.currentEnemy.currentHP / gameState.currentEnemy.hp;
+    const eHP = eRatio * 100;
     const pHP = (gameState.playerTeam[0].currentHP / gameState.playerTeam[0].maxHP) * 100;
-    document.getElementById('enemy-hp').style.width = eHP + "%";
-    document.getElementById('player-hp').style.width = pHP + "%";
+    
+    document.getElementById('enemy-hp').style.width = Math.max(0, eHP) + "%";
+    document.getElementById('player-hp').style.width = Math.max(0, pHP) + "%";
+    
+    // 33% Capture Logic Lock
+    const captureBtn = document.querySelector('.catch-btn');
+    if (captureBtn) {
+        if (eRatio <= 0.33) {
+            captureBtn.disabled = false;
+            captureBtn.textContent = "Capture";
+        } else {
+            captureBtn.disabled = true;
+            captureBtn.textContent = "HP Too High";
+        }
+    }
 };
 
 // ==========================================
-// 6. PARTY LIMITS & DEX RENDERING
+// 7. PARTY LIMITS & DEX RENDERING
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
     const grid = document.getElementById('release-grid');
     grid.innerHTML = ''; 
 
-    // Generate buttons for current party
     gameState.playerTeam.forEach((mon, index) => {
         const btn = document.createElement('button');
         btn.className = 'starter-btn';
@@ -278,11 +346,10 @@ window.showReleaseMenu = function(newCatch) {
         grid.appendChild(btn);
     });
 
-    // Wire up the cancel button
     document.getElementById('release-new-btn').onclick = () => {
         alert(`${newCatch.name} was released back into the wild.`);
         overlay.classList.add('hidden');
-        window.saveGame(); // Save Pokedex addition even if released
+        window.saveGame(); 
         window.showScreen('map');
     };
 
@@ -290,7 +357,6 @@ window.showReleaseMenu = function(newCatch) {
 };
 
 window.renderDex = function() {
-    // 1. Render Party (Max 6)
     const partyGrid = document.getElementById('party-grid');
     partyGrid.innerHTML = '';
     
@@ -308,14 +374,11 @@ window.renderDex = function() {
         partyGrid.appendChild(card);
     });
 
-    // 2. Render Lifetime Pokedex Record
     const dexGrid = document.getElementById('dex-grid');
     dexGrid.innerHTML = '';
     
     poekedex.forEach(mon => {
-        // Starters (Unit 0) or regular? Let's show all.
         const hasCaught = gameState.pokedexCaught.includes(mon.id);
-        
         const card = document.createElement('div');
         card.className = `dex-entry ${hasCaught ? 'captured' : ''}`;
         
@@ -337,12 +400,11 @@ window.renderDex = function() {
 window.deployMon = function(id) {
     const index = gameState.playerTeam.findIndex(p => p.id === id);
     if (index > 0) {
-        // Swap selected to index 0
         const temp = gameState.playerTeam[0];
         gameState.playerTeam[0] = gameState.playerTeam[index];
         gameState.playerTeam[index] = temp;
         
         window.saveGame();
-        window.renderDex(); // Re-render to update UI badges
+        window.renderDex(); 
     }
 };
