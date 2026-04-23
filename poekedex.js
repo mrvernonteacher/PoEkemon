@@ -1,5 +1,5 @@
 // ==========================================
-// POEKEDEX DATA (60 Creatures)
+// POEKEDEX DATA (66 Creatures)
 // ==========================================
 
 const poekedex = [
@@ -85,5 +85,61 @@ const poekedex = [
     { id: 57, name: "Ethic-o", unit: 6, type: "Ethics", desc: "A paladin-like creature that prevents 'unfair' moves from being used.", hp: 50 },
     { id: 58, name: "Deep-Fake", unit: 6, type: "Generative", desc: "Transforms into a perfect, but slightly flawed, copy of the opponent.", hp: 32 },
     { id: 59, name: "Algo-rith", unit: 6, type: "Logic", desc: "Automatically sorts and organizes its attacks for maximum efficiency.", hp: 26 },
-    { id: 60, name: "Singularity", unit: 6, type: "Rare / Boss", desc: "OP: An omniscient AI that can use any move from any Unit in the game.", hp: 120 }
+    { id: 60, name: "Singularity", unit: 6, type: "Rare / Boss", desc: "OP: An omniscient AI that can use any move from any Unit in the game.", hp: 120 },
+
+    // ------------------------------------------
+    // STARTERS: Digital Electronics (Mr. V)
+    // ------------------------------------------
+    { 
+        id: 61, 
+        name: "Gatesaur", 
+        unit: 0, 
+        type: "Logic", 
+        desc: "Emits logical signals (AND, OR, NOT) to process information and execute precise attacks.", 
+        hp: 30 
+    },
+    { 
+        id: 62, 
+        name: "Countertle", 
+        unit: 0, 
+        type: "Timing", 
+        desc: "Increments its internal counter with each action, building up power for a massive discharge.", 
+        hp: 35 
+    },
+    { 
+        id: 63, 
+        name: "Latchander", 
+        unit: 0, 
+        type: "Memory", 
+        desc: "Capable of storing a temporary state, allowing it to replicate its last powerful attack.", 
+        hp: 28 
+    },
+
+    // ------------------------------------------
+    // STARTERS: Aerospace Engineering (Ms. G)
+    // ------------------------------------------
+    { 
+        id: 64, 
+        name: "Liftander", 
+        unit: 0, 
+        type: "Aerodynamics", 
+        desc: "Uses its specialized wings to generate powerful wind currents and outmaneuver opponents in flight.", 
+        hp: 28 
+    },
+    { 
+        id: 65, 
+        name: "Propellite", 
+        unit: 0, 
+        type: "Propulsion", 
+        desc: "Launches high-speed energy blasts powered by its highly efficient internal jet engine.", 
+        hp: 30 
+    },
+    { 
+        id: 66, 
+        name: "Turburtle", 
+        unit: 0, 
+        type: "Engine", 
+        desc: "Rotates at incredible speeds to create a powerful vortex to shield itself from incoming attacks.", 
+        hp: 35 
+    }
 ];
