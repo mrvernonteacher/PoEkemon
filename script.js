@@ -2,21 +2,19 @@
 // 1. GYM LEADER DATA & GAME STATE
 // ==========================================
 
-// Defines the Gym Leaders and their 3-creature rosters (by PoEkedex ID)
 const gymLeaders = {
-    1: { name: "Prof. Torque", roster: [2, 7, 10] },      // Mechanisms
-    2: { name: "Captain Code", roster: [11, 14, 20] },    // VEX Control
-    3: { name: "Dr. Watt", roster: [24, 27, 30] },        // Energy
-    4: { name: "Builder Bridge", roster: [31, 35, 40] },  // Statics
-    5: { name: "Mayor Transit", roster: [41, 44, 50] },   // Transportation
-    6: { name: "Director Data", roster: [51, 53, 60] }    // Kinematics/AI
+    1: { name: "Prof. Torque", roster: [2, 7, 10] },
+    2: { name: "Captain Code", roster: [11, 14, 20] },
+    3: { name: "Dr. Watt", roster: [24, 27, 30] },
+    4: { name: "Builder Bridge", roster: [31, 35, 40] },
+    5: { name: "Mayor Transit", roster: [41, 44, 50] },
+    6: { name: "Director Data", roster: [51, 53, 60] }
 };
 
 let gameState = {
-    playerHP: 100,
-    maxHP: 100,
-    capturedIDs: [],
-    badges: [], // Tracks defeated Gyms
+    playerCharacter: null, // 'MrV' or 'MsG'
+    playerTeam: [],        // Array containing captured PoEkemon objects
+    badges: [],
     currentUnit: null,
     currentEnemy: null,
     currentQuestion: null,
@@ -25,44 +23,48 @@ let gameState = {
     trainerMonIndex: 0
 };
 
-// Load saved game from LocalStorage
+// Load saved game
 function loadGame() {
     const savedData = localStorage.getItem('PoEkemon_Waltonia_Save');
     if (savedData) {
         gameState = JSON.parse(savedData);
-        // Safety check for older saves that didn't have badges
-        if (!gameState.badges) gameState.badges = []; 
     }
 }
 
-// Save game to LocalStorage
+// Save game
 function saveGame() {
     localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState));
 }
 
 // ==========================================
-// 2. DOM ELEMENTS
+// 2. DOM ELEMENTS (Assuming HTML updates)
 // ==========================================
 
 const screens = {
+    characterSelect: document.getElementById('screen-character-select'), // NEW
     map: document.getElementById('screen-map'),
     battle: document.getElementById('screen-battle'),
     dex: document.getElementById('screen-dex')
 };
 
 // Navigation
-document.getElementById('btn-map').addEventListener('click', () => showScreen('map'));
+document.getElementById('btn-map').addEventListener('click', () => {
+    if (gameState.playerTeam.length > 0) showScreen('map');
+});
 document.getElementById('btn-dex').addEventListener('click', () => {
-    renderDex();
-    showScreen('dex');
+    if (gameState.playerTeam.length > 0) {
+        renderDex();
+        showScreen('dex');
+    }
 });
 
-// Map & Battle Elements
 const mapGrid = document.getElementById('map-grid');
 const enemyName = document.getElementById('enemy-name');
 const enemyHPFill = document.getElementById('enemy-hp');
+const playerName = document.getElementById('player-name'); // NEW: Replaces "Your Stress"
 const playerHPFill = document.getElementById('player-hp');
 const dialogueBox = document.getElementById('dialogue-box');
+const actionMenu = document.getElementById('action-menu'); // NEW: Holds Attack & Catch buttons
 const questionContainer = document.getElementById('question-container');
 const questionText = document.getElementById('question-text');
 const answerGrid = document.getElementById('answer-grid');
@@ -70,16 +72,34 @@ const dexCount = document.getElementById('dex-count');
 const dexGrid = document.getElementById('dex-grid');
 
 // ==========================================
-// 3. GAME LOGIC
+// 3. GAME LOGIC & INITIALIZATION
 // ==========================================
 
 function showScreen(screenName) {
     Object.values(screens).forEach(screen => {
-        screen.classList.remove('active');
-        screen.classList.add('hidden');
+        if(screen) {
+            screen.classList.remove('active');
+            screen.classList.add('hidden');
+        }
     });
-    screens[screenName].classList.remove('hidden');
-    screens[screenName].classList.add('active');
+    if(screens[screenName]) {
+        screens[screenName].classList.remove('hidden');
+        screens[screenName].classList.add('active');
+    }
+}
+
+// NEW: Character Selection Logic
+function selectStarter(character, starterID) {
+    gameState.playerCharacter = character;
+    const starter = poekedex.find(p => p.id === starterID);
+    
+    // Give it full HP to start
+    const myStarter = { ...starter, currentHP: starter.hp, maxHP: starter.hp };
+    gameState.playerTeam.push(myStarter);
+    
+    saveGame();
+    initMap();
+    showScreen('map');
 }
 
 function initMap() {
@@ -87,23 +107,20 @@ function initMap() {
     const unitNames = ["Mechanisms", "Control Systems", "Energy", "Statics", "Transportation", "Kinematics"];
     
     for (let i = 1; i <= 6; i++) {
-        // Create a wrapper for the two buttons per unit
         const unitDiv = document.createElement('div');
         unitDiv.style.display = 'flex';
         unitDiv.style.flexDirection = 'column';
         unitDiv.style.gap = '8px';
 
-        // Wild Encounter Button
         const wildBtn = document.createElement('button');
         wildBtn.className = 'map-btn';
         wildBtn.innerHTML = `Unit ${i}: ${unitNames[i-1]} <span>Tall Grass (Catch)</span>`;
         wildBtn.onclick = () => startEncounter(i, false);
 
-        // Gym Leader Button
         const isBeaten = gameState.badges.includes(i);
         const gymBtn = document.createElement('button');
         gymBtn.className = 'map-btn';
-        gymBtn.style.backgroundColor = isBeaten ? '#ffd700' : '#ff6b6b'; // Gold if beaten, Red if not
+        gymBtn.style.backgroundColor = isBeaten ? '#ffd700' : '#ff6b6b';
         gymBtn.innerHTML = `Unit ${i} Gym <span>${isBeaten ? 'Badge Earned!' : 'Challenge Leader'}</span>`;
         gymBtn.onclick = () => startEncounter(i, true);
 
@@ -113,30 +130,28 @@ function initMap() {
     }
 }
 
+// ==========================================
+// 4. COMBAT ENGINE (RPG Style)
+// ==========================================
+
 function startEncounter(unitNumber, isGymBattle) {
     gameState.currentUnit = unitNumber;
     gameState.isTrainerBattle = isGymBattle;
-    gameState.playerHP = gameState.maxHP; // Reset Player HP for the run
+    
+    // Heal lead PoEkemon for the encounter (Simplified for now)
+    gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP;
 
     if (isGymBattle) {
-        // Setup Gym Leader Run
         gameState.currentTrainer = gymLeaders[unitNumber];
         gameState.trainerMonIndex = 0;
         loadTrainerMon();
     } else {
-        // Setup Wild Encounter (Filter out the boss types so they are gym exclusive)
         const unitMons = poekedex.filter(p => p.unit === unitNumber && !p.type.includes("Boss"));
-        if (unitMons.length === 0) {
-            alert("No wild PoEkemon spotted here yet!");
-            return;
-        }
-
         gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
         gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
 
         enemyName.textContent = `Wild ${gameState.currentEnemy.name}`;
-        dialogueBox.textContent = `A wild ${gameState.currentEnemy.name} appeared!`;
-        
+        dialogueBox.textContent = `A wild ${gameState.currentEnemy.name} appeared! Go, ${gameState.playerTeam[0].name}!`;
         setupBattleUI();
     }
 }
@@ -149,35 +164,73 @@ function loadTrainerMon() {
     gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
 
     enemyName.textContent = gameState.currentEnemy.name;
-    
-    if (gameState.trainerMonIndex === 0) {
-        dialogueBox.textContent = `Gym Leader ${gameState.currentTrainer.name} challenges you! They sent out ${gameState.currentEnemy.name}!`;
-    } else {
-        dialogueBox.textContent = `${gameState.currentTrainer.name} sent out ${gameState.currentEnemy.name}!`;
-    }
+    dialogueBox.textContent = `${gameState.currentTrainer.name} sent out ${gameState.currentEnemy.name}!`;
 
     setupBattleUI();
 }
 
 function setupBattleUI() {
-    dialogueBox.classList.remove('hidden');
+    playerName.textContent = gameState.playerTeam[0].name;
+    
+    // Show Action Menu (Attack / Catch), hide Questions
+    actionMenu.classList.remove('hidden');
     questionContainer.classList.add('hidden');
+    dialogueBox.classList.remove('hidden');
+    
     showScreen('battle');
     updateHPBars();
-    setTimeout(loadNextQuestion, 2000);
 }
 
-function loadNextQuestion() {
-    const questions = questionBank[gameState.currentUnit];
+// NEW: Standard Attack (No questions)
+function executeAttack() {
+    actionMenu.classList.add('hidden');
     
-    if (!questions || questions.length === 0) {
-        dialogueBox.textContent = "Error: No questions found for this unit.";
-        dialogueBox.classList.remove('hidden');
-        setTimeout(() => showScreen('map'), 2000);
+    const damage = 10; // Base damage
+    gameState.currentEnemy.currentHP -= damage;
+    dialogueBox.textContent = `${gameState.playerTeam[0].name} used Applied Force!`;
+    updateHPBars();
+
+    setTimeout(() => {
+        if (gameState.currentEnemy.currentHP <= 0) {
+            handleEnemyDefeat();
+        } else {
+            enemyCounterAttack();
+        }
+    }, 1500);
+}
+
+// NEW: Enemy Turn
+function enemyCounterAttack() {
+    const damage = 10;
+    gameState.playerTeam[0].currentHP -= damage;
+    dialogueBox.textContent = `The opposing ${gameState.currentEnemy.name} attacked!`;
+    updateHPBars();
+
+    setTimeout(() => {
+        if (gameState.playerTeam[0].currentHP <= 0) {
+            dialogueBox.textContent = `${gameState.playerTeam[0].name} fainted! You blacked out.`;
+            setTimeout(() => showScreen('map'), 2500);
+        } else {
+            // Player's turn again
+            actionMenu.classList.remove('hidden');
+        }
+    }, 1500);
+}
+
+// ==========================================
+// 5. CAPTURE ENGINE (Questions Live Here)
+// ==========================================
+
+function attemptCapture() {
+    if (gameState.isTrainerBattle) {
+        dialogueBox.textContent = "You can't catch a Gym Leader's PoEkemon!";
         return;
     }
 
+    actionMenu.classList.add('hidden');
+    const questions = questionBank[gameState.currentUnit];
     gameState.currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+
     dialogueBox.classList.add('hidden');
     questionContainer.classList.remove('hidden');
     questionText.innerHTML = gameState.currentQuestion.q;
@@ -187,42 +240,33 @@ function loadNextQuestion() {
         const btn = document.createElement('button');
         btn.className = 'answer-btn';
         btn.textContent = opt;
-        btn.onclick = () => handleAnswer(index);
+        btn.onclick = () => handleCaptureAnswer(index);
         answerGrid.appendChild(btn);
     });
 }
 
-function handleAnswer(selectedIndex) {
+function handleCaptureAnswer(selectedIndex) {
     questionContainer.classList.add('hidden');
     dialogueBox.classList.remove('hidden');
 
     if (selectedIndex === gameState.currentQuestion.ans) {
-        // Correct Answer
-        const damage = 15;
-        gameState.currentEnemy.currentHP -= damage;
-        dialogueBox.textContent = `Correct! You used "Applied Physics"!`;
+        // Correct - Successful Catch!
+        gameState.currentEnemy.currentHP = 0;
+        updateHPBars();
+        dialogueBox.textContent = `Gotcha! ${gameState.currentEnemy.name} was caught!`;
         
-        if (gameState.currentEnemy.currentHP <= 0) {
-            handleEnemyDefeat();
-        } else {
-            setTimeout(loadNextQuestion, 1500);
-        }
+        // Add to team and dex
+        gameState.playerTeam.push({ ...gameState.currentEnemy, maxHP: gameState.currentEnemy.hp });
+        saveGame();
+        
+        setTimeout(() => showScreen('map'), 2500);
     } else {
-        // Incorrect Answer
-        const stressDamage = 25;
-        gameState.playerHP -= stressDamage;
-        dialogueBox.textContent = `Incorrect! The ${gameState.currentEnemy.name} caused you ${stressDamage} Stress Damage!`;
-        
-        if (gameState.playerHP <= 0) {
-            setTimeout(() => {
-                dialogueBox.textContent = "Your Stress reached maximum! You blacked out and fled.";
-                setTimeout(() => showScreen('map'), 3000);
-            }, 2000);
-        } else {
-            setTimeout(loadNextQuestion, 2000);
-        }
+        // Incorrect - Breaks free
+        dialogueBox.textContent = `Oh no! The PoEkemon broke free!`;
+        setTimeout(() => {
+            enemyCounterAttack();
+        }, 1500);
     }
-    updateHPBars();
 }
 
 function handleEnemyDefeat() {
@@ -230,36 +274,29 @@ function handleEnemyDefeat() {
     updateHPBars();
 
     if (gameState.isTrainerBattle) {
-        // Progress to next Gym Leader PoEkemon
         gameState.trainerMonIndex++;
         if (gameState.trainerMonIndex < gameState.currentTrainer.roster.length) {
             dialogueBox.textContent = `The opposing ${gameState.currentEnemy.name} fainted!`;
-            setTimeout(loadTrainerMon, 2500);
+            setTimeout(loadTrainerMon, 2000);
         } else {
-            // Defeated the entire Gym
-            dialogueBox.textContent = `You defeated Gym Leader ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`;
+            dialogueBox.textContent = `You defeated ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`;
             if (!gameState.badges.includes(gameState.currentUnit)) {
                 gameState.badges.push(gameState.currentUnit);
                 saveGame();
             }
             setTimeout(() => {
-                initMap(); // Refresh map to show the new gold badge color
+                initMap();
                 showScreen('map');
-            }, 4000);
+            }, 3500);
         }
     } else {
-        // Wild Encounter Capture
-        dialogueBox.textContent = `Gotcha! ${gameState.currentEnemy.name} was caught!`;
-        if (!gameState.capturedIDs.includes(gameState.currentEnemy.id)) {
-            gameState.capturedIDs.push(gameState.currentEnemy.id);
-            saveGame();
-        }
-        setTimeout(() => showScreen('map'), 2500);
+        dialogueBox.textContent = `The wild ${gameState.currentEnemy.name} fainted!`;
+        setTimeout(() => showScreen('map'), 2000);
     }
 }
 
 function updateHPBars() {
-    const playerPct = Math.max(0, (gameState.playerHP / gameState.maxHP) * 100);
+    const playerPct = Math.max(0, (gameState.playerTeam[0].currentHP / gameState.playerTeam[0].maxHP) * 100);
     playerHPFill.style.width = `${playerPct}%`;
     playerHPFill.style.backgroundColor = playerPct > 30 ? "var(--hp-green)" : "red";
 
@@ -271,12 +308,13 @@ function updateHPBars() {
 
 function renderDex() {
     dexGrid.innerHTML = '';
-    dexCount.textContent = gameState.capturedIDs.length;
-
-    if (typeof poekedex === 'undefined') return;
+    
+    // We count unique IDs in the player's team to simulate the "Pokedex" count
+    const uniqueCaptured = [...new Set(gameState.playerTeam.map(mon => mon.id))];
+    dexCount.textContent = uniqueCaptured.length;
 
     poekedex.forEach(mon => {
-        const isCaptured = gameState.capturedIDs.includes(mon.id);
+        const isCaptured = uniqueCaptured.includes(mon.id);
         const div = document.createElement('div');
         div.className = `dex-entry ${isCaptured ? 'captured' : ''}`;
         
@@ -290,11 +328,16 @@ function renderDex() {
 }
 
 // ==========================================
-// 4. INITIALIZE
+// 6. INITIALIZE
 // ==========================================
 window.onload = () => {
     loadGame();
-    initMap();
-    renderDex();
-    showScreen('map');
+    // If no team exists, they must pick a character first
+    if (gameState.playerTeam.length === 0) {
+        showScreen('characterSelect');
+    } else {
+        initMap();
+        renderDex();
+        showScreen('map');
+    }
 };
