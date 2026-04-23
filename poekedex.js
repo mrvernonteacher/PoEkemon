@@ -13,7 +13,7 @@ const poekedex = [
         evolutions: [
             { reqXP: 3, name: "Megacru", desc: "Its fulcrum shifted closer to the load, giving it massive striking power.", hpBonus: 10, atkBonus: 2, spAtkBonus: 8 }
         ]
-    },
+    }, 
     { 
         id: 2, name: "Spurite", unit: 1, type: "Gear Train", 
         desc: "A small gear that interlocks with others to increase torque.", 
