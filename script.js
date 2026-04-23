@@ -1,82 +1,5 @@
 // ==========================================
-// 1. GAME DATA (The PoEkdex & Questions)
-// ==========================================
-
-const poEkdex = [
-    // Unit 1: Mechanisms
-    { id: 1, name: "Fulcru", unit: 1, type: "Mechanisms", desc: "A see-saw creature that gains Mechanical Advantage.", hp: 20 },
-    { id: 2, name: "Spurite", unit: 1, type: "Mechanisms", desc: "A small gear that grows into a planetary system.", hp: 25 },
-    { id: 3, name: "Pulle-pup", unit: 1, type: "Mechanisms", desc: "Uses rope-like vines to lift heavy objects.", hp: 22 },
-    // Unit 2: Machine Control
-    { id: 4, name: "Vex-el", unit: 2, type: "Control", desc: "A small brain-chip creature with wire limbs.", hp: 30 },
-    { id: 5, name: "Loop-a", unit: 2, type: "Control", desc: "Trapped in a While loop.", hp: 28 },
-    // Unit 3: Energy
-    { id: 6, name: "Sola-ray", unit: 3, type: "Energy", desc: "Absorbs sunlight to charge its battery.", hp: 35 },
-    // Unit 4: Statics
-    { id: 7, name: "Truss-tle", unit: 4, type: "Statics", desc: "A turtle whose shell is a perfectly balanced truss.", hp: 50 },
-    // Unit 5: Transportation
-    { id: 8, name: "Flow-ey", unit: 5, type: "Transport", desc: "Moves faster in groups.", hp: 40 },
-    // Unit 6: Kinematics
-    { id: 9, name: "Proj-ec", unit: 6, type: "Kinematics", desc: "Launches itself at a specific angle and velocity.", hp: 45 }
-];
-
-const questionBank = {
-    1: [ // Unit 1: Mechanisms
-        {
-            q: "If a first-class lever has an effort arm of 10 ft and a resistance arm of 2 ft, what is the Ideal Mechanical Advantage (IMA)?",
-            options: ["5", "12", "0.2", "8"],
-            ans: 0 // Index of correct option
-        },
-        {
-            q: "In a gear train, if the drive gear has 10 teeth and the driven gear has 40 teeth, what happens to the torque and speed?",
-            options: ["Torque increases, speed decreases", "Torque decreases, speed increases", "Both increase", "Both decrease"],
-            ans: 0
-        },
-        {
-            q: "How much Work is done if a 50 lb force moves an object 10 feet? ($W = F \\times d$)",
-            options: ["500 ft-lbs", "5 ft-lbs", "50 ft-lbs", "60 ft-lbs"],
-            ans: 0
-        }
-    ],
-    2: [ // Unit 2: VEX/Control
-        {
-            q: "Which of the following is considered an ANALOG sensor?",
-            options: ["Potentiometer", "Bumper Switch", "Limit Switch", "LED"],
-            ans: 0
-        }
-    ],
-    3: [ // Unit 3: Energy
-        {
-            q: "What type of heat transfer occurs through direct physical contact?",
-            options: ["Conduction", "Convection", "Radiation", "Insulation"],
-            ans: 0
-        }
-    ],
-    4: [ // Unit 4: Statics
-        {
-            q: "What is the condition where the sum of all forces and moments acting on a body equals zero?",
-            options: ["Static Equilibrium", "Dynamic Kinematics", "Centroidal Axis", "Yield Point"],
-            ans: 0
-        }
-    ],
-    5: [ // Unit 5: Transportation
-        {
-            q: "In traffic engineering, what does 'Headway' refer to?",
-            options: ["Time between vehicles passing a point", "Top speed of a car", "Width of the lane", "Stopping distance"],
-            ans: 0
-        }
-    ],
-    6: [ // Unit 6: Kinematics
-        {
-            q: "Ignoring air resistance, at what angle should a projectile be launched to achieve maximum horizontal distance?",
-            options: ["45 degrees", "90 degrees", "30 degrees", "60 degrees"],
-            ans: 0
-        }
-    ]
-};
-
-// ==========================================
-// 2. GAME STATE & SAVE SYSTEM
+// 1. GAME STATE & SAVE SYSTEM
 // ==========================================
 
 let gameState = {
@@ -102,7 +25,7 @@ function saveGame() {
 }
 
 // ==========================================
-// 3. DOM ELEMENTS
+// 2. DOM ELEMENTS
 // ==========================================
 
 const screens = {
@@ -133,7 +56,7 @@ const dexCount = document.getElementById('dex-count');
 const dexGrid = document.getElementById('dex-grid');
 
 // ==========================================
-// 4. GAME LOGIC
+// 3. GAME LOGIC
 // ==========================================
 
 function showScreen(screenName) {
@@ -161,8 +84,8 @@ function initMap() {
 function startEncounter(unitNumber) {
     gameState.currentUnit = unitNumber;
     
-    // Filter PoEkemon by unit
-    const unitMons = poEkdex.filter(p => p.unit === unitNumber);
+    // Filter PoEkemon by unit using the external poekedex array
+    const unitMons = poekedex.filter(p => p.unit === unitNumber);
     if (unitMons.length === 0) {
         alert("No PoEkemon spotted here yet!");
         return;
@@ -189,7 +112,17 @@ function startEncounter(unitNumber) {
 }
 
 function loadNextQuestion() {
+    // Pull from the external questionBank object
     const questions = questionBank[gameState.currentUnit];
+    
+    // Check if questions exist for this unit yet
+    if (!questions || questions.length === 0) {
+        dialogueBox.textContent = "Error: No questions found for this unit.";
+        dialogueBox.classList.remove('hidden');
+        setTimeout(() => showScreen('map'), 2000);
+        return;
+    }
+
     gameState.currentQuestion = questions[Math.floor(Math.random() * questions.length)];
 
     dialogueBox.classList.add('hidden');
@@ -273,7 +206,10 @@ function renderDex() {
     dexGrid.innerHTML = '';
     dexCount.textContent = gameState.capturedIDs.length;
 
-    poEkdex.forEach(mon => {
+    // Check if poekedex is loaded to avoid errors
+    if (typeof poekedex === 'undefined') return;
+
+    poekedex.forEach(mon => {
         const isCaptured = gameState.capturedIDs.includes(mon.id);
         const div = document.createElement('div');
         div.className = `dex-entry ${isCaptured ? 'captured' : ''}`;
@@ -288,9 +224,12 @@ function renderDex() {
 }
 
 // ==========================================
-// 5. INITIALIZE
+// 4. INITIALIZE
 // ==========================================
-loadGame();
-initMap();
-renderDex();
-showScreen('map');
+// Wait for all scripts to load before initializing
+window.onload = () => {
+    loadGame();
+    initMap();
+    renderDex();
+    showScreen('map');
+};
