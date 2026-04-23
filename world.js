@@ -14,7 +14,7 @@ const waltoniaRegions = {
     6: { name: "AI Archipelago", unit: "Kinematics & AI" }
 };
 
-// Procedural Generator so you don't have to write 2,500 numbers by hand
+// Procedural Generator
 function buildMap(gymX, gymY) {
     let map = [];
     for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -37,15 +37,18 @@ function buildMap(gymX, gymY) {
         map.push(row);
     }
     
-    // Place the Gym on the border and ensure the tile in front of it is a path
+    // Place the Gym (Tile 2) on the border
     map[gymY][gymX] = 2;
     if (gymY > 0 && gymY < MAP_HEIGHT - 1) map[gymY + 1][gymX] = 0; 
     if (gymY === MAP_HEIGHT - 1) map[gymY - 1][gymX] = 0;
     
+    // Place the Clinic (Tile 4) in the center safe zone
+    map[27][25] = 4;
+    
     return map;
 }
 
-// 0: Path, 1: Grass, 2: Gym, 3: Wall/Tree
+// 0: Path, 1: Grass, 2: Gym, 3: Wall/Tree, 4: Clinic
 const unitMaps = {
     1: buildMap(25, 1),  // Gym at Top Center
     2: buildMap(48, 25), // Gym at Right Center
