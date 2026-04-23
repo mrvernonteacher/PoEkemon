@@ -1,24 +1,9 @@
 // ==========================================
-// 1. DATA & CONFIG
+// 1. ENGINE CONFIG
 // ==========================================
 const TILE_SIZE = 40;
-const MAP_WIDTH = 15;
-const MAP_HEIGHT = 10;
-
-const unitMaps = {
-    1: [
-        [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
-        [3,0,0,0,0,0,1,1,1,1,1,0,0,2,3],
-        [3,0,1,1,0,0,1,1,1,1,1,0,0,0,3],
-        [3,0,1,1,0,0,0,0,0,0,0,0,0,0,3],
-        [3,0,0,0,0,3,3,3,3,3,0,1,1,0,3],
-        [3,0,0,0,0,3,3,3,3,3,0,1,1,0,3],
-        [3,1,1,0,0,0,0,0,0,0,0,0,0,0,3],
-        [3,1,1,0,0,0,1,1,1,0,0,0,1,1,3],
-        [3,0,0,0,0,0,1,1,1,0,0,0,1,1,3],
-        [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
-    ]
-};
+const VIEW_WIDTH = 15; // How many tiles wide the canvas is
+const VIEW_HEIGHT = 10; // How many tiles tall the canvas is
 
 let gameState = {
     playerCharacter: null,
@@ -29,7 +14,8 @@ let gameState = {
     isTrainerBattle: false
 };
 
-let playerPos = { x: 1, y: 1 };
+// Player starts dead center of the 50x50 map
+let playerPos = { x: 25, y: 25 };
 
 // ==========================================
 // 2. SPRITE ENGINE
@@ -58,106 +44,131 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
 };
 
 // ==========================================
-// 3. UI & SAVE ENGINE
+// 3. UI & MAP NAVIGATION (THE CAMERA)
 // ==========================================
-window.showScreen = function(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    const target = document.getElementById('screen-' + name);
-    if (target) {
-        target.classList.remove('hidden');
-        target.classList.add('active');
-    }
-    if (name === 'map') setTimeout(window.drawMap, 50);
-};
-
-window.saveGame = function() {
-    localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState));
-};
-
-window.loadGame = function() {
-    const saved = localStorage.getItem('PoEkemon_Waltonia_Save');
-    if (saved) gameState = JSON.parse(saved);
-};
-
-window.toggleSettings = function() {
-    document.getElementById('settings-overlay').classList.toggle('hidden');
-};
-
-window.resetGame = function() {
-    if (confirm("Reset progress?")) {
-        localStorage.removeItem('PoEkemon_Waltonia_Save');
-        location.reload();
-    }
-};
-
-// ==========================================
-// 4. MAP & STARTER
-// ==========================================
-window.selectStarter = function(char, id) {
-    gameState.playerCharacter = char;
-    const mon = poekedex.find(p => p.id === id);
-    if (mon) {
-        gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp }];
-        window.saveGame();
-        window.showScreen('map');
-    }
-};
-
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const map = unitMaps[gameState.currentUnit];
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    map.forEach((row, y) => {
-        row.forEach((tile, x) => {
-            if (tile === 0) ctx.fillStyle = "#e2e2e2"; 
-            if (tile === 1) ctx.fillStyle = "#78c850"; 
-            if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
-            if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
+
+    // Calculate Camera Offset (keeps player centered)
+    let offsetX = playerPos.x - Math.floor(VIEW_WIDTH / 2);
+    let offsetY = playerPos.y - Math.floor(VIEW_HEIGHT / 2);
+
+    // Clamp camera to map edges so we don't draw outside the array
+    offsetX = Math.max(0, Math.min(offsetX, MAP_WIDTH - VIEW_WIDTH));
+    offsetY = Math.max(0, Math.min(offsetY, MAP_HEIGHT - VIEW_HEIGHT));
+
+    // Draw only the visible portion of the map
+    for (let y = 0; y < VIEW_HEIGHT; y++) {
+        for (let x = 0; x < VIEW_WIDTH; x++) {
+            let mapY = offsetY + y;
+            let mapX = offsetX + x;
+            let tile = map[mapY][mapX];
+
+            if (tile === 0) ctx.fillStyle = "#e2e2e2"; // Path
+            if (tile === 1) ctx.fillStyle = "#78c850"; // Grass
+            if (tile === 2) ctx.fillStyle = "#ff6b6b"; // Gym
+            if (tile === 3) ctx.fillStyle = "#2d4c1e"; // Wall/Tree
+
             ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-        });
-    });
-    window.drawCharacterSprite(ctx, playerPos.x * TILE_SIZE, playerPos.y * TILE_SIZE, TILE_SIZE);
+        }
+    }
+
+    // Calculate Player's position relative to the camera window
+    const screenPlayerX = (playerPos.x - offsetX) * TILE_SIZE;
+    const screenPlayerY = (playerPos.y - offsetY) * TILE_SIZE;
+    
+    window.drawCharacterSprite(ctx, screenPlayerX, screenPlayerY, TILE_SIZE);
 };
 
 window.addEventListener('keydown', (e) => {
     if (!document.getElementById('screen-map').classList.contains('active')) return;
     let nx = playerPos.x, ny = playerPos.y;
+    
     if (['ArrowUp', 'w'].includes(e.key)) ny--;
     if (['ArrowDown', 's'].includes(e.key)) ny++;
     if (['ArrowLeft', 'a'].includes(e.key)) nx--;
     if (['ArrowRight', 'd'].includes(e.key)) nx++;
+
     const map = unitMaps[gameState.currentUnit];
-    if (map && map[ny] && map[ny][nx] !== 3) {
+    // Check bounds and collisions
+    if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
         playerPos.x = nx; playerPos.y = ny;
         window.drawMap();
+        
+        // Triggers
         if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
         if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
     }
 });
 
 // ==========================================
-// 5. COMBAT ENGINE (THE FIX)
+// 4. MENUS & INITIALIZATION
+// ==========================================
+window.showScreen = function(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden', 'active'));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + name);
+    if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('active');
+    }
+    
+    if (name === 'map') {
+        const region = waltoniaRegions[gameState.currentUnit];
+        const label = document.getElementById('map-label');
+        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region.name}`;
+        setTimeout(window.drawMap, 50);
+    }
+};
+
+window.saveGame = function() { localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState)); };
+window.loadGame = function() { const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); if (saved) gameState = JSON.parse(saved); };
+window.toggleSettings = function() { document.getElementById('settings-overlay').classList.toggle('hidden'); };
+window.resetGame = function() { if (confirm("Reset progress?")) { localStorage.removeItem('PoEkemon_Waltonia_Save'); location.reload(); } };
+
+window.selectStarter = function(char, id) {
+    gameState.playerCharacter = char;
+    const mon = poekedex.find(p => p.id === id);
+    if (mon) {
+        gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp }];
+        playerPos = { x: 25, y: 25 }; // Reset to center
+        window.saveGame();
+        window.showScreen('map');
+    }
+};
+
+window.onload = () => {
+    window.loadGame();
+    document.getElementById('btn-settings').onclick = window.toggleSettings;
+    document.getElementById('btn-map').onclick = () => window.showScreen('map');
+    document.getElementById('btn-dex').onclick = () => window.showScreen('dex');
+
+    if (!gameState.playerTeam || gameState.playerTeam.length === 0) window.showScreen('characterSelect');
+    else window.showScreen('map');
+};
+
+// ==========================================
+// 5. COMBAT LOGIC (Kept exactly as it was)
 // ==========================================
 window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
     gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
     gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
 
-    // Reset UI Elements
     document.getElementById('enemy-name').textContent = gameState.currentEnemy.name;
     document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
     document.getElementById('dialogue-box').textContent = `Wild ${gameState.currentEnemy.name} appeared!`;
-    
-    // Explicitly show buttons and hide questions
     document.getElementById('action-menu').classList.remove('hidden');
     document.getElementById('question-container').classList.add('hidden');
     
     window.showScreen('battle');
     window.updateHP();
     
-    // Draw Sprite in Battle
     const pSprite = document.getElementById('player-sprite');
     pSprite.innerHTML = '<canvas id="bCanvas" width="80" height="80"></canvas>';
     const bCtx = document.getElementById('bCanvas').getContext('2d');
@@ -189,6 +200,7 @@ window.enemyTurn = function() {
         if (gameState.playerTeam[0].currentHP <= 0) {
             alert("Fainted!");
             gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP;
+            playerPos = { x: 25, y: 25 }; // Send back to center on blackout
             window.showScreen('map');
         } else {
             document.getElementById('action-menu').classList.remove('hidden');
@@ -230,17 +242,4 @@ window.updateHP = function() {
     const pHP = (gameState.playerTeam[0].currentHP / gameState.playerTeam[0].maxHP) * 100;
     document.getElementById('enemy-hp').style.width = eHP + "%";
     document.getElementById('player-hp').style.width = pHP + "%";
-};
-
-// ==========================================
-// 6. INITIALIZE
-// ==========================================
-window.onload = () => {
-    window.loadGame();
-    document.getElementById('btn-settings').onclick = window.toggleSettings;
-    document.getElementById('btn-map').onclick = () => window.showScreen('map');
-    document.getElementById('btn-dex').onclick = () => window.showScreen('dex');
-
-    if (!gameState.playerTeam || gameState.playerTeam.length === 0) window.showScreen('characterSelect');
-    else window.showScreen('map');
 };
