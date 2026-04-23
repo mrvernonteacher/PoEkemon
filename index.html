@@ -12,13 +12,48 @@
             <h1>PoEkemon</h1>
             <nav>
                 <button id="btn-map" class="nav-btn">World Map</button>
-                <button id="btn-dex" class="nav-btn">PoEkdex</button>
+                <button id="btn-dex" class="nav-btn">PoEkedex</button>
             </nav>
         </header>
 
-        <section id="screen-map" class="screen active">
+        <section id="screen-character-select" class="screen active">
+            <h2>Select Your Engineering Field!</h2>
+            <p>Choose your instructor and your starter PoEkemon to begin.</p>
+            
+            <div class="character-grid">
+                <div class="character-card">
+                    <h3>Mr. V</h3>
+                    <p class="theme-text">Digital Electronics</p>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 61)">
+                        <strong>Gatesaur</strong><br><span>Logic Type</span>
+                    </button>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 62)">
+                        <strong>Countertle</strong><br><span>Timing Type</span>
+                    </button>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 63)">
+                        <strong>Latchander</strong><br><span>Memory Type</span>
+                    </button>
+                </div>
+
+                <div class="character-card">
+                    <h3>Ms. G</h3>
+                    <p class="theme-text">Aerospace Engineering</p>
+                    <button class="starter-btn" onclick="selectStarter('MsG', 64)">
+                        <strong>Liftander</strong><br><span>Aero Type</span>
+                    </button>
+                    <button class="starter-btn" onclick="selectStarter('MsG', 65)">
+                        <strong>Propellite</strong><br><span>Propulsion Type</span>
+                    </button>
+                    <button class="starter-btn" onclick="selectStarter('MsG', 66)">
+                        <strong>Turburtle</strong><br><span>Engine Type</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-map" class="screen hidden">
             <h2>The Waltonia Region</h2>
-            <p>Select a unit to encounter wild PoEkemon!</p>
+            <p>Select a unit to encounter wild PoEkemon or challenge Gyms!</p>
             <div id="map-grid">
                 </div>
         </section>
@@ -40,7 +75,7 @@
                         <div id="player-sprite" class="placeholder-sprite player-placeholder">You</div>
                     </div>
                     <div class="stats-box">
-                        <h3>Your Stress</h3>
+                        <h3 id="player-name">Player Mon</h3>
                         <div class="hp-bar-bg"><div id="player-hp" class="hp-bar-fill player-hp-fill"></div></div>
                     </div>
                 </div>
@@ -48,6 +83,12 @@
 
             <div class="battle-ui">
                 <div id="dialogue-box">A wild PoEkemon appeared!</div>
+                
+                <div id="action-menu" class="hidden">
+                    <button onclick="executeAttack()" class="action-btn attack-btn">Use Attack</button>
+                    <button onclick="attemptCapture()" class="action-btn catch-btn">Attempt Capture</button>
+                </div>
+
                 <div id="question-container" class="hidden">
                     <p id="question-text">Question text will appear here...</p>
                     <div id="answer-grid">
@@ -57,9 +98,9 @@
         </section>
 
         <section id="screen-dex" class="screen hidden">
-            <h2>PoEkdex Database</h2>
+            <h2>PoEkedex Database</h2>
             <div class="dex-stats">
-                <p>Captured: <span id="dex-count">0</span> / 60</p>
+                <p>Captured: <span id="dex-count">0</span></p>
             </div>
             <div id="dex-grid">
                 </div>
