@@ -1,141 +1,110 @@
-/* Import 8-bit retro font */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoEkedex: Waltonia Region</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>PoEkedex</h1>
+            <nav>
+                <button id="btn-map" class="nav-btn">Map</button>
+                <button id="btn-dex" class="nav-btn">Collection</button>
+                <button id="btn-settings" class="nav-btn">⚙️</button>
+            </nav>
+        </header>
 
-:root {
-    --walton-blue: #0033a0;
-    --walton-red: #c8102e;
-    --game-bg: #f8f8f8;
-    --text-color: #333;
-    --border-color: #222;
-    --hp-green: #32cd32;
-}
+        <div id="settings-overlay" class="hidden">
+            <div class="settings-content">
+                <h3>Settings</h3>
+                <button onclick="resetGame()" class="action-btn attack-btn">Reset Save Data</button>
+                <br><br>
+                <button onclick="toggleSettings()" class="nav-btn">Close</button>
+            </div>
+        </div>
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+        <div id="release-overlay" class="hidden">
+            <div class="settings-content" style="width: 90%;">
+                <h3 style="color: #c8102e;">Party Full!</h3>
+                <p id="release-prompt" style="font-size: 8px; margin-bottom: 15px;">Choose a PoEkemon to set free:</p>
+                <div id="release-grid" class="character-grid"></div>
+                <button id="release-new-btn" class="action-btn catch-btn" style="margin-top:15px; width:100%;">Set New Catch Free</button>
+            </div>
+        </div>
 
-body { 
-    font-family: 'Press Start 2P', monospace; 
-    background-color: #2c3e50; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh; 
-    color: var(--text-color); 
-    font-size: 12px; 
-}
+        <section id="screen-characterSelect" class="screen active">
+            <h2>Select Your Instructor</h2>
+            <div class="character-grid">
+                <div class="character-card">
+                    <h3>Mr. V</h3>
+                    <p class="theme-text">Digital Electronics</p>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 61)">Gatesaur</button>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 62)">Countertle</button>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 63)">Latchander</button>
+                </div>
+                <div class="character-card">
+                    <h3>Mrs. G</h3>
+                    <p class="theme-text">Aerospace Engineering</p>
+                    <button class="starter-btn" onclick="selectStarter('MrsG', 64)">Liftander</button>
+                    <button class="starter-btn" onclick="selectStarter('MrsG', 65)">Propellite</button>
+                    <button class="starter-btn" onclick="selectStarter('MrsG', 66)">Turburtle</button>
+                </div>
+            </div>
+        </section>
 
-#game-container { 
-    width: 800px; 
-    height: 600px; 
-    background-color: var(--game-bg); 
-    border: 8px solid var(--border-color); 
-    border-radius: 10px; 
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; 
-    position: relative; 
-}
+        <section id="screen-map" class="screen hidden">
+            <h2 id="map-label">Unit 1: The Leveraged Lowlands</h2>
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="600" height="400"></canvas>
+            </div>
+            <p class="controls-hint">WASD to Move | Green = Wild Encounters</p>
+        </section>
 
-/* --- NAVIGATION --- */
-header { 
-    background-color: var(--walton-blue); 
-    color: white; 
-    padding: 15px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 4px solid var(--border-color); 
-}
+        <section id="screen-battle" class="screen hidden">
+            <div class="battle-stage">
+                <div class="combatant enemy">
+                    <div class="stats-box">
+                        <h3 id="enemy-name">???</h3>
+                        <div class="hp-bar-bg"><div id="enemy-hp" class="hp-bar-fill"></div></div>
+                    </div>
+                    <div class="placeholder-sprite"></div>
+                </div>
+                <div class="combatant player">
+                    <div id="player-sprite" class="placeholder-sprite player-placeholder"></div>
+                    <div class="stats-box">
+                        <h3 id="player-mon-name">Your Mon</h3>
+                        <div class="hp-bar-bg"><div id="player-hp" class="hp-bar-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="battle-ui">
+                <div id="dialogue-box"></div>
+                <div id="action-menu" class="hidden">
+                    <button onclick="executeAttack()" class="action-btn attack-btn">Attack</button>
+                    <button onclick="attemptCapture()" class="action-btn catch-btn">Capture</button>
+                </div>
+                <div id="question-container" class="hidden">
+                    <p id="question-text"></p>
+                    <div id="answer-grid"></div>
+                </div>
+            </div>
+        </section>
 
-header h1 { font-size: 16px; color: #ffd700; }
+        <section id="screen-dex" class="screen hidden">
+            <h2 style="color: #0033a0; margin-bottom: 10px;">Current Party (Max 6)</h2>
+            <div id="party-grid" class="party-grid"></div>
+            
+            <h2 style="color: #555; margin: 20px 0 10px 0;">PoEkedex Record</h2>
+            <div id="dex-grid"></div>
+        </section>
+    </div>
 
-.nav-btn { 
-    font-family: 'Press Start 2P', monospace; 
-    font-size: 10px; 
-    padding: 8px; 
-    cursor: pointer; 
-    background: white; 
-    border: 2px solid var(--border-color); 
-}
-
-/* --- SCREENS & OVERLAYS --- */
-.screen { 
-    flex: 1; 
-    padding: 20px; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    overflow-y: auto; 
-}
-
-.hidden { display: none !important; }
-
-#settings-overlay, #release-overlay { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(0,0,0,0.85); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    z-index: 1000; 
-}
-
-.settings-content { 
-    background: white; 
-    padding: 30px; 
-    border: 4px solid var(--border-color); 
-    text-align: center; 
-}
-
-/* --- CHARACTER SELECT --- */
-.character-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 20px; }
-.character-card { background: #ddd; border: 4px solid var(--border-color); padding: 20px; text-align: center; }
-.theme-text { font-size: 8px; margin: 10px 0; color: var(--walton-blue); }
-.starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; }
-.starter-btn:hover { background: #ffd700; }
-
-/* --- MAP --- */
-.canvas-container { background: #333; padding: 5px; border: 4px solid var(--border-color); margin: 10px 0; }
-#gameCanvas { display: block; image-rendering: pixelated; background-color: #78c850; }
-.controls-hint { font-size: 8px; color: #666; margin-top: 5px; }
-
-/* --- BATTLE ARENA --- */
-.battle-stage { width: 100%; height: 250px; position: relative; background: linear-gradient(to bottom, #a0d8ef 50%, #e8f4f8 50%); border: 4px solid var(--border-color); margin-bottom: 10px; }
-.combatant { position: absolute; display: flex; align-items: flex-end; gap: 10px; }
-.enemy { top: 20px; right: 20px; }
-.player { bottom: 20px; left: 20px; flex-direction: row-reverse; }
-.stats-box { background: #fff8d0; border: 3px solid var(--border-color); padding: 8px; width: 180px; }
-.hp-bar-bg { height: 10px; background: #555; border: 2px solid #222; }
-.hp-bar-fill { height: 100%; background: var(--hp-green); width: 100%; transition: width 0.3s; }
-.placeholder-sprite { width: 80px; height: 80px; background: transparent; display: flex; justify-content: center; align-items: center; }
-
-/* --- BATTLE UI --- */
-.battle-ui { width: 100%; height: 150px; background: white; border: 6px solid var(--border-color); padding: 15px; }
-#action-menu { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-.action-btn { font-family: 'Press Start 2P', monospace; padding: 10px; cursor: pointer; border: 2px solid #222; }
-
-/* BUTTON STATES */
-.attack-btn { background: #ff6b6b; color: white; }
-.catch-btn { background: #4da6ff; color: white; }
-.action-btn:disabled { background: #999 !important; border-color: #555 !important; color: #ccc !important; cursor: not-allowed; }
-
-#answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.answer-btn { font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 10px; text-align: left; background: #eee; cursor: pointer; border: 2px solid #222; }
-.answer-btn:hover { background: #ddd; }
-
-/* --- PARTY & DEX GRIDS --- */
-.party-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
-.party-card { background: #fffde7; border: 4px solid var(--border-color); padding: 10px; text-align: center; }
-.party-card h4 { font-size: 10px; margin-bottom: 5px; color: var(--walton-blue); }
-.party-card p { font-size: 8px; margin-bottom: 5px; }
-
-#dex-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; padding-bottom: 20px; }
-.dex-entry { background: #ccc; border: 4px solid #555; padding: 10px; text-align: center; opacity: 0.5; filter: grayscale(100%); }
-.dex-entry.captured { opacity: 1; filter: grayscale(0%); background: #fff; border-color: var(--walton-blue); }
-.dex-entry h4 { font-size: 8px; margin-bottom: 5px; }
-.dex-entry p { font-size: 6px; color: #555; }
-
-.deploy-btn { font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 5px; background: #4da6ff; color: white; border: 2px solid #222; cursor: pointer; margin-top: 5px; width: 100%; }
-.active-badge { display: block; font-size: 8px; background: #ffd700; color: #000; padding: 5px; border: 2px solid #222; margin-top: 5px; }
+    <script src="world.js"></script>
+    <script src="poekedex.js"></script>
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
