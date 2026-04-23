@@ -9,12 +9,21 @@
 <body>
     <div id="game-container">
         <header>
-            <h1>PoEkedex</h1>
-            <nav>
-                <button id="btn-map" class="nav-btn">Map</button>
-                <button id="btn-dex" class="nav-btn">Collection</button>
-            </nav>
-        </header>
+    <h1>PoEkedex</h1>
+    <nav>
+        <button id="btn-map" class="nav-btn">Map</button>
+        <button id="btn-dex" class="nav-btn">Collection</button>
+        <button id="btn-settings" class="nav-btn">⚙️</button>
+    </nav>
+</header>
+
+<div id="settings-overlay" class="hidden">
+    <div class="settings-content">
+        <h3>Settings</h3>
+        <button onclick="resetGame()" class="action-btn attack-btn">Reset Save Data</button>
+        <button onclick="toggleSettings()" class="nav-btn">Close</button>
+    </div>
+</div>
 
         <section id="screen-characterSelect" class="screen active">
             <h2>Select Your Instructor</h2>
