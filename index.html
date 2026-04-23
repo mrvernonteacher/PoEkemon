@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoEkemon: Waltonia Region</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>PoEkemon</h1>
+            <nav>
+                <button id="btn-map" class="nav-btn">World Map</button>
+                <button id="btn-dex" class="nav-btn">PoEkdex</button>
+            </nav>
+        </header>
+
+        <section id="screen-map" class="screen active">
+            <h2>The Waltonia Region</h2>
+            <p>Select a unit to encounter wild PoEkemon!</p>
+            <div id="map-grid">
+                </div>
+        </section>
+
+        <section id="screen-battle" class="screen hidden">
+            <div class="battle-stage">
+                <div class="combatant enemy">
+                    <div class="stats-box">
+                        <h3 id="enemy-name">???</h3>
+                        <div class="hp-bar-bg"><div id="enemy-hp" class="hp-bar-fill"></div></div>
+                    </div>
+                    <div class="sprite-box">
+                        <div id="enemy-sprite" class="placeholder-sprite"></div>
+                    </div>
+                </div>
+
+                <div class="combatant player">
+                    <div class="sprite-box">
+                        <div id="player-sprite" class="placeholder-sprite player-placeholder">You</div>
+                    </div>
+                    <div class="stats-box">
+                        <h3>Your Stress</h3>
+                        <div class="hp-bar-bg"><div id="player-hp" class="hp-bar-fill player-hp-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="battle-ui">
+                <div id="dialogue-box">A wild PoEkemon appeared!</div>
+                <div id="question-container" class="hidden">
+                    <p id="question-text">Question text will appear here...</p>
+                    <div id="answer-grid">
+                        </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-dex" class="screen hidden">
+            <h2>PoEkdex Database</h2>
+            <div class="dex-stats">
+                <p>Captured: <span id="dex-count">0</span> / 60</p>
+            </div>
+            <div id="dex-grid">
+                </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
