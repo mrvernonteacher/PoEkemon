@@ -20,7 +20,7 @@ let playerPos = { x: 25, y: 25 };
 const spriteCache = {}; 
 
 // ==========================================
-// 2. CUSTOM ALERTS (Replaces browser popups)
+// 2. CUSTOM ALERTS
 // ==========================================
 window.showMessage = function(text, callback) {
     const overlay = document.getElementById('message-overlay');
@@ -144,12 +144,24 @@ window.drawMap = function() {
             if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
             if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
             if (tile === 4) ctx.fillStyle = "#3498db"; 
+            if (tile === 5) ctx.fillStyle = "#95a5a6"; // Train Station
+            
             ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             
+            // Clinic cross
             if (tile === 4) {
                 ctx.fillStyle = "white";
                 ctx.fillRect(x * TILE_SIZE + 15, y * TILE_SIZE + 5, 10, 30);
                 ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 15, 30, 10);
+            }
+            
+            // Train Tracks graphic
+            if (tile === 5) {
+                ctx.fillStyle = "#333";
+                ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE, 5, 40);
+                ctx.fillRect(x * TILE_SIZE + 30, y * TILE_SIZE, 5, 40);
+                ctx.fillStyle = "#8b4513"; // Wood planks
+                for(let t=5; t<40; t+=10) ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE + t, 40, 4);
             }
         }
     }
@@ -159,7 +171,6 @@ window.drawMap = function() {
 };
 
 window.addEventListener('keydown', (e) => {
-    // Disable movement if map isn't active or a message is on screen
     if (!document.getElementById('screen-map').classList.contains('active')) return;
     if (!document.getElementById('message-overlay').classList.contains('hidden')) return;
 
@@ -175,13 +186,14 @@ window.addEventListener('keydown', (e) => {
         window.drawMap();
         
         if (map[ny][nx] === 4) window.triggerClinic();
+        else if (map[ny][nx] === 5) window.triggerTrainStation();
         else if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
         else if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
     }
 });
 
 // ==========================================
-// 5. MENUS & INITIALIZATION
+// 5. MENUS, FILE I/O & INITIALIZATION
 // ==========================================
 window.showScreen = function(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden', 'active'));
@@ -199,13 +211,12 @@ window.showScreen = function(name) {
 };
 
 window.saveGame = function() { localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState)); };
+
 window.loadGame = function() { 
     const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); 
     if (saved) {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
-        
-        // GHOST SAVE PATCH: Fixes old saves to match new poekedex.js
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
             if (masterDex) {
@@ -216,6 +227,38 @@ window.loadGame = function() {
             if (mon.evolutionLevel === undefined) mon.evolutionLevel = 0;
         });
     }
+};
+
+window.downloadSaveFile = function() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
+    const a = document.createElement('a');
+    a.setAttribute("href", dataStr);
+    a.setAttribute("download", "poekedex_save.json");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+};
+
+window.uploadSaveFile = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const loadedState = JSON.parse(e.target.result);
+            if (loadedState && loadedState.playerTeam) {
+                gameState = loadedState;
+                window.saveGame(); 
+                window.loadGame(); // Run patcher just in case
+                window.showMessage("Save file loaded successfully!", () => window.showScreen('map'));
+            } else {
+                window.showMessage("Invalid save file.");
+            }
+        } catch(err) {
+            window.showMessage("Error reading the save file.");
+        }
+    };
+    reader.readAsText(file);
 };
 
 window.toggleSettings = function() { document.getElementById('settings-overlay').classList.toggle('hidden'); };
@@ -252,7 +295,7 @@ window.onload = () => {
 };
 
 // ==========================================
-// 6. CLINIC HEALING LOGIC
+// 6. MAP BUILDINGS (CLINIC & STATION)
 // ==========================================
 window.triggerClinic = function() {
     const questions = questionBank[gameState.currentUnit];
@@ -290,6 +333,36 @@ window.triggerClinic = function() {
         grid.appendChild(btn);
     });
     document.getElementById('question-container').classList.remove('hidden');
+};
+
+window.triggerTrainStation = function() {
+    window.showScreen('trainStation');
+    const list = document.getElementById('unit-travel-list');
+    list.innerHTML = '';
+    
+    // Push player off the tile so they don't get stuck in a loop upon return
+    playerPos.y += 1;
+
+    for (let i = 1; i <= Object.keys(waltoniaRegions).length; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'starter-btn';
+        btn.style.textAlign = 'left';
+        
+        if (i === gameState.currentUnit) {
+            btn.innerHTML = `<span style="color: #32cd32;">&bull; Unit ${i}: ${waltoniaRegions[i].name}</span>`;
+            btn.disabled = true;
+            btn.style.borderColor = '#32cd32';
+        } else {
+            btn.textContent = `Unit ${i}: ${waltoniaRegions[i].name}`;
+            btn.onclick = () => {
+                gameState.currentUnit = i;
+                playerPos = { x: 25, y: 25 }; 
+                window.saveGame();
+                window.showScreen('map');
+            };
+        }
+        list.appendChild(btn);
+    }
 };
 
 // ==========================================
@@ -418,9 +491,7 @@ window.executeAttack = function(type, success, earnXP) {
 
     setTimeout(() => {
         if (gameState.currentEnemy.currentHP <= 0) {
-            window.showMessage("The enemy fainted!", () => {
-                window.showScreen('map');
-            });
+            window.showMessage("The enemy fainted!", () => window.showScreen('map'));
         } else {
             window.enemyTurn();
         }
