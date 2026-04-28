@@ -343,11 +343,11 @@ const poekedex = [
     // STARTERS: Digital Electronics (Mr. V)
     // ------------------------------------------
     { 
-        id: 61, name: "DimetORdon", unit: 0, type: "Digital Logic", desc: "Emits logical signals (AND, OR, NOT) to process information.", 
+        id: 61, name: "ORchaeopteryx", unit: 0, type: "Digital Logic", desc: "Emits logical signals (AND, OR, NOT) to process information.", 
         hp: 30, baseAtk: 6, basicAtkName: "Bit Shift",
         evolutions: [
-            { reqXP: 10, name: "PterNANDodon", desc: "Grew a massive universal gate on its back.", hpBonus: 12, atkBonus: 4, specialAtkName: "NAND Blast", specialAtkPower: 18 },
-            { reqXP: 50, name: "T-ReXOR", desc: "Can process millions of logic combinations instantly.", hpBonus: 25, atkBonus: 9, specialAtkName: "Universal Truth", specialAtkPower: 34 }
+            { reqXP: 10, name: "PterANDadon", desc: "Grew a massive universal gate on its back.", hpBonus: 12, atkBonus: 4, specialAtkName: "NAND Blast", specialAtkPower: 18 },
+            { reqXP: 50, name: "NANDragon", desc: "Can process millions of logic combinations instantly.", hpBonus: 25, atkBonus: 9, specialAtkName: "Universal Truth", specialAtkPower: 34 }
         ]
     },
     { 
