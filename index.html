@@ -70,7 +70,7 @@
             <div class="canvas-container">
                 <canvas id="gameCanvas" width="600" height="400"></canvas>
             </div>
-            <p class="controls-hint">WASD to Move | Green = Wild Encounters</p>
+            <p class="controls-hint">WASD to Move | Green = Encounters | Blue = Clinic | Grey = Station</p>
         </section>
 
         <section id="screen-battle" class="screen hidden">
@@ -107,6 +107,30 @@
             <h2 style="color: #555; margin: 20px 0 10px 0;">PoEkedex Record</h2>
             <div id="dex-grid"></div>
         </section>
+
+        <section id="screen-trainStation" class="screen hidden">
+            <h2 style="color: #0033a0; margin-bottom: 20px;">Waltonia Central Station</h2>
+            <div style="display: flex; gap: 20px; width: 100%;">
+                
+                <div style="flex: 1; border: 4px solid var(--border-color); padding: 15px; background: white; max-height: 400px; overflow-y: auto;">
+                    <h3 style="margin-bottom: 15px;">Departures</h3>
+                    <div id="unit-travel-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+
+                <div style="flex: 1; border: 4px solid var(--border-color); padding: 15px; background: #fffde7; text-align: center;">
+                    <h3 style="color: #c8102e; margin-bottom: 10px;">Data Terminal</h3>
+                    <p style="font-size: 8px; line-height: 1.5; margin-bottom: 20px;">Back up your save to your computer, or restore a previous game state.</p>
+                    
+                    <button onclick="downloadSaveFile()" class="action-btn catch-btn" style="width: 100%; margin-bottom: 15px;">Download Save Data</button>
+                    
+                    <label for="save-upload" class="action-btn attack-btn" style="display: inline-block; width: 100%; cursor: pointer;">Upload Save File</label>
+                    <input type="file" id="save-upload" accept=".json" class="hidden" onchange="uploadSaveFile(event)">
+                    
+                    <button onclick="window.showScreen('map')" class="nav-btn" style="margin-top: 30px; width: 100%;">Exit Station</button>
+                </div>
+            </div>
+        </section>
+
     </div>
 
     <script src="world.js"></script>
