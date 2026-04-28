@@ -12,7 +12,7 @@ let gameState = {
     badges: [],
     currentUnit: 1,
     currentEnemy: null,
-    queuedAttack: null,   // Tracks which attack was clicked before trivia
+    queuedAttack: null,   
     isTrainerBattle: false
 };
 
@@ -20,7 +20,42 @@ let playerPos = { x: 25, y: 25 };
 const spriteCache = {}; 
 
 // ==========================================
-// 2. SPRITE ENGINE
+// 2. CUSTOM ALERTS (Replaces browser popups)
+// ==========================================
+window.showMessage = function(text, callback) {
+    const overlay = document.getElementById('message-overlay');
+    document.getElementById('message-text').textContent = text;
+    const btnOk = document.getElementById('msg-btn-ok');
+    const btnCancel = document.getElementById('msg-btn-cancel');
+
+    btnCancel.classList.add('hidden');
+    btnOk.onclick = () => {
+        overlay.classList.add('hidden');
+        if (callback) callback();
+    };
+    overlay.classList.remove('hidden');
+};
+
+window.showConfirm = function(text, onYes, onNo) {
+    const overlay = document.getElementById('message-overlay');
+    document.getElementById('message-text').textContent = text;
+    const btnOk = document.getElementById('msg-btn-ok');
+    const btnCancel = document.getElementById('msg-btn-cancel');
+
+    btnCancel.classList.remove('hidden');
+    btnOk.onclick = () => {
+        overlay.classList.add('hidden');
+        if (onYes) onYes();
+    };
+    btnCancel.onclick = () => {
+        overlay.classList.add('hidden');
+        if (onNo) onNo();
+    };
+    overlay.classList.remove('hidden');
+};
+
+// ==========================================
+// 3. SPRITE ENGINE
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -47,11 +82,9 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
 
 window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
     if (!mon) return;
-
     if (spriteCache[mon.id] === undefined) {
         const img = new Image();
         img.src = `assets/${mon.id}.png`; 
-        
         img.onload = () => {
             spriteCache[mon.id] = img;
             if (document.getElementById('screen-battle').classList.contains('active')) window.updateHP(); 
@@ -89,7 +122,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
 };
 
 // ==========================================
-// 3. MAP NAVIGATION (CAMERA)
+// 4. MAP NAVIGATION (CAMERA)
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
@@ -126,7 +159,10 @@ window.drawMap = function() {
 };
 
 window.addEventListener('keydown', (e) => {
+    // Disable movement if map isn't active or a message is on screen
     if (!document.getElementById('screen-map').classList.contains('active')) return;
+    if (!document.getElementById('message-overlay').classList.contains('hidden')) return;
+
     let nx = playerPos.x, ny = playerPos.y;
     if (['ArrowUp', 'w'].includes(e.key)) ny--;
     if (['ArrowDown', 's'].includes(e.key)) ny++;
@@ -145,7 +181,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================
-// 4. MENUS & INITIALIZATION
+// 5. MENUS & INITIALIZATION
 // ==========================================
 window.showScreen = function(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden', 'active'));
@@ -168,21 +204,32 @@ window.loadGame = function() {
     if (saved) {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
-        // Safely add evolution data to old saves
+        
+        // GHOST SAVE PATCH: Fixes old saves to match new poekedex.js
         gameState.playerTeam.forEach(mon => {
+            const masterDex = poekedex.find(p => p.id === mon.id);
+            if (masterDex) {
+                if (!mon.basicAtkName) mon.basicAtkName = masterDex.basicAtkName;
+                if (!mon.evolutions) mon.evolutions = masterDex.evolutions;
+            }
             if (mon.xp === undefined) mon.xp = 0;
             if (mon.evolutionLevel === undefined) mon.evolutionLevel = 0;
         });
     }
 };
+
 window.toggleSettings = function() { document.getElementById('settings-overlay').classList.toggle('hidden'); };
-window.resetGame = function() { if (confirm("Reset progress?")) { localStorage.removeItem('PoEkemon_Waltonia_Save'); location.reload(); } };
+window.resetGame = function() { 
+    window.showConfirm("Are you sure you want to reset all progress?", () => {
+        localStorage.removeItem('PoEkemon_Waltonia_Save'); 
+        location.reload(); 
+    });
+};
 
 window.selectStarter = function(char, id) {
     gameState.playerCharacter = char;
     const mon = poekedex.find(p => p.id === id);
     if (mon) {
-        // Initialize new stats for the starter
         gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp, xp: 0, evolutionLevel: 0 }];
         gameState.pokedexCaught.push(id); 
         playerPos = { x: 25, y: 25 }; 
@@ -205,7 +252,7 @@ window.onload = () => {
 };
 
 // ==========================================
-// 5. CLINIC HEALING LOGIC
+// 6. CLINIC HEALING LOGIC
 // ==========================================
 window.triggerClinic = function() {
     const questions = questionBank[gameState.currentUnit];
@@ -229,12 +276,16 @@ window.triggerClinic = function() {
             if (i === q.ans) {
                 gameState.playerTeam.forEach(mon => mon.currentHP = mon.maxHP);
                 window.saveGame();
-                alert("Correct! Your PoEkemon are fully healed.");
+                window.showMessage("Correct! Your PoEkemon are fully healed.", () => {
+                    playerPos.y += 1; 
+                    window.showScreen('map');
+                });
             } else {
-                alert("Incorrect. Study your notes and try again!");
+                window.showMessage("Incorrect. Study your notes and try again!", () => {
+                    playerPos.y += 1; 
+                    window.showScreen('map');
+                });
             }
-            playerPos.y += 1; 
-            window.showScreen('map');
         };
         grid.appendChild(btn);
     });
@@ -242,7 +293,7 @@ window.triggerClinic = function() {
 };
 
 // ==========================================
-// 6. COMBAT, TRIVIA & EVOLUTION
+// 7. COMBAT, TRIVIA & EVOLUTION
 // ==========================================
 window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
@@ -253,8 +304,7 @@ window.startEncounter = function(unit, isGym) {
     document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
     document.getElementById('dialogue-box').textContent = `Wild ${gameState.currentEnemy.name} appeared!`;
     
-    window.renderBattleMenu(); // Draws the dynamic attack buttons
-    
+    window.renderBattleMenu(); 
     window.showScreen('battle');
     window.updateHP(); 
     
@@ -269,7 +319,6 @@ window.startEncounter = function(unit, isGym) {
     window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 0, 0, 80);
 };
 
-// Dynamically creates buttons based on Evolution Level
 window.renderBattleMenu = function() {
     const mon = gameState.playerTeam[0];
     const menu = document.getElementById('action-menu');
@@ -277,25 +326,22 @@ window.renderBattleMenu = function() {
     menu.classList.remove('hidden');
     document.getElementById('question-container').classList.add('hidden');
 
-    // 1. Basic Attack (Always available)
     const btnBasic = document.createElement('button');
     btnBasic.className = 'action-btn attack-btn';
     btnBasic.textContent = mon.basicAtkName;
     btnBasic.onclick = () => window.prepareAttack('basic');
     menu.appendChild(btnBasic);
 
-    // 2. Special Attack (Requires Evolution Level 1 or higher)
     if (mon.evolutionLevel > 0) {
         const currentEvo = mon.evolutions[mon.evolutionLevel - 1];
         const btnSpecial = document.createElement('button');
         btnSpecial.className = 'action-btn attack-btn';
-        btnSpecial.style.background = '#e67e22'; // Orange color to stand out
+        btnSpecial.style.background = '#e67e22'; 
         btnSpecial.textContent = currentEvo.specialAtkName;
         btnSpecial.onclick = () => window.prepareAttack('special');
         menu.appendChild(btnSpecial);
     }
 
-    // 3. Capture Button
     const btnCapture = document.createElement('button');
     btnCapture.className = 'action-btn catch-btn';
     btnCapture.textContent = "Capture";
@@ -305,14 +351,11 @@ window.renderBattleMenu = function() {
 
 window.prepareAttack = function(type) {
     const mon = gameState.playerTeam[0];
-    
-    // If they use Basic Attack AFTER evolving, they can spam it (No Trivia, No XP)
     if (type === 'basic' && mon.evolutionLevel > 0) {
         window.executeAttack('basic', true, false); 
         return;
     }
 
-    // Otherwise, we need a trivia question
     document.getElementById('action-menu').classList.add('hidden');
     gameState.queuedAttack = type;
     
@@ -330,10 +373,8 @@ window.prepareAttack = function(type) {
         btn.onclick = () => {
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) {
-                // Correct: Deal damage and earn XP!
                 window.executeAttack(gameState.queuedAttack, true, true);
             } else {
-                // Incorrect: 50/50 penalty
                 window.executeAttack(gameState.queuedAttack, false, false);
             }
         };
@@ -351,21 +392,19 @@ window.executeAttack = function(type, success, earnXP) {
     if (success) {
         if (type === 'special') {
             const power = mon.evolutions[mon.evolutionLevel - 1].specialAtkPower;
-            dmg = power + Math.floor(Math.random() * 5); // Base power + variance
+            dmg = power + Math.floor(Math.random() * 5); 
         } else {
             dmg = mon.baseAtk + Math.floor(Math.random() * 4);
         }
         msg = `${mon.name} used ${attackName} for ${dmg} damage!`;
         
-        // Grant XP and check for Evolution
         if (earnXP) {
             mon.xp += 1;
             window.checkEvolution(mon);
         }
     } else {
-        // Punish incorrect answer
         if (Math.random() > 0.5) {
-            dmg = Math.max(1, Math.floor(mon.baseAtk / 2)); // Minimum damage
+            dmg = Math.max(1, Math.floor(mon.baseAtk / 2)); 
             msg = `Incorrect! ${mon.name} stumbled and only dealt ${dmg} damage.`;
         } else {
             dmg = 0;
@@ -379,24 +418,25 @@ window.executeAttack = function(type, success, earnXP) {
 
     setTimeout(() => {
         if (gameState.currentEnemy.currentHP <= 0) {
-            alert("The enemy fainted!");
-            window.showScreen('map');
+            window.showMessage("The enemy fainted!", () => {
+                window.showScreen('map');
+            });
         } else {
             window.enemyTurn();
         }
-    }, 1800);
+    }, 1500);
 };
 
 window.checkEvolution = function(mon) {
-    if (!mon.evolutions || mon.evolutionLevel >= mon.evolutions.length) return; // Max level reached
+    if (!mon.evolutions || mon.evolutionLevel >= mon.evolutions.length) return; 
     
     const nextEvo = mon.evolutions[mon.evolutionLevel];
     if (mon.xp >= nextEvo.reqXP) {
-        alert(`What?! Your ${mon.name} is evolving into ${nextEvo.name}!`);
+        window.showMessage(`What?! Your ${mon.name} is evolving into ${nextEvo.name}!`);
         
         mon.name = nextEvo.name;
         mon.maxHP += nextEvo.hpBonus;
-        mon.currentHP += nextEvo.hpBonus; // Heal by the new bonus
+        mon.currentHP += nextEvo.hpBonus; 
         mon.baseAtk += nextEvo.atkBonus;
         mon.evolutionLevel += 1;
         
@@ -413,12 +453,13 @@ window.enemyTurn = function() {
 
     setTimeout(() => {
         if (gameState.playerTeam[0].currentHP <= 0) {
-            alert("Your active PoEkemon fainted!");
-            gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
-            playerPos = { x: 25, y: 25 }; 
-            window.showScreen('map');
+            window.showMessage("Your active PoEkemon fainted!", () => {
+                gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
+                playerPos = { x: 25, y: 25 }; 
+                window.showScreen('map');
+            });
         } else {
-            window.renderBattleMenu(); // Bring buttons back
+            window.renderBattleMenu(); 
         }
     }, 1500);
 };
@@ -438,24 +479,24 @@ window.attemptCapture = function() {
         btn.textContent = opt;
         btn.onclick = () => {
             if (i === q.ans) {
-                alert("Correct! You caught " + gameState.currentEnemy.name + "!");
-                
-                // Init new stats for captured mon
-                const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 0 };
-                
-                if (!gameState.pokedexCaught.includes(newCatch.id)) gameState.pokedexCaught.push(newCatch.id);
+                window.showMessage(`Correct! You caught ${gameState.currentEnemy.name}!`, () => {
+                    const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 0 };
+                    
+                    if (!gameState.pokedexCaught.includes(newCatch.id)) gameState.pokedexCaught.push(newCatch.id);
 
-                if (gameState.playerTeam.length < 6) {
-                    gameState.playerTeam.push(newCatch);
-                    window.saveGame();
-                    window.showScreen('map');
-                } else {
-                    window.showReleaseMenu(newCatch);
-                }
+                    if (gameState.playerTeam.length < 6) {
+                        gameState.playerTeam.push(newCatch);
+                        window.saveGame();
+                        window.showScreen('map');
+                    } else {
+                        window.showReleaseMenu(newCatch);
+                    }
+                });
             } else {
-                alert("Incorrect! It broke free!");
-                document.getElementById('question-container').classList.add('hidden');
-                window.enemyTurn();
+                window.showMessage("Incorrect! It broke free!", () => {
+                    document.getElementById('question-container').classList.add('hidden');
+                    window.enemyTurn();
+                });
             }
         };
         grid.appendChild(btn);
@@ -484,7 +525,7 @@ window.updateHP = function() {
 };
 
 // ==========================================
-// 7. PARTY LIMITS & DEX RENDERING
+// 8. PARTY LIMITS & DEX RENDERING
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
@@ -497,21 +538,22 @@ window.showReleaseMenu = function(newCatch) {
         btn.style.borderColor = '#c8102e'; 
         btn.innerHTML = `<strong>${mon.name}</strong><br>HP: ${mon.maxHP}<br><em>Release</em>`;
         btn.onclick = () => {
-            if (confirm(`Release ${mon.name} and add ${newCatch.name}?`)) {
+            window.showConfirm(`Release ${mon.name} and add ${newCatch.name}?`, () => {
                 gameState.playerTeam[index] = newCatch;
                 window.saveGame();
                 overlay.classList.add('hidden');
                 window.showScreen('map');
-            }
+            });
         };
         grid.appendChild(btn);
     });
 
     document.getElementById('release-new-btn').onclick = () => {
-        alert(`${newCatch.name} was released.`);
-        overlay.classList.add('hidden');
-        window.saveGame(); 
-        window.showScreen('map');
+        window.showMessage(`${newCatch.name} was released.`, () => {
+            overlay.classList.add('hidden');
+            window.saveGame(); 
+            window.showScreen('map');
+        });
     };
 
     overlay.classList.remove('hidden');
