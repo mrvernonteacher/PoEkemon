@@ -13,7 +13,7 @@ let gameState = {
     currentUnit: 1,
     currentEnemy: null,
     queuedAttack: null,   
-    isTrainerBattle: false
+    inBattle: false
 };
 
 let playerPos = { x: 25, y: 25 };
@@ -144,23 +144,20 @@ window.drawMap = function() {
             if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
             if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
             if (tile === 4) ctx.fillStyle = "#3498db"; 
-            if (tile === 5) ctx.fillStyle = "#95a5a6"; // Train Station
+            if (tile === 5) ctx.fillStyle = "#95a5a6"; 
             
             ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             
-            // Clinic cross
             if (tile === 4) {
                 ctx.fillStyle = "white";
                 ctx.fillRect(x * TILE_SIZE + 15, y * TILE_SIZE + 5, 10, 30);
                 ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 15, 30, 10);
             }
-            
-            // Train Tracks graphic
             if (tile === 5) {
                 ctx.fillStyle = "#333";
                 ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE, 5, 40);
                 ctx.fillRect(x * TILE_SIZE + 30, y * TILE_SIZE, 5, 40);
-                ctx.fillStyle = "#8b4513"; // Wood planks
+                ctx.fillStyle = "#8b4513"; 
                 for(let t=5; t<40; t+=10) ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE + t, 40, 4);
             }
         }
@@ -203,6 +200,19 @@ window.showScreen = function(name) {
         target.classList.remove('hidden');
         target.classList.add('active');
     }
+
+    // Dynamic Header specific for Battle Returns
+    const mapBtn = document.getElementById('btn-map');
+    if (gameState.inBattle) {
+        mapBtn.textContent = "Battle";
+        mapBtn.style.background = "#ff6b6b"; // Red to indicate action
+        mapBtn.style.color = "white";
+    } else {
+        mapBtn.textContent = "Map";
+        mapBtn.style.background = "white";
+        mapBtn.style.color = "black";
+    }
+
     if (name === 'map') {
         const region = waltoniaRegions[gameState.currentUnit];
         document.getElementById('map-label').textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
@@ -217,11 +227,14 @@ window.loadGame = function() {
     if (saved) {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
+        
+        // DEEP PATCH: Cures "Ghost Saves" by re-syncing with poekedex.js
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
             if (masterDex) {
-                if (!mon.basicAtkName) mon.basicAtkName = masterDex.basicAtkName;
-                if (!mon.evolutions) mon.evolutions = masterDex.evolutions;
+                mon.basicAtkName = masterDex.basicAtkName;
+                mon.baseAtk = masterDex.baseAtk;
+                mon.evolutions = JSON.parse(JSON.stringify(masterDex.evolutions));
             }
             if (mon.xp === undefined) mon.xp = 0;
             if (mon.evolutionLevel === undefined) mon.evolutionLevel = 0;
@@ -249,7 +262,7 @@ window.uploadSaveFile = function(event) {
             if (loadedState && loadedState.playerTeam) {
                 gameState = loadedState;
                 window.saveGame(); 
-                window.loadGame(); // Run patcher just in case
+                window.loadGame(); 
                 window.showMessage("Save file loaded successfully!", () => window.showScreen('map'));
             } else {
                 window.showMessage("Invalid save file.");
@@ -284,7 +297,12 @@ window.selectStarter = function(char, id) {
 window.onload = () => {
     window.loadGame();
     document.getElementById('btn-settings').onclick = window.toggleSettings;
-    document.getElementById('btn-map').onclick = () => window.showScreen('map');
+    
+    document.getElementById('btn-map').onclick = () => {
+        if (gameState.inBattle) window.showScreen('battle');
+        else window.showScreen('map');
+    };
+    
     document.getElementById('btn-dex').onclick = () => {
         window.renderDex();
         window.showScreen('dex');
@@ -339,9 +357,7 @@ window.triggerTrainStation = function() {
     window.showScreen('trainStation');
     const list = document.getElementById('unit-travel-list');
     list.innerHTML = '';
-    
-    // Push player off the tile so they don't get stuck in a loop upon return
-    playerPos.y += 1;
+    playerPos.y += 1; // Bump to prevent re-trigger loop
 
     for (let i = 1; i <= Object.keys(waltoniaRegions).length; i++) {
         const btn = document.createElement('button');
@@ -369,6 +385,7 @@ window.triggerTrainStation = function() {
 // 7. COMBAT, TRIVIA & EVOLUTION
 // ==========================================
 window.startEncounter = function(unit, isGym) {
+    gameState.inBattle = true;
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
     gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
     gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
@@ -416,10 +433,21 @@ window.renderBattleMenu = function() {
     }
 
     const btnCapture = document.createElement('button');
+    btnCapture.id = 'btn-capture';
     btnCapture.className = 'action-btn catch-btn';
     btnCapture.textContent = "Capture";
     btnCapture.onclick = () => window.attemptCapture();
     menu.appendChild(btnCapture);
+    
+    const btnRun = document.createElement('button');
+    btnRun.className = 'action-btn';
+    btnRun.style.background = '#95a5a6';
+    btnRun.style.color = 'white';
+    btnRun.textContent = "Run";
+    btnRun.onclick = () => window.prepareEscape();
+    menu.appendChild(btnRun);
+    
+    window.updateHP(); // Force buttons to update states
 };
 
 window.prepareAttack = function(type) {
@@ -456,28 +484,58 @@ window.prepareAttack = function(type) {
     document.getElementById('question-container').classList.remove('hidden');
 };
 
+window.prepareEscape = function() {
+    document.getElementById('action-menu').classList.add('hidden');
+    const questions = questionBank[gameState.currentUnit];
+    const q = questions[Math.floor(Math.random() * questions.length)];
+
+    document.getElementById('question-text').textContent = "Answer correctly to flee: " + q.q;
+    const grid = document.getElementById('answer-grid');
+    grid.innerHTML = '';
+
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.textContent = opt;
+        btn.onclick = () => {
+            document.getElementById('question-container').classList.add('hidden');
+            if (i === q.ans) {
+                if (Math.random() < 0.5) {
+                    window.showMessage("Got away safely!", () => window.endBattle());
+                } else {
+                    window.showMessage("Couldn't escape!", () => window.enemyTurn());
+                }
+            } else {
+                window.showMessage("Incorrect! You stumbled and couldn't escape!", () => window.enemyTurn());
+            }
+        };
+        grid.appendChild(btn);
+    });
+    document.getElementById('question-container').classList.remove('hidden');
+};
+
 window.executeAttack = function(type, success, earnXP) {
     const mon = gameState.playerTeam[0];
     let dmg = 0;
     let msg = "";
-    let attackName = type === 'basic' ? mon.basicAtkName : mon.evolutions[mon.evolutionLevel - 1].specialAtkName;
+    
+    let attackName = mon.basicAtkName;
+    if (type === 'special' && mon.evolutionLevel > 0) {
+        attackName = mon.evolutions[mon.evolutionLevel - 1].specialAtkName;
+    }
     
     if (success) {
         if (type === 'special') {
-            const power = mon.evolutions[mon.evolutionLevel - 1].specialAtkPower;
+            const power = mon.evolutions[mon.evolutionLevel - 1].specialAtkPower || 10; 
             dmg = power + Math.floor(Math.random() * 5); 
         } else {
-            dmg = mon.baseAtk + Math.floor(Math.random() * 4);
+            dmg = (mon.baseAtk || 5) + Math.floor(Math.random() * 4);
         }
         msg = `${mon.name} used ${attackName} for ${dmg} damage!`;
-        
-        if (earnXP) {
-            mon.xp += 1;
-            window.checkEvolution(mon);
-        }
+        if (earnXP) mon.xp += 1; // Evolutions check happens at end of battle
     } else {
         if (Math.random() > 0.5) {
-            dmg = Math.max(1, Math.floor(mon.baseAtk / 2)); 
+            dmg = Math.max(1, Math.floor((mon.baseAtk || 5) / 2)); 
             msg = `Incorrect! ${mon.name} stumbled and only dealt ${dmg} damage.`;
         } else {
             dmg = 0;
@@ -491,29 +549,11 @@ window.executeAttack = function(type, success, earnXP) {
 
     setTimeout(() => {
         if (gameState.currentEnemy.currentHP <= 0) {
-            window.showMessage("The enemy fainted!", () => window.showScreen('map'));
+            window.showMessage("The enemy fainted!", () => window.endBattle());
         } else {
             window.enemyTurn();
         }
     }, 1500);
-};
-
-window.checkEvolution = function(mon) {
-    if (!mon.evolutions || mon.evolutionLevel >= mon.evolutions.length) return; 
-    
-    const nextEvo = mon.evolutions[mon.evolutionLevel];
-    if (mon.xp >= nextEvo.reqXP) {
-        window.showMessage(`What?! Your ${mon.name} is evolving into ${nextEvo.name}!`);
-        
-        mon.name = nextEvo.name;
-        mon.maxHP += nextEvo.hpBonus;
-        mon.currentHP += nextEvo.hpBonus; 
-        mon.baseAtk += nextEvo.atkBonus;
-        mon.evolutionLevel += 1;
-        
-        document.getElementById('player-mon-name').textContent = mon.name;
-        window.saveGame();
-    }
 };
 
 window.enemyTurn = function() {
@@ -527,12 +567,13 @@ window.enemyTurn = function() {
             window.showMessage("Your active PoEkemon fainted!", () => {
                 gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
                 playerPos = { x: 25, y: 25 }; 
-                window.showScreen('map');
+                window.endBattle();
             });
         } else {
+            document.getElementById('dialogue-box').textContent = `What will ${gameState.playerTeam[0].name} do?`;
             window.renderBattleMenu(); 
         }
-    }, 1500);
+    }, 1800);
 };
 
 window.attemptCapture = function() {
@@ -550,19 +591,28 @@ window.attemptCapture = function() {
         btn.textContent = opt;
         btn.onclick = () => {
             if (i === q.ans) {
-                window.showMessage(`Correct! You caught ${gameState.currentEnemy.name}!`, () => {
-                    const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 0 };
-                    
-                    if (!gameState.pokedexCaught.includes(newCatch.id)) gameState.pokedexCaught.push(newCatch.id);
+                const eRatio = gameState.currentEnemy.currentHP / gameState.currentEnemy.hp;
+                const catchChance = eRatio <= 0.33 ? 0.90 : 0.50;
+                
+                if (Math.random() <= catchChance) {
+                    window.showMessage(`Correct! You caught ${gameState.currentEnemy.name}!`, () => {
+                        const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 0 };
+                        if (!gameState.pokedexCaught.includes(newCatch.id)) gameState.pokedexCaught.push(newCatch.id);
 
-                    if (gameState.playerTeam.length < 6) {
-                        gameState.playerTeam.push(newCatch);
-                        window.saveGame();
-                        window.showScreen('map');
-                    } else {
-                        window.showReleaseMenu(newCatch);
-                    }
-                });
+                        if (gameState.playerTeam.length < 6) {
+                            gameState.playerTeam.push(newCatch);
+                            window.saveGame();
+                            window.endBattle();
+                        } else {
+                            window.showReleaseMenu(newCatch);
+                        }
+                    });
+                } else {
+                    window.showMessage("Correct... but it broke free!", () => {
+                        document.getElementById('question-container').classList.add('hidden');
+                        window.enemyTurn();
+                    });
+                }
             } else {
                 window.showMessage("Incorrect! It broke free!", () => {
                     document.getElementById('question-container').classList.add('hidden');
@@ -580,19 +630,70 @@ window.updateHP = function() {
     const eHP = eRatio * 100;
     const pHP = (gameState.playerTeam[0].currentHP / gameState.playerTeam[0].maxHP) * 100;
     
-    document.getElementById('enemy-hp').style.width = Math.max(0, eHP) + "%";
-    document.getElementById('player-hp').style.width = Math.max(0, pHP) + "%";
+    const enemyBar = document.getElementById('enemy-hp');
+    const playerBar = document.getElementById('player-hp');
     
-    const captureBtn = document.querySelector('.catch-btn');
+    enemyBar.style.width = Math.max(0, eHP) + "%";
+    playerBar.style.width = Math.max(0, pHP) + "%";
+    
+    // Dynamic HP Colors
+    enemyBar.className = 'hp-bar-fill';
+    if (eRatio > 0.66) enemyBar.classList.add('hp-green');
+    else if (eRatio > 0.33) enemyBar.classList.add('hp-yellow');
+    else enemyBar.classList.add('hp-red');
+
+    const pRatio = gameState.playerTeam[0].currentHP / gameState.playerTeam[0].maxHP;
+    playerBar.className = 'hp-bar-fill';
+    if (pRatio > 0.66) playerBar.classList.add('hp-green');
+    else if (pRatio > 0.33) playerBar.classList.add('hp-yellow');
+    else playerBar.classList.add('hp-red');
+    
+    // Capture Lockout
+    const captureBtn = document.getElementById('btn-capture');
     if (captureBtn) {
-        if (eRatio <= 0.33) {
-            captureBtn.disabled = false;
-            captureBtn.textContent = "Capture";
-        } else {
+        if (eRatio > 0.66) {
             captureBtn.disabled = true;
             captureBtn.textContent = "HP Too High";
+        } else {
+            captureBtn.disabled = false;
+            captureBtn.textContent = "Capture";
         }
     }
+};
+
+window.endBattle = function() {
+    gameState.inBattle = false;
+    let evoQueue = [];
+    
+    // Check entire party for triggered evolutions
+    gameState.playerTeam.forEach(mon => {
+        if (mon.evolutions && mon.evolutionLevel < mon.evolutions.length) {
+            const nextEvo = mon.evolutions[mon.evolutionLevel];
+            if (mon.xp >= nextEvo.reqXP) {
+                evoQueue.push(mon);
+            }
+        }
+    });
+
+    const processEvolutions = () => {
+        if (evoQueue.length === 0) {
+            window.showScreen('map');
+            return;
+        }
+        const mon = evoQueue.shift();
+        const nextEvo = mon.evolutions[mon.evolutionLevel];
+        window.showMessage(`What?! Your ${mon.name} is evolving into ${nextEvo.name}!`, () => {
+            mon.name = nextEvo.name;
+            mon.maxHP += nextEvo.hpBonus;
+            mon.currentHP += nextEvo.hpBonus; 
+            mon.baseAtk += nextEvo.atkBonus;
+            mon.evolutionLevel += 1;
+            window.saveGame();
+            processEvolutions(); // Trigger next if multiple evolved
+        });
+    };
+
+    processEvolutions();
 };
 
 // ==========================================
@@ -613,7 +714,7 @@ window.showReleaseMenu = function(newCatch) {
                 gameState.playerTeam[index] = newCatch;
                 window.saveGame();
                 overlay.classList.add('hidden');
-                window.showScreen('map');
+                window.endBattle();
             });
         };
         grid.appendChild(btn);
@@ -623,7 +724,7 @@ window.showReleaseMenu = function(newCatch) {
         window.showMessage(`${newCatch.name} was released.`, () => {
             overlay.classList.add('hidden');
             window.saveGame(); 
-            window.showScreen('map');
+            window.endBattle();
         });
     };
 
@@ -674,5 +775,20 @@ window.deployMon = function(id) {
         gameState.playerTeam[index] = temp;
         window.saveGame();
         window.renderDex(); 
+        
+        if (gameState.inBattle) {
+            window.showMessage(`You sent out ${gameState.playerTeam[0].name}!`, () => {
+                window.showScreen('battle');
+                window.updateHP();
+                
+                const pCtx = document.getElementById('pCanvas').getContext('2d');
+                pCtx.clearRect(0, 0, 80, 80);
+                window.drawPoekemonSprite(pCtx, gameState.playerTeam[0], 0, 0, 80);
+                document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
+                
+                // Switching costs a turn!
+                window.enemyTurn();
+            });
+        }
     }
 };
