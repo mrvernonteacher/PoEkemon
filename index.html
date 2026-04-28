@@ -35,6 +35,16 @@
             </div>
         </div>
 
+        <div id="message-overlay" class="hidden">
+            <div class="message-content">
+                <p id="message-text">Message goes here</p>
+                <div class="msg-btn-container">
+                    <button id="msg-btn-ok" class="action-btn catch-btn">OK</button>
+                    <button id="msg-btn-cancel" class="action-btn attack-btn hidden">Cancel</button>
+                </div>
+            </div>
+        </div>
+
         <section id="screen-characterSelect" class="screen active">
             <h2>Select Your Instructor</h2>
             <div class="character-grid">
@@ -82,10 +92,7 @@
             </div>
             <div class="battle-ui">
                 <div id="dialogue-box"></div>
-                <div id="action-menu" class="hidden">
-                    <button onclick="executeAttack()" class="action-btn attack-btn">Attack</button>
-                    <button onclick="attemptCapture()" class="action-btn catch-btn">Capture</button>
-                </div>
+                <div id="action-menu" class="hidden"></div>
                 <div id="question-container" class="hidden">
                     <p id="question-text"></p>
                     <div id="answer-grid"></div>
