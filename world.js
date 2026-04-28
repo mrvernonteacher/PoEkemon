@@ -44,17 +44,19 @@ function buildMap(gymX, gymY) {
     
     // Place the Clinic (Tile 4) in the center safe zone
     map[27][25] = 4;
+
+    // Place the Train Station (Tile 5) directly above spawn
+    map[24][25] = 5;
     
     return map;
 }
 
-// 0: Path, 1: Grass, 2: Gym, 3: Wall/Tree, 4: Clinic
+// 0: Path, 1: Grass, 2: Gym, 3: Wall/Tree, 4: Clinic, 5: Train Station
 const unitMaps = {
-    1: buildMap(25, 1),  // Gym at Top Center
-    2: buildMap(48, 25), // Gym at Right Center
-    3: buildMap(25, 48), // Gym at Bottom Center
-    4: buildMap(1, 25),  // Gym at Left Center
+    1: buildMap(25, 1),  
+    2: buildMap(48, 25), 
+    3: buildMap(25, 48), 
+    4: buildMap(1, 25),  
     5: buildMap(25, 1),
     6: buildMap(48, 25)
 };
-
