@@ -201,11 +201,10 @@ window.showScreen = function(name) {
         target.classList.add('active');
     }
 
-    // Dynamic Header specific for Battle Returns
     const mapBtn = document.getElementById('btn-map');
     if (gameState.inBattle) {
         mapBtn.textContent = "Battle";
-        mapBtn.style.background = "#ff6b6b"; // Red to indicate action
+        mapBtn.style.background = "#ff6b6b"; 
         mapBtn.style.color = "white";
     } else {
         mapBtn.textContent = "Map";
@@ -228,16 +227,24 @@ window.loadGame = function() {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
         
-        // DEEP PATCH: Cures "Ghost Saves" by re-syncing with poekedex.js
+        // DEEP PATCH: Syncs old saves with new poekedex.js names/stats
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
             if (masterDex) {
                 mon.basicAtkName = masterDex.basicAtkName;
                 mon.baseAtk = masterDex.baseAtk;
                 mon.evolutions = JSON.parse(JSON.stringify(masterDex.evolutions));
+                
+                // Keep the names synced with their current evolution level!
+                if (mon.evolutionLevel === undefined) mon.evolutionLevel = 0;
+                if (mon.xp === undefined) mon.xp = 0;
+                
+                if (mon.evolutionLevel === 0) {
+                    mon.name = masterDex.name;
+                } else {
+                    mon.name = masterDex.evolutions[mon.evolutionLevel - 1].name;
+                }
             }
-            if (mon.xp === undefined) mon.xp = 0;
-            if (mon.evolutionLevel === undefined) mon.evolutionLevel = 0;
         });
     }
 };
@@ -357,7 +364,7 @@ window.triggerTrainStation = function() {
     window.showScreen('trainStation');
     const list = document.getElementById('unit-travel-list');
     list.innerHTML = '';
-    playerPos.y += 1; // Bump to prevent re-trigger loop
+    playerPos.y += 1; 
 
     for (let i = 1; i <= Object.keys(waltoniaRegions).length; i++) {
         const btn = document.createElement('button');
@@ -447,7 +454,7 @@ window.renderBattleMenu = function() {
     btnRun.onclick = () => window.prepareEscape();
     menu.appendChild(btnRun);
     
-    window.updateHP(); // Force buttons to update states
+    window.updateHP(); 
 };
 
 window.prepareAttack = function(type) {
@@ -532,7 +539,7 @@ window.executeAttack = function(type, success, earnXP) {
             dmg = (mon.baseAtk || 5) + Math.floor(Math.random() * 4);
         }
         msg = `${mon.name} used ${attackName} for ${dmg} damage!`;
-        if (earnXP) mon.xp += 1; // Evolutions check happens at end of battle
+        if (earnXP) mon.xp += 1; 
     } else {
         if (Math.random() > 0.5) {
             dmg = Math.max(1, Math.floor((mon.baseAtk || 5) / 2)); 
@@ -636,7 +643,6 @@ window.updateHP = function() {
     enemyBar.style.width = Math.max(0, eHP) + "%";
     playerBar.style.width = Math.max(0, pHP) + "%";
     
-    // Dynamic HP Colors
     enemyBar.className = 'hp-bar-fill';
     if (eRatio > 0.66) enemyBar.classList.add('hp-green');
     else if (eRatio > 0.33) enemyBar.classList.add('hp-yellow');
@@ -648,7 +654,6 @@ window.updateHP = function() {
     else if (pRatio > 0.33) playerBar.classList.add('hp-yellow');
     else playerBar.classList.add('hp-red');
     
-    // Capture Lockout
     const captureBtn = document.getElementById('btn-capture');
     if (captureBtn) {
         if (eRatio > 0.66) {
@@ -665,7 +670,6 @@ window.endBattle = function() {
     gameState.inBattle = false;
     let evoQueue = [];
     
-    // Check entire party for triggered evolutions
     gameState.playerTeam.forEach(mon => {
         if (mon.evolutions && mon.evolutionLevel < mon.evolutions.length) {
             const nextEvo = mon.evolutions[mon.evolutionLevel];
@@ -689,7 +693,7 @@ window.endBattle = function() {
             mon.baseAtk += nextEvo.atkBonus;
             mon.evolutionLevel += 1;
             window.saveGame();
-            processEvolutions(); // Trigger next if multiple evolved
+            processEvolutions(); 
         });
     };
 
@@ -786,7 +790,6 @@ window.deployMon = function(id) {
                 window.drawPoekemonSprite(pCtx, gameState.playerTeam[0], 0, 0, 80);
                 document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
                 
-                // Switching costs a turn!
                 window.enemyTurn();
             });
         }
