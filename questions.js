@@ -4,6 +4,9 @@
 // ==========================================
 
 const questionBank = {
+    // ------------------------------------------
+    // UNIT 1: MECHANISMS (Professor Wes)
+    // ------------------------------------------
     1: {
         regular: [
             { id: "u1_r01", q: "Which class of lever always has the fulcrum between the effort and resistance?", options: ["1st Class", "2nd Class", "3rd Class", "4th Class"], ans: 0, exp: "In a 1st class lever, the fulcrum is in the middle, like a seesaw." },
@@ -80,10 +83,45 @@ const questionBank = {
             { id: "u1_g20", q: "If the input power to a gear train is 10 hp and the output power is 8 hp, what accounts for the 2 hp loss?", options: ["Friction (heat/sound)", "Gear Ratio reduction", "Speed increase", "Torque decrease"], ans: 0, exp: "The First Law of Thermodynamics states energy cannot be destroyed. Losses in mechanical systems are due to friction." }
         ]
     },
-    // Placeholders for Units 2-6 to prevent crashes
-    2: { regular: [{id: "u2_r01", q: "Unit 2 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u2_g01", q: "Gym 2 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
-    3: { regular: [{id: "u3_r01", q: "Unit 3 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u3_g01", q: "Gym 3 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
-    4: { regular: [{id: "u4_r01", q: "Unit 4 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u4_g01", q: "Gym 4 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
-    5: { regular: [{id: "u5_r01", q: "Unit 5 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u5_g01", q: "Gym 5 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
-    6: { regular: [{id: "u6_r01", q: "Unit 6 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u6_g01", q: "Gym 6 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] }
-};
+
+    // ------------------------------------------
+    // UNIT 2: MACHINE CONTROL (Lord Hubbard)
+    // ------------------------------------------
+    2: {
+        regular: [
+            // Design Process
+            { id: "u2_r01", q: "What is the first step of the Design Process?", options: ["Define the Problem", "Generate Concepts", "Construct a Prototype", "Evaluate Solution"], ans: 0, exp: "Before you can solve a problem, you must clearly define it using a Design Brief." },
+            { id: "u2_r02", q: "What is the difference between an Invention and an Innovation?", options: ["Invention is for software; Innovation is for hardware", "Invention is an improvement on an existing product; Innovation is a new product", "Invention is a new product; Innovation is an improvement on an existing product", "They mean the exact same thing"], ans: 2, exp: "An invention creates something entirely new (like the first telephone). An innovation improves it (like adding a camera to a phone)." },
+            { id: "u2_r03", q: "Which step of the Design Process involves creating an Engineering Notebook and Design Brief?", options: ["Develop a Solution", "Define the Problem", "Present Solution", "Generate Concepts"], ans: 1, exp: "The Design Brief acts as the contract and baseline rules established during problem definition." },
+            { id: "u2_r04", q: "What is the primary purpose of the Design Process?", options: ["To build robots", "To provide a systematic, iterative problem-solving strategy", "To write code faster", "To avoid using math"], ans: 1, exp: "The design process is a structured methodology used by engineers to reliably solve problems." },
+            { id: "u2_r05", q: "Which step involves brainstorming and sketching multiple ideas?", options: ["Generate Concepts", "Construct a Prototype", "Define the Problem", "Evaluate Solution"], ans: 0, exp: "Generating concepts is the brainstorming phase where you utilize decision matrices to select the best path forward." },
+            { id: "u2_r06", q: "In which step do you build a working physical model?", options: ["Develop a Solution", "Construct and Test a Prototype", "Present Solution", "Generate Concepts"], ans: 1, exp: "A prototype is a working model built to test whether the concept actually solves the problem." },
+            { id: "u2_r07", q: "What is a 'deliverable' in the design process?", options: ["A pizza", "A tangible output or document produced during a specific step", "A type of sensor", "The final robot"], ans: 1, exp: "Deliverables are the proofs of work, like sketches, CAD files, or testing data logs." },
+            { id: "u2_r08", q: "What happens during the 'Evaluate Solution' step?", options: ["You brainstorm new ideas", "Testing data is analyzed against the original design criteria", "You build the robot", "You present to the client"], ans: 1, exp: "Evaluation ensures the prototype actually met the requirements set in step 1." },
+            { id: "u2_r09", q: "If a prototype fails to meet the criteria during testing, what should the design team do?", options: ["Give up", "Present it anyway", "Iterate and return to a previous step to modify the design", "Change the design brief criteria"], ans: 2, exp: "The design process is 'iterative', meaning you loop back to earlier steps when things fail." },
+            { id: "u2_r10", q: "Which of the following is an example of an Innovation?", options: ["The first wheel", "The first lightbulb", "Adding an electric motor to a bicycle", "The discovery of fire"], ans: 2, exp: "Adding a motor to an existing bicycle is an improvement (innovation) on an existing design." },
+
+            // VEX Hardware (I/O)
+            { id: "u2_r11", q: "What defines a digital sensor?", options: ["It returns only two distinct states (e.g., 0 or 1)", "It returns a continuous range of values", "It plugs into the motor port", "It has an LCD screen"], ans: 0, exp: "Digital logic is binary. It is either ON (1) or OFF (0)." },
+            { id: "u2_r12", q: "What defines an analog sensor?", options: ["It returns only two distinct states", "It returns a continuous range of values", "It can only be read once", "It requires a battery"], ans: 1, exp: "Analog sensors read a spectrum of voltage, allowing for ranges like 0 to 4095." },
+            { id: "u2_r13", q: "Which of the following is an analog sensor?", options: ["Limit Switch", "Bumper Switch", "Potentiometer", "LED"], ans: 2, exp: "A potentiometer acts as a variable resistor, returning a wide range of values as it turns." },
+            { id: "u2_r14", q: "Which of the following is a digital sensor?", options: ["Line Tracker", "Potentiometer", "Light Sensor", "Bumper Switch"], ans: 3, exp: "A bumper switch is just a button. It is either pressed or it isn't." },
+            { id: "u2_r15", q: "How does a Line Tracker (Light Sensor) work?", options: ["It measures physical pressure", "It emits infrared light and measures how much reflects back", "It measures distance using sound", "It counts rotations"], ans: 1, exp: "Light sensors rely on IR reflectivity to determine how light or dark a surface is." },
+            { id: "u2_r16", q: "What physical property does a Potentiometer measure?", options: ["Distance to an object", "Angular rotation (up to about 265 degrees)", "Light intensity", "Motor speed"], ans: 1, exp: "Potentiometers measure limited rotational angles, making them great for robot arms." },
+            { id: "u2_r17", q: "What does a VEX Optical Shaft Encoder measure?", options: ["Temperature", "Relative rotation using a slotted disk", "Absolute angle", "Sound waves"], ans: 1, exp: "Encoders count 'ticks' as a slotted disk interrupts an optical beam inside the housing." },
+            { id: "u2_r18", q: "How does an Ultrasonic Rangefinder (Sonar) measure distance?", options: ["By timing how long high-frequency sound echoes take to return", "By shooting a laser", "By calculating wheel rotations", "By measuring light reflection"], ans: 0, exp: "Sonar uses sound waves. Distance is calculated using the speed of sound and the time of the echo." },
+            { id: "u2_r19", q: "What is an LED?", options: ["An analog input", "A digital input", "A digital output device that emits light", "A type of motor"], ans: 2, exp: "Light Emitting Diodes (LEDs) are outputs that you turn ON (1) or OFF (0)." },
+            { id: "u2_r20", q: "What is the difference between a standard VEX Motor and a Servo Motor?", options: ["Servos rotate to a specific position; motors rotate continuously", "Motors rotate to a specific position; servos rotate continuously", "Servos are analog; motors are digital", "There is no difference"], ans: 0, exp: "Servos have internal gearing and limits, allowing them to hold a specific angle (e.g., 0 to 120 degrees)." },
+            { id: "u2_r21", q: "What value does an unpressed digital Bumper Switch typically return?", options: ["1", "0", "127", "4095"], ans: 1, exp: "When unpressed, the circuit is open, resulting in a reading of 0 (LOW)." },
+            { id: "u2_r22", q: "In VEX coding, what command is used to read a sensor's data?", options: ["motor[]", "startMotor()", "SensorValue[]", "readSensor()"], ans: 2, exp: "SensorValue[port_name] reads the current data state of that specific port." },
+            { id: "u2_r23", q: "Darker surfaces typically cause a Line Tracker to return...", options: ["A value of 0", "A lower analog value", "A higher analog value", "A negative value"], ans: 2, exp: "Dark surfaces absorb IR light, causing less reflection and a higher resistance/analog reading." },
+            { id: "u2_r24", q: "A limit switch is primarily used to...", options: ["Detect physical contact or the end of a moving mechanism's travel", "Measure distance to a wall", "Track how fast a wheel is spinning", "Follow a line on the ground"], ans: 0, exp: "Limit switches are thin metal arms used to prevent mechanisms from driving too far and breaking." },
+            { id: "u2_r25", q: "A VEX motor set to speed 0 will...", options: ["Run at full speed", "Run in reverse", "Stop completely", "Burn out"], ans: 2, exp: "A speed of 0 cuts the PWM power, causing the motor to stop." },
+
+            // VEX Software (Logic, Variables, Loops)
+            { id: "u2_r26", q: "What is a variable?", options: ["A hardware sensor", "A named storage location in memory for data", "A type of syntax error", "A loop that never ends"], ans: 1, exp: "Variables hold data (like a counter or a sensor reading) so the program can use it later." },
+            { id: "u2_r27", q: "Which data type is best for storing a motor's speed (-127 to 127)?", options: ["Boolean (bool)", "Floating point (float)", "Integer (int)", "String"], ans: 2, exp: "Integers hold whole numbers, which perfectly matches the motor speed values." },
+            { id: "u2_r28", q: "Which data type is best for storing a true/false condition?", options: ["Integer (int)", "Boolean (bool)", "Floating point (float)", "Character (char)"], ans: 1, exp: "Booleans only take up 1 bit of memory and hold exactly two states: True (1) or False (0)." },
+            { id: "u2_r29", q: "Which data type is best for storing a value like 3.14?", options: ["Integer (int)", "Boolean (bool)", "Floating point (float)", "String"], ans: 2, exp: "Floats are required anytime you need to store decimal precision." },
+            { id: "u2_r30", q: "What is the purpose of pseudocode?", options: ["To make the code run faster", "To plan out logic using plain language before writing actual code", "To confuse other programmers", "To compile into machine code"], ans: 1, exp: "Pseudocode bridges the gap between human thought and strict coding syntax." },
+            { id: "u2_r31", q: "How do you write a single-line comment in C-based languages?", options: ["//", "/*", "
