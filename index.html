@@ -13,7 +13,7 @@
         <h1>Waltonia PoEkemon</h1>
         <nav>
             <button id="btn-map" class="nav-btn">Map</button>
-            <button id="btn-dex" class="nav-btn">PoEkedex</button>
+            <button id="btn-dex" class="nav-btn">Party/Dex</button>
             <button id="btn-quedex" class="nav-btn">PoEQuedex</button>
             <button id="btn-trainer" class="nav-btn">Trainer Card</button>
         </nav>
@@ -24,19 +24,19 @@
         <div class="character-grid">
             <div class="character-card">
                 <h3>Mr. V</h3>
-                <p>Engineering</p>
+                <p>Digital Electronics</p>
                 <canvas id="char-v-canvas" width="80" height="80"></canvas>
-                <button class="starter-btn" onclick="selectStarter('MrV', 1)">Start with Fulcru (Mech)</button>
-                <button class="starter-btn" onclick="selectStarter('MrV', 21)">Start with Ohm-Bug (Circuits)</button>
-                <button class="starter-btn" onclick="selectStarter('MrV', 44)">Start with Truss-T (Statics)</button>
+                <button class="starter-btn" onclick="selectStarter('MrV', 61)">Start with ArchaeopXORyx</button>
+                <button class="starter-btn" onclick="selectStarter('MrV', 62)">Start with Countertle</button>
+                <button class="starter-btn" onclick="selectStarter('MrV', 63)">Start with Latchander</button>
             </div>
             <div class="character-card">
                 <h3>Ms. G</h3>
                 <p>Aerospace</p>
                 <canvas id="char-g-canvas" width="80" height="80"></canvas>
-                <button class="starter-btn" onclick="selectStarter('MsG', 60)">Start with Lift-Off (Aero)</button>
-                <button class="starter-btn" onclick="selectStarter('MsG', 63)">Start with Glide-Wing (Flight)</button>
-                <button class="starter-btn" onclick="selectStarter('MsG', 65)">Start with Propellite (Thrust)</button>
+                <button class="starter-btn" onclick="selectStarter('MsG', 64)">Start with Liftander</button>
+                <button class="starter-btn" onclick="selectStarter('MsG', 65)">Start with Propellite</button>
+                <button class="starter-btn" onclick="selectStarter('MsG', 66)">Start with Turburtle</button>
             </div>
         </div>
     </div>
@@ -125,6 +125,8 @@
             <select id="quedex-unit-select" onchange="renderQuedex()" style="font-family: 'Press Start 2P'; font-size: 8px; padding: 5px;">
                 <option value="1">Unit 1: Mechanisms</option>
                 <option value="2">Unit 2: Machine Control</option>
+                <option value="3">Unit 3: Energy</option>
+                <option value="4">Unit 4: Statics</option>
             </select>
         </div>
         <div id="quedex-grid" class="quedex-grid"></div>
