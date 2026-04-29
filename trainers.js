@@ -10,12 +10,12 @@ const dialoguePool = {
     "wes4": "Why was the belt drive always tired? It was stuck in an endless loop!",
     "wes5": "You know what drives me crazy? Unlubricated sprockets. Really grinds my gears.",
 
-    // Lord Hubbard (Unit 2) - Computer Science & Control Systems Jokes
-    "hub1": "Why do programmers prefer dark mode? Because light attracts bugs!",
-    "hub2": "I tried to explain an infinite loop to my class, but they just kept asking me to repeat myself.",
-    "hub3": "Why did the limit switch break up with the bumper switch? It just needed some physical space.",
-    "hub4": "There are 10 types of people in this world: those who understand binary, and those who don't!",
-    "hub5": "My robot kept running into the wall... turns out it had a while loop with no exit condition. Classic."
+    // Lord Hubbard (Unit 2) - Computer Science & Machine Control Jokes
+    "hub1": "Why did the open-loop system cross the road? It didn't know when to stop!",
+    "hub2": "I tried to explain an infinite while-loop to my class... I'm still explaining it.",
+    "hub3": "Why did the limit switch break up with the bumper switch? It needed more physical space.",
+    "hub4": "There are 10 types of people in this world.  Those who understand binary and those who don't!",
+    "hub5": "My robot kept spinning in circles. Turns out my left motor was missing a negative 127. Classic!"
 };
 
 const trainerBank = {
@@ -27,9 +27,10 @@ const trainerBank = {
         jokeIDs: ["wes1", "wes2", "wes3", "wes4", "wes5"],
         intro: "Welcome to the Leveraged Lowlands Gym! Let's see if you can handle the torque!",
         team: [
+            // Progressive difficulty: Level 1 -> Level 2 -> Boss
             { id: 1,  level: 1 }, // Fulcru (Base)
             { id: 6,  level: 2 }, // Cam-Shaft (Evolved)
-            { id: 10, level: 1 }  // Maw-ment (Unit 1 Boss)
+            { id: 10, level: 1 }  // Maw-ment (Unit 1 Boss/Rare)
         ]
     },
     
@@ -41,12 +42,13 @@ const trainerBank = {
         jokeIDs: ["hub1", "hub2", "hub3", "hub4", "hub5"],
         intro: "I am Lord Hubbard, Breaker of Code! Step into my while-loop and let's see if your logic compiles!",
         team: [
+            // Progressive difficulty: Level 2 -> Level 2 -> Boss
             { id: 14, level: 2 }, // For-Loopa (Evolved)
             { id: 16, level: 2 }, // Servo-Max (Evolved)
-            { id: 20, level: 1 }  // The Kernel (Unit 2 Boss)
+            { id: 20, level: 1 }  // The Kernel (Unit 2 Boss/Rare)
         ]
     }
     
-    // Placeholders for future units 
+    // Placeholders for future units so the game doesn't crash
     // "unit3_leader": { unit: 3, team: [...] }
 };
