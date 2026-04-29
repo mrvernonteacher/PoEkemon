@@ -157,26 +157,14 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
+            
+            // THE FIX: Instantly clear and redraw the specific canvas that requested this image!
+            ctx.clearRect(x, y, size, size);
+            ctx.drawImage(img, x, y, size, size);
+            
+            // Update HP if we happen to be in the battle screen
             const screenBattle = document.getElementById('screen-battle');
             if (screenBattle && screenBattle.classList.contains('active')) window.updateHP(); 
-            const cardOverlay = document.getElementById('dex-card-overlay');
-            if (cardOverlay && !cardOverlay.classList.contains('hidden')) {
-                const cardCanvas = document.getElementById('cardCanvas');
-                if(cardCanvas) {
-                    const cardCtx = cardCanvas.getContext('2d');
-                    cardCtx.clearRect(0, 0, 120, 120);
-                    cardCtx.drawImage(img, 0, 0, 120, 120);
-                }
-            }
-            const tcOverlay = document.getElementById('trainer-card-overlay');
-            if (tcOverlay && !tcOverlay.classList.contains('hidden')) {
-                const tcCanvas = document.getElementById('tc-fav-canvas');
-                if(tcCanvas) {
-                    const tcCtx = tcCanvas.getContext('2d');
-                    tcCtx.clearRect(0, 0, 80, 80);
-                    tcCtx.drawImage(img, 0, 0, 80, 80);
-                }
-            }
         };
         img.onerror = () => spriteCache[spriteKey] = null; 
         spriteCache[spriteKey] = 'loading';
