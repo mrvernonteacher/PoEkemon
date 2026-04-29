@@ -302,13 +302,11 @@ window.loadGame = function() {
         }
         
         // --- ANTI-SOFT-LOCK FIX ---
-        // If the game loads, automatically kill any ghost battles caused by refreshing
         gameState.inBattle = false;
         gameState.currentEnemy = null;
         gameState.currentTrainer = null;
         gameState.gymQueue = [];
         
-        // Enforce data types to prevent crashes
         if (!Array.isArray(gameState.playerTeam)) gameState.playerTeam = [];
         if (!Array.isArray(gameState.pokedexCaught)) gameState.pokedexCaught = [];
         if (!Array.isArray(gameState.answeredQuestions)) gameState.answeredQuestions = [];
@@ -350,14 +348,52 @@ window.loadGame = function() {
     }
 };
 
-window.downloadSaveFile = function() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
+window.downloadSaveFile = async function() {
+    const dataStr = JSON.stringify(gameState);
+    
+    // Generate Timestamp
+    const now = new Date();
+    const timestamp = now.getFullYear() + "-" +
+                      String(now.getMonth() + 1).padStart(2, '0') + "-" +
+                      String(now.getDate()).padStart(2, '0') + "_" +
+                      String(now.getHours()).padStart(2, '0') + "-" +
+                      String(now.getMinutes()).padStart(2, '0') + "-" +
+                      String(now.getSeconds()).padStart(2, '0');
+                      
+    const defaultFilename = `poekedex_save_${timestamp}.json`;
+
+    try {
+        // Try using the modern File System Access API (prompts for location)
+        if (window.showSaveFilePicker) {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: defaultFilename,
+                types: [{
+                    description: 'JSON Save File',
+                    accept: {'application/json': ['.json']},
+                }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(dataStr);
+            await writable.close();
+            
+            window.showMessage("Game saved successfully!");
+            return;
+        }
+    } catch (err) {
+        // If user cancelled the prompt, abort silently. Otherwise log.
+        if (err.name !== 'AbortError') console.error("File System Access API error:", err);
+        else return; 
+    }
+
+    // Fallback for browsers that don't support showSaveFilePicker
+    const encodedData = "data:text/json;charset=utf-8," + encodeURIComponent(dataStr);
     const a = document.createElement('a');
-    a.setAttribute("href", dataStr);
-    a.setAttribute("download", "poekedex_save.json");
+    a.setAttribute("href", encodedData);
+    a.setAttribute("download", defaultFilename);
     document.body.appendChild(a);
     a.click();
     a.remove();
+    window.showMessage("Game downloaded to your default Downloads folder.");
 };
 
 window.uploadSaveFile = function(event) {
@@ -416,7 +452,6 @@ window.selectStarter = function(char, id) {
 };
 
 window.onload = () => {
-    // Safety check to alert you immediately if a file is missing/broken
     if (typeof poekedex === 'undefined') alert("WARNING: poekedex.js is missing or has a syntax error!");
     if (typeof trainerBank === 'undefined') alert("WARNING: trainers.js is missing or has a syntax error!");
 
@@ -813,7 +848,7 @@ window.enemyTurn = function() {
                 
                 gameState.currentTrainer = null;
                 gameState.gymQueue = [];
-                window.saveGame(); // Save restored HP and wipe queue
+                window.saveGame();
                 window.endBattle();
             });
         } else {
@@ -936,7 +971,7 @@ window.endBattle = function() {
             }
         } else {
             gameState.inBattle = false;
-            window.saveGame(); // The crucial missing link!
+            window.saveGame(); 
             window.showScreen('map');
         }
     };
