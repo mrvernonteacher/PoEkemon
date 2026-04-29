@@ -83,21 +83,17 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
 window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
     if (!mon) return;
     
-    // Default to level 1 for drawing
     const currentLevel = mon.evolutionLevel || 1;
     const spriteKey = `${mon.id}-${currentLevel}`;
 
     if (spriteCache[spriteKey] === undefined) {
         const img = new Image();
-        
-        // Looks for exactly id.level.png (e.g., 61.1.png)
         img.src = `assets/${mon.id}.${currentLevel}.png`; 
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
             if (document.getElementById('screen-battle').classList.contains('active')) window.updateHP(); 
             if (!document.getElementById('dex-card-overlay').classList.contains('hidden')) {
-                // Redraw card if the image loaded while the card was open
                 const cardCtx = document.getElementById('cardCanvas').getContext('2d');
                 cardCtx.clearRect(0, 0, 120, 120);
                 cardCtx.drawImage(img, 0, 0, 120, 120);
@@ -241,17 +237,14 @@ window.loadGame = function() {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
         
-        // DEEP PATCH: Syncs old saves with new poekedex.js and upgrades to Level 1, 2, 3 system
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
             if (masterDex) {
                 mon.basicAtkName = masterDex.basicAtkName;
                 mon.baseAtk = masterDex.baseAtk;
                 mon.evolutions = JSON.parse(JSON.stringify(masterDex.evolutions));
-                
                 if (mon.xp === undefined) mon.xp = 0;
                 
-                // Intelligent Level Re-Calculation based on name matching
                 let correctLevel = 1;
                 if (mon.name === masterDex.name) {
                     correctLevel = 1;
@@ -260,12 +253,10 @@ window.loadGame = function() {
                 } else if (masterDex.evolutions.length > 1 && mon.name === masterDex.evolutions[1].name) {
                     correctLevel = 3;
                 } else if (mon.evolutionLevel === 0) {
-                    correctLevel = 1; // Catch all legacy level 0
+                    correctLevel = 1; 
                 }
                 
                 mon.evolutionLevel = correctLevel;
-                
-                // Enforce names
                 if (mon.evolutionLevel === 1) mon.name = masterDex.name;
                 else mon.name = masterDex.evolutions[mon.evolutionLevel - 2].name;
             }
@@ -339,6 +330,16 @@ window.onload = () => {
         window.showScreen('dex');
     };
 
+    // The Missing Button Link for the Study Guide!
+    document.getElementById('btn-quedex').onclick = () => {
+        if (gameState.inBattle) {
+            window.showMessage("No studying during a battle! Focus on your opponent!");
+            return;
+        }
+        window.renderQuedex();
+        window.showScreen('quedex');
+    };
+
     if (!gameState.playerTeam || gameState.playerTeam.length === 0) window.showScreen('characterSelect');
     else window.showScreen('map');
 };
@@ -347,8 +348,10 @@ window.onload = () => {
 // 6. MAP BUILDINGS (CLINIC & STATION)
 // ==========================================
 window.triggerClinic = function() {
-    const questions = questionBank[gameState.currentUnit];
-    const q = questions[Math.floor(Math.random() * questions.length)];
+    let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
+    if (qArray.length === 0) return window.showMessage("Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); });
+
+    const q = qArray[Math.floor(Math.random() * qArray.length)];
     
     window.showScreen('battle');
     document.querySelector('.battle-stage').style.display = 'none';
@@ -420,7 +423,7 @@ window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
     gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
     gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
-    gameState.currentEnemy.evolutionLevel = 1; // Wild mons spawn at Level 1
+    gameState.currentEnemy.evolutionLevel = 1; 
 
     document.getElementById('enemy-name').textContent = gameState.currentEnemy.name;
     document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
@@ -454,7 +457,6 @@ window.renderBattleMenu = function() {
     btnBasic.onclick = () => window.prepareAttack('basic');
     menu.appendChild(btnBasic);
 
-    // Evolution Levels 2 and 3 get the special attack button
     if (mon.evolutionLevel > 1) {
         const currentEvo = mon.evolutions[mon.evolutionLevel - 2];
         const btnSpecial = document.createElement('button');
@@ -483,6 +485,13 @@ window.renderBattleMenu = function() {
     window.updateHP(); 
 };
 
+window.getQuestion = function() {
+    // Determine if we need regular or gym questions. Gym questions aren't fully implemented yet, so default to regular for standard encounters.
+    let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
+    if (qArray.length === 0) return null;
+    return qArray[Math.floor(Math.random() * qArray.length)];
+};
+
 window.prepareAttack = function(type) {
     const mon = gameState.playerTeam[0];
     if (type === 'basic' && mon.evolutionLevel > 1) {
@@ -493,8 +502,11 @@ window.prepareAttack = function(type) {
     document.getElementById('action-menu').classList.add('hidden');
     gameState.queuedAttack = type;
     
-    const questions = questionBank[gameState.currentUnit];
-    const q = questions[Math.floor(Math.random() * questions.length)];
+    const q = window.getQuestion();
+    if (!q) {
+        window.showMessage("No questions loaded! Free hit!", () => window.executeAttack(gameState.queuedAttack, true, true));
+        return;
+    }
     
     document.getElementById('question-text').textContent = q.q;
     const grid = document.getElementById('answer-grid');
@@ -506,11 +518,8 @@ window.prepareAttack = function(type) {
         btn.textContent = opt;
         btn.onclick = () => {
             document.getElementById('question-container').classList.add('hidden');
-            if (i === q.ans) {
-                window.executeAttack(gameState.queuedAttack, true, true);
-            } else {
-                window.executeAttack(gameState.queuedAttack, false, false);
-            }
+            if (i === q.ans) window.executeAttack(gameState.queuedAttack, true, true);
+            else window.executeAttack(gameState.queuedAttack, false, false);
         };
         grid.appendChild(btn);
     });
@@ -519,8 +528,8 @@ window.prepareAttack = function(type) {
 
 window.prepareEscape = function() {
     document.getElementById('action-menu').classList.add('hidden');
-    const questions = questionBank[gameState.currentUnit];
-    const q = questions[Math.floor(Math.random() * questions.length)];
+    const q = window.getQuestion();
+    if (!q) return window.endBattle();
 
     document.getElementById('question-text').textContent = "Answer correctly to flee: " + q.q;
     const grid = document.getElementById('answer-grid');
@@ -533,14 +542,9 @@ window.prepareEscape = function() {
         btn.onclick = () => {
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) {
-                if (Math.random() < 0.5) {
-                    window.showMessage("Got away safely!", () => window.endBattle());
-                } else {
-                    window.showMessage("Couldn't escape!", () => window.enemyTurn());
-                }
-            } else {
-                window.showMessage("Incorrect! You stumbled and couldn't escape!", () => window.enemyTurn());
-            }
+                if (Math.random() < 0.5) window.showMessage("Got away safely!", () => window.endBattle());
+                else window.showMessage("Couldn't escape!", () => window.enemyTurn());
+            } else window.showMessage("Incorrect! You stumbled and couldn't escape!", () => window.enemyTurn());
         };
         grid.appendChild(btn);
     });
@@ -611,8 +615,8 @@ window.enemyTurn = function() {
 
 window.attemptCapture = function() {
     document.getElementById('action-menu').classList.add('hidden');
-    const questions = questionBank[gameState.currentUnit];
-    const q = questions[Math.floor(Math.random() * questions.length)];
+    const q = window.getQuestion();
+    if (!q) return window.endBattle();
     
     document.getElementById('question-text').textContent = q.q;
     const grid = document.getElementById('answer-grid');
@@ -846,4 +850,51 @@ window.openDexCard = function(mon, isOwned) {
 
 window.closeDexCard = function() {
     document.getElementById('dex-card-overlay').classList.add('hidden');
+};
+
+// ==========================================
+// 9. POEQUEDEX (STUDY GUIDE FLASHCARDS)
+// ==========================================
+window.renderQuedex = function() {
+    const unit = document.getElementById('quedex-unit-select').value;
+    const grid = document.getElementById('quedex-grid');
+    grid.innerHTML = '';
+
+    if (!questionBank[unit]) return;
+
+    // Combine regular and gym questions for study review
+    const allQuestions = [...questionBank[unit].regular, ...questionBank[unit].gym];
+
+    allQuestions.forEach((q, index) => {
+        const container = document.createElement('div');
+        container.className = 'flashcard-container';
+        // The click event that triggers the 3D flip!
+        container.onclick = function() {
+            this.querySelector('.flashcard').classList.toggle('flipped');
+        };
+
+        const card = document.createElement('div');
+        card.className = 'flashcard';
+
+        // --- FRONT OF CARD ---
+        const front = document.createElement('div');
+        front.className = 'flashcard-front';
+        let badgeType = q.id.includes('_g') ? '<span style="color:#c8102e;">[GYM]</span>' : '';
+        front.innerHTML = `<h4>Question #${index + 1} ${badgeType}</h4><p>${q.q}</p>`;
+
+        // --- BACK OF CARD ---
+        const back = document.createElement('div');
+        back.className = 'flashcard-back';
+        const correctAnswerText = q.options[q.ans];
+        back.innerHTML = `
+            <h4>Answer</h4>
+            <p class="ans-text">${correctAnswerText}</p>
+            <p class="exp-text">${q.exp || "No explanation provided."}</p>
+        `;
+
+        card.appendChild(front);
+        card.appendChild(back);
+        container.appendChild(card);
+        grid.appendChild(container);
+    });
 };
