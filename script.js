@@ -55,7 +55,7 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 3. SPRITE ENGINE (NEW FILE NAMING SYSTEM)
+// 3. SPRITE ENGINE (LEVEL 1-3 SYSTEM)
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -83,19 +83,25 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
 window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
     if (!mon) return;
     
-    // Ensure the level defaults to 1 for rendering if undefined
+    // Default to level 1 for drawing
     const currentLevel = mon.evolutionLevel || 1;
     const spriteKey = `${mon.id}-${currentLevel}`;
 
     if (spriteCache[spriteKey] === undefined) {
         const img = new Image();
         
-        // Looks for id.1.png, id.2.png, or id.3.png
+        // Looks for exactly id.level.png (e.g., 61.1.png)
         img.src = `assets/${mon.id}.${currentLevel}.png`; 
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
             if (document.getElementById('screen-battle').classList.contains('active')) window.updateHP(); 
+            if (!document.getElementById('dex-card-overlay').classList.contains('hidden')) {
+                // Redraw card if the image loaded while the card was open
+                const cardCtx = document.getElementById('cardCanvas').getContext('2d');
+                cardCtx.clearRect(0, 0, 120, 120);
+                cardCtx.drawImage(img, 0, 0, 120, 120);
+            }
         };
         img.onerror = () => spriteCache[spriteKey] = null; 
         spriteCache[spriteKey] = 'loading';
@@ -414,8 +420,7 @@ window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
     gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
     gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
-    // Wild enemies are always Level 1
-    gameState.currentEnemy.evolutionLevel = 1; 
+    gameState.currentEnemy.evolutionLevel = 1; // Wild mons spawn at Level 1
 
     document.getElementById('enemy-name').textContent = gameState.currentEnemy.name;
     document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
@@ -449,9 +454,8 @@ window.renderBattleMenu = function() {
     btnBasic.onclick = () => window.prepareAttack('basic');
     menu.appendChild(btnBasic);
 
-    // Show special attack if Level 2 or Level 3
+    // Evolution Levels 2 and 3 get the special attack button
     if (mon.evolutionLevel > 1) {
-        // -2 because level 2 uses index 0 in the evolutions array
         const currentEvo = mon.evolutions[mon.evolutionLevel - 2];
         const btnSpecial = document.createElement('button');
         btnSpecial.className = 'action-btn attack-btn';
@@ -692,9 +696,7 @@ window.endBattle = function() {
     gameState.inBattle = false;
     let evoQueue = [];
     
-    // Check entire party for evolutions
     gameState.playerTeam.forEach(mon => {
-        // -1 to compare Level to the length of the array correctly
         if (mon.evolutions && (mon.evolutionLevel - 1) < mon.evolutions.length) {
             const nextEvo = mon.evolutions[mon.evolutionLevel - 1];
             if (mon.xp >= nextEvo.reqXP) {
@@ -725,7 +727,7 @@ window.endBattle = function() {
 };
 
 // ==========================================
-// 8. PARTY LIMITS & DEX RENDERING
+// 8. PARTY LIMITS, DEX RENDERING & CARDS
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
@@ -766,14 +768,15 @@ window.renderDex = function() {
     gameState.playerTeam.forEach((mon, index) => {
         const card = document.createElement('div');
         card.className = 'party-card';
-        const isActive = (index === 0);
+        card.onclick = () => window.openDexCard(mon, true);
         
+        const isActive = (index === 0);
         card.innerHTML = `
             <h4>${mon.name}</h4>
             <p>${mon.type}</p>
             <p>HP: ${mon.currentHP}/${mon.maxHP}</p>
             <p style="color: #c8102e; font-weight: bold;">Lvl ${mon.evolutionLevel} | XP: ${mon.xp}</p>
-            ${isActive ? '<span class="active-badge">ACTIVE FIGHTER</span>' : `<button class="deploy-btn" onclick="deployMon(${mon.id})">Deploy</button>`}
+            ${isActive ? '<span class="active-badge">ACTIVE FIGHTER</span>' : `<button class="deploy-btn" onclick="event.stopPropagation(); deployMon(${mon.id})">Deploy</button>`}
         `;
         partyGrid.appendChild(card);
     });
@@ -788,6 +791,8 @@ window.renderDex = function() {
         
         if (hasCaught) {
             card.innerHTML = `<h4>${mon.name}</h4><p>${mon.type}</p>`;
+            const partyVersion = gameState.playerTeam.find(p => p.id === mon.id);
+            card.onclick = () => window.openDexCard(partyVersion || mon, !!partyVersion);
         } else {
             card.innerHTML = `<h4>???</h4><p>Unit ${mon.unit}</p>`;
         }
@@ -818,4 +823,27 @@ window.deployMon = function(id) {
             });
         }
     }
+};
+
+window.openDexCard = function(mon, isOwned) {
+    const overlay = document.getElementById('dex-card-overlay');
+    document.getElementById('card-name').textContent = mon.name.toUpperCase();
+    document.getElementById('card-id').textContent = `#${mon.id.toString().padStart(2, '0')}`;
+    document.getElementById('card-type').textContent = mon.type;
+    document.getElementById('card-level').textContent = mon.evolutionLevel || 1;
+    document.getElementById('card-unit').textContent = mon.unit || "Starter";
+    document.getElementById('card-hp').textContent = mon.hp || mon.maxHP;
+    document.getElementById('card-atk').textContent = mon.baseAtk;
+    document.getElementById('card-desc').textContent = mon.desc;
+
+    const canvas = document.getElementById('cardCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    window.drawPoekemonSprite(ctx, mon, 0, 0, 120);
+    overlay.classList.remove('hidden');
+};
+
+window.closeDexCard = function() {
+    document.getElementById('dex-card-overlay').classList.add('hidden');
 };
