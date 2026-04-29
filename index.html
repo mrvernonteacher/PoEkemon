@@ -43,6 +43,32 @@
                     <button id="msg-btn-cancel" class="action-btn attack-btn hidden">Cancel</button>
                 </div>
             </div>
+            <div id="dex-card-overlay" class="hidden">
+    <div class="dex-card">
+        <button class="close-card" onclick="closeDexCard()">X</button>
+        <div class="dex-card-header">
+            <h2 id="card-name">NAME</h2>
+            <span id="card-id">#00</span>
+        </div>
+        <div class="dex-card-body">
+            <div id="card-sprite-container">
+                <canvas id="cardCanvas" width="120" height="120"></canvas>
+            </div>
+            <div class="dex-card-info">
+                <p><strong>Type:</strong> <span id="card-type">---</span></p>
+                <p><strong>Level:</strong> <span id="card-level">1</span></p>
+                <p><strong>Unit:</strong> <span id="card-unit">0</span></p>
+                <div class="stats-mini">
+                    <span>HP: <span id="card-hp">0</span></span>
+                    <span>ATK: <span id="card-atk">0</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="dex-card-footer">
+            <p id="card-desc">Description goes here...</p>
+        </div>
+    </div>
+</div>
         </div>
 
         <section id="screen-characterSelect" class="screen active">
