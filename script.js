@@ -11,11 +11,12 @@ let gameState = {
     pokedexCaught: [],    
     answeredQuestions: [], 
     badges: [],
+    kennel: [], // PC Storage
     stats: {
         questionsAnswered: 0,
         questionsCorrect: 0,
         battlesWon: 0,
-        deployed: {} // Tracks how many times a PoEkemon ID is sent into battle
+        deployed: {} 
     },
     currentUnit: 1,
     currentEnemy: null,
@@ -99,56 +100,45 @@ window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
         ctx.fillStyle = "#333333"; 
         ctx.fillRect(x + 12*s, y + 4*s, 26*s, 8*s); 
         ctx.fillRect(x + 10*s, y + 10*s, 32*s, 4*s); 
-
         ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 16*s, y + 14*s, 18*s, 12*s);
-        
         ctx.fillStyle = "#5d4037"; 
         ctx.fillRect(x + 16*s, y + 20*s, 18*s, 8*s); 
         ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 22*s, y + 22*s, 6*s, 2*s);
-
         ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + 18*s, y + 16*s, 5*s, 4*s); ctx.fillRect(x + 27*s, y + 16*s, 5*s, 4*s);
         ctx.fillStyle = "#000000";
         ctx.fillRect(x + 20*s, y + 17*s, 2*s, 2*s); ctx.fillRect(x + 27*s, y + 17*s, 2*s, 2*s);
         ctx.fillRect(x + 23*s, y + 17*s, 4*s, 2*s); 
-
         ctx.fillStyle = "#0033a0"; 
         ctx.fillRect(x + 12*s, y + 26*s, 26*s, 16*s);
         ctx.fillStyle = "#c8102e"; 
         ctx.fillRect(x + 23*s, y + 30*s, 4*s, 4*s); 
-
         ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 8*s, y + 28*s, 4*s, 12*s); ctx.fillRect(x + 38*s, y + 28*s, 4*s, 12*s);
-
         ctx.fillStyle = "#d2b48c"; 
         ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
     } else if (trainerId === 'hubbard') {
         ctx.fillStyle = "#f5cbad"; 
         ctx.fillRect(x + 16*s, y + 6*s, 18*s, 16*s); 
-        
         ctx.fillStyle = "#555555"; 
         ctx.fillRect(x + 16*s, y + 18*s, 18*s, 8*s); 
         ctx.fillStyle = "#f5cbad"; 
         ctx.fillRect(x + 22*s, y + 20*s, 6*s, 2*s);
-
         ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + 18*s, y + 14*s, 5*s, 4*s); ctx.fillRect(x + 27*s, y + 14*s, 5*s, 4*s);
         ctx.fillStyle = "#000000";
         ctx.fillRect(x + 20*s, y + 15*s, 2*s, 2*s); ctx.fillRect(x + 27*s, y + 15*s, 2*s, 2*s);
         ctx.fillRect(x + 23*s, y + 15*s, 4*s, 2*s); 
-
         ctx.fillStyle = "#2e7d32"; 
         ctx.fillRect(x + 12*s, y + 26*s, 26*s, 16*s);
         ctx.fillStyle = "#1b5e20";
         for(let i = 14; i < 38; i+=6) {
             ctx.fillRect(x + i*s, y + 26*s, 2*s, 16*s);
         }
-
         ctx.fillStyle = "#f5cbad"; 
         ctx.fillRect(x + 8*s, y + 28*s, 4*s, 12*s); ctx.fillRect(x + 38*s, y + 28*s, 4*s, 12*s);
-
         ctx.fillStyle = "#333333"; 
         ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
     }
@@ -352,8 +342,8 @@ window.loadGame = function() {
         if (!Array.isArray(gameState.pokedexCaught)) gameState.pokedexCaught = [];
         if (!Array.isArray(gameState.answeredQuestions)) gameState.answeredQuestions = [];
         if (!Array.isArray(gameState.badges)) gameState.badges = [];
+        if (!Array.isArray(gameState.kennel)) gameState.kennel = [];
         
-        // Initialize the new stats object safely if it doesn't exist in old saves
         if (!gameState.stats) {
             gameState.stats = { questionsAnswered: 0, questionsCorrect: 0, battlesWon: 0, deployed: {} };
         }
@@ -454,22 +444,18 @@ window.uploadSaveFile = function(event) {
     reader.readAsText(file);
 };
 
-// NEW: Tracker helper function
 window.trackDeployment = function(monId) {
     if (!gameState.stats.deployed) gameState.stats.deployed = {};
     gameState.stats.deployed[monId] = (gameState.stats.deployed[monId] || 0) + 1;
     window.saveGame();
 };
 
-// NEW: Trainer Card Display Logic
 window.openTrainerCard = function() {
     const overlay = document.getElementById('trainer-card-overlay');
     if (!overlay) return;
 
-    // Set Text Name
     document.getElementById('tc-name').textContent = gameState.playerCharacter === 'MrV' ? 'Mr. V' : (gameState.playerCharacter === 'MsG' ? 'Ms. G' : 'Trainer');
     
-    // Calculate and set stats
     let acc = 0;
     if (gameState.stats.questionsAnswered > 0) {
         acc = Math.round((gameState.stats.questionsCorrect / gameState.stats.questionsAnswered) * 100);
@@ -479,7 +465,6 @@ window.openTrainerCard = function() {
     document.getElementById('tc-battles').textContent = gameState.stats.battlesWon;
     document.getElementById('tc-caught').textContent = gameState.pokedexCaught.length;
     
-    // Build Badge Grid
     const badgeGrid = document.getElementById('tc-badge-grid');
     badgeGrid.innerHTML = '';
     for(let i=1; i<=6; i++) {
@@ -490,12 +475,10 @@ window.openTrainerCard = function() {
         }
     }
 
-    // Draw Character Avatar (Adjusted position to center face)
     const avatarCtx = document.getElementById('tc-avatar-canvas').getContext('2d');
     avatarCtx.clearRect(0, 0, 60, 60);
     window.drawCharacterSprite(avatarCtx, -10, -5, 80); 
 
-    // Find and draw Favorite PoEkemon
     let favId = null;
     let maxUses = 0;
     for (const [id, uses] of Object.entries(gameState.stats.deployed)) {
@@ -539,10 +522,7 @@ window.selectStarter = function(char, id) {
             if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
             gameState.pokedexCaught.push(id); 
             playerPos = { x: 25, y: 25 }; 
-            
-            // Track first deployment
             window.trackDeployment(mon.id);
-            
             window.saveGame();
             window.showScreen('map');
         }
@@ -558,7 +538,6 @@ window.onload = () => {
 
     window.loadGame();
     
-    // Event Listeners for the updated index.html
     const btnMap = document.getElementById('btn-map');
     if (btnMap) btnMap.onclick = () => {
         if (gameState.inBattle) window.showScreen('battle');
@@ -581,7 +560,6 @@ window.onload = () => {
         window.showScreen('quedex');
     };
 
-    // The new Trainer Card button
     const btnTrainer = document.getElementById('btn-trainer');
     if (btnTrainer) btnTrainer.onclick = window.openTrainerCard;
 
@@ -624,11 +602,11 @@ window.triggerClinic = function() {
         btn.textContent = opt;
         btn.onclick = () => {
             window.unlockQuestion(q.id); 
-            gameState.stats.questionsAnswered++; // STAT TRACKING
+            gameState.stats.questionsAnswered++; 
             
             document.querySelector('.battle-stage').style.display = 'block';
             if (i === q.ans) {
-                gameState.stats.questionsCorrect++; // STAT TRACKING
+                gameState.stats.questionsCorrect++; 
                 gameState.playerTeam.forEach(mon => mon.currentHP = mon.maxHP);
                 window.saveGame();
                 window.showMessage("Correct! Your PoEkemon are fully healed.", () => {
@@ -700,7 +678,6 @@ window.generateEnemy = function(id, level) {
 window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
     
-    // Track deployment on battle start
     if (gameState.playerTeam.length > 0) {
         window.trackDeployment(gameState.playerTeam[0].id);
     }
@@ -737,9 +714,12 @@ window.startEncounter = function(unit, isGym) {
         let selectedMon;
         const hasBadge = gameState.badges.includes(unit);
         
-        const regularMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
-        const bossMons = poekedex.filter(p => p.unit === unit && p.type.includes("Boss"));
+        // --- BULLETPROOF BOSS FILTERING USING `desc` ---
+        let regularMons = poekedex.filter(p => p.unit === unit && (!p.desc || !p.desc.includes("Boss")));
+        let bossMons = poekedex.filter(p => p.unit === unit && p.desc && p.desc.includes("Boss"));
         
+        if (regularMons.length === 0) regularMons = poekedex.filter(p => p.unit === unit); // Failsafe
+
         if (hasBadge && bossMons.length > 0 && Math.random() < 0.01) {
             selectedMon = bossMons[Math.floor(Math.random() * bossMons.length)];
         } else {
@@ -880,11 +860,11 @@ window.prepareAttack = function(type) {
         btn.textContent = opt;
         btn.onclick = () => {
             window.unlockQuestion(q.id); 
-            gameState.stats.questionsAnswered++; // STAT TRACKING
+            gameState.stats.questionsAnswered++; 
             
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) {
-                gameState.stats.questionsCorrect++; // STAT TRACKING
+                gameState.stats.questionsCorrect++; 
                 window.executeAttack(gameState.queuedAttack, true, true);
             } else {
                 window.executeAttack(gameState.queuedAttack, false, false);
@@ -911,11 +891,11 @@ window.prepareEscape = function() {
         btn.textContent = opt;
         btn.onclick = () => {
             window.unlockQuestion(q.id); 
-            gameState.stats.questionsAnswered++; // STAT TRACKING
+            gameState.stats.questionsAnswered++; 
             
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) {
-                gameState.stats.questionsCorrect++; // STAT TRACKING
+                gameState.stats.questionsCorrect++; 
                 if (Math.random() < 0.5) window.showMessage("Got away safely!", () => window.endBattle());
                 else window.showMessage("Couldn't escape!", () => window.enemyTurn());
             } else {
@@ -962,8 +942,7 @@ window.executeAttack = function(type, success, earnXP) {
 
     setTimeout(() => {
         if (gameState.currentEnemy.currentHP <= 0) {
-            // Victory against current opponent
-            gameState.stats.battlesWon++; // STAT TRACKING
+            gameState.stats.battlesWon++; 
             window.showMessage("The enemy fainted!", () => window.endBattle());
         } else {
             window.enemyTurn();
@@ -1011,15 +990,15 @@ window.attemptCapture = function() {
         btn.textContent = opt;
         btn.onclick = () => {
             window.unlockQuestion(q.id); 
-            gameState.stats.questionsAnswered++; // STAT TRACKING
+            gameState.stats.questionsAnswered++; 
             
             if (i === q.ans) {
-                gameState.stats.questionsCorrect++; // STAT TRACKING
+                gameState.stats.questionsCorrect++; 
                 const eRatio = gameState.currentEnemy.currentHP / gameState.currentEnemy.hp;
                 const catchChance = eRatio <= 0.33 ? 0.90 : 0.50;
                 
                 if (Math.random() <= catchChance) {
-                    gameState.stats.battlesWon++; // Treat capture as a win
+                    gameState.stats.battlesWon++; 
                     window.showMessage(`Correct! You caught ${gameState.currentEnemy.name}!`, () => {
                         const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 1 };
                         if (!gameState.pokedexCaught.includes(newCatch.id)) gameState.pokedexCaught.push(newCatch.id);
@@ -1029,6 +1008,7 @@ window.attemptCapture = function() {
                             window.saveGame();
                             window.endBattle();
                         } else {
+                            // REVERTED: TOUGH DECISION (Wild catch with full party)
                             window.showReleaseMenu(newCatch);
                         }
                     });
@@ -1139,36 +1119,43 @@ window.endBattle = function() {
 };
 
 // ==========================================
-// 8. PARTY LIMITS, DEX RENDERING & CARDS
+// 8. PARTY LIMITS, DEX RENDERING & KENNEL
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
+    if (!overlay) return window.endBattle(); // Safety fallback
+    
     const grid = document.getElementById('release-grid');
-    grid.innerHTML = ''; 
+    if (grid) {
+        grid.innerHTML = ''; 
 
-    gameState.playerTeam.forEach((mon, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'starter-btn';
-        btn.style.borderColor = '#c8102e'; 
-        btn.innerHTML = `<strong>${mon.name}</strong><br>HP: ${mon.maxHP}<br><em>Release</em>`;
-        btn.onclick = () => {
-            window.showConfirm(`Release ${mon.name} and add ${newCatch.name}?`, () => {
-                gameState.playerTeam[index] = newCatch;
-                window.saveGame();
+        gameState.playerTeam.forEach((mon, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'starter-btn';
+            btn.style.borderColor = '#c8102e'; 
+            btn.innerHTML = `<strong>${mon.name}</strong><br>HP: ${mon.maxHP}<br><em>Release</em>`;
+            btn.onclick = () => {
+                window.showConfirm(`Release ${mon.name} and add ${newCatch.name}?`, () => {
+                    gameState.playerTeam[index] = newCatch;
+                    window.saveGame();
+                    overlay.classList.add('hidden');
+                    window.endBattle();
+                });
+            };
+            grid.appendChild(btn);
+        });
+    }
+
+    const releaseNewBtn = document.getElementById('release-new-btn');
+    if (releaseNewBtn) {
+        releaseNewBtn.onclick = () => {
+            window.showMessage(`${newCatch.name} was released.`, () => {
                 overlay.classList.add('hidden');
+                window.saveGame(); 
                 window.endBattle();
             });
         };
-        grid.appendChild(btn);
-    });
-
-    document.getElementById('release-new-btn').onclick = () => {
-        window.showMessage(`${newCatch.name} was released.`, () => {
-            overlay.classList.add('hidden');
-            window.saveGame(); 
-            window.endBattle();
-        });
-    };
+    }
 
     overlay.classList.remove('hidden');
 };
@@ -1219,7 +1206,7 @@ window.deployMon = function(id) {
         gameState.playerTeam[0] = gameState.playerTeam[index];
         gameState.playerTeam[index] = temp;
         
-        window.trackDeployment(gameState.playerTeam[0].id); // Track Deployment
+        window.trackDeployment(gameState.playerTeam[0].id); 
         window.saveGame();
         window.renderDex(); 
         
@@ -1260,6 +1247,105 @@ window.openDexCard = function(mon, isOwned) {
 
 window.closeDexCard = function() {
     document.getElementById('dex-card-overlay').classList.add('hidden');
+};
+
+// POEKENNEL PC SYSTEM LOGIC
+window.openKennel = function() {
+    if (!gameState.kennel) gameState.kennel = [];
+    window.renderKennel();
+    document.getElementById('kennel-overlay').classList.remove('hidden');
+};
+
+window.renderKennel = function() {
+    const partyGrid = document.getElementById('kennel-party-grid');
+    const boxGrid = document.getElementById('kennel-box-grid');
+    if (!partyGrid || !boxGrid) return;
+    
+    partyGrid.innerHTML = '';
+    boxGrid.innerHTML = '';
+
+    // Render Current Party
+    gameState.playerTeam.forEach((mon, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'kennel-slot';
+        slot.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        
+        if (gameState.playerTeam.length > 1) {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            btn.style.width = '100%';
+            btn.style.marginTop = '5px';
+            btn.style.padding = '5px';
+            btn.textContent = 'Deposit';
+            btn.onclick = () => {
+                gameState.kennel.push(gameState.playerTeam.splice(index, 1)[0]);
+                window.saveGame();
+                window.renderKennel();
+                window.renderDex(); 
+            };
+            slot.appendChild(btn);
+        } else {
+            slot.innerHTML += `<br><span style="color:var(--walton-red); font-size:6px; display:block; margin-top:5px;">Cannot Deposit Last Mon</span>`;
+        }
+        partyGrid.appendChild(slot);
+    });
+
+    // Pad Party with empties
+    for(let i=gameState.playerTeam.length; i<6; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'kennel-slot empty';
+        empty.textContent = 'Empty Slot';
+        partyGrid.appendChild(empty);
+    }
+
+    // Render PC Storage Box
+    gameState.kennel.forEach((mon, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'kennel-slot';
+        slot.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        
+        if (gameState.playerTeam.length < 6) {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn catch-btn';
+            btn.style.width = '100%';
+            btn.style.marginTop = '5px';
+            btn.style.padding = '5px';
+            btn.textContent = 'Withdraw';
+            btn.onclick = () => {
+                gameState.playerTeam.push(gameState.kennel.splice(index, 1)[0]);
+                window.saveGame();
+                window.renderKennel();
+                window.renderDex();
+            };
+            slot.appendChild(btn);
+        }
+        
+        const releaseBtn = document.createElement('button');
+        releaseBtn.className = 'action-btn attack-btn';
+        releaseBtn.style.width = '100%';
+        releaseBtn.style.marginTop = '5px';
+        releaseBtn.style.padding = '5px';
+        releaseBtn.textContent = 'Release';
+        releaseBtn.onclick = () => {
+            window.showConfirm(`Permanently release ${mon.name} into the wild?`, () => {
+                gameState.kennel.splice(index, 1);
+                window.saveGame();
+                window.renderKennel();
+            });
+        };
+        slot.appendChild(releaseBtn);
+        
+        boxGrid.appendChild(slot);
+    });
+    
+    // Pad Box with empties for aesthetic
+    const emptySlots = Math.max(16 - gameState.kennel.length, 0);
+    for(let i=0; i<emptySlots; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'kennel-slot empty';
+        empty.textContent = '---';
+        boxGrid.appendChild(empty);
+    }
 };
 
 // ==========================================
