@@ -3,179 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoEkedex: Waltonia Region</title>
+    <title>Waltonia POEkemon</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <header>
-            <h1>PoEkedex</h1>
-            <nav>
-                <button id="btn-map" class="nav-btn">Map</button>
-                <button id="btn-dex" class="nav-btn">PoEkedex</button>
-                <button id="btn-quedex" class="nav-btn">PoEQuedex</button>
-                <button id="btn-settings" class="nav-btn">⚙️</button>
-            </nav>
-        </header>
 
-        <div id="settings-overlay" class="hidden">
-            <div class="settings-content">
-                <h3>Settings</h3>
-                <button onclick="resetGame()" class="action-btn attack-btn">Reset Save Data</button>
-                <br><br>
-                <button onclick="toggleSettings()" class="nav-btn">Close</button>
+<div id="game-container">
+    <header>
+        <h1>POEkemon</h1>
+        <nav>
+            <button id="btn-map" class="nav-btn">Map</button>
+            <button id="btn-dex" class="nav-btn">PoEkedex</button>
+            <button id="btn-quedex" class="nav-btn">PoEQuedex</button>
+            <button id="btn-trainer" class="nav-btn">Trainer Card</button> </nav>
+    </header>
+
+    <div id="screen-characterSelect" class="screen active">
+        <h2>Select Your Instructor</h2>
+        <div class="character-grid">
+            <div class="character-card">
+                <h3>Mr. V</h3>
+                <p>Engineering</p>
+                <canvas id="char-v-canvas" width="80" height="80"></canvas>
+                <button class="starter-btn" onclick="selectStarter('MrV', 1)">Start with Fulcru (Mech)</button>
+                <button class="starter-btn" onclick="selectStarter('MrV', 21)">Start with Ohm-Bug (Circuits)</button>
+                <button class="starter-btn" onclick="selectStarter('MrV', 44)">Start with Truss-T (Statics)</button>
+            </div>
+            <div class="character-card">
+                <h3>Ms. G</h3>
+                <p>Aerospace</p>
+                <canvas id="char-g-canvas" width="80" height="80"></canvas>
+                <button class="starter-btn" onclick="selectStarter('MsG', 60)">Start with Lift-Off (Aero)</button>
+                <button class="starter-btn" onclick="selectStarter('MsG', 63)">Start with Glide-Wing (Flight)</button>
+                <button class="starter-btn" onclick="selectStarter('MsG', 65)">Start with Propellite (Thrust)</button>
             </div>
         </div>
-
-        <div id="release-overlay" class="hidden">
-            <div class="settings-content" style="width: 90%;">
-                <h3 style="color: #c8102e;">Party Full!</h3>
-                <p id="release-prompt" style="font-size: 8px; margin-bottom: 15px;">Choose a PoEkemon to set free:</p>
-                <div id="release-grid" class="character-grid"></div>
-                <button id="release-new-btn" class="action-btn catch-btn" style="margin-top:15px; width:100%;">Set New Catch Free</button>
-            </div>
-        </div>
-
-        <div id="message-overlay" class="hidden">
-            <div class="message-content">
-                <p id="message-text">Message goes here</p>
-                <div class="msg-btn-container">
-                    <button id="msg-btn-ok" class="action-btn catch-btn">OK</button>
-                    <button id="msg-btn-cancel" class="action-btn attack-btn hidden">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="dex-card-overlay" class="hidden">
-            <div class="dex-card">
-                <button class="close-card" onclick="closeDexCard()">X</button>
-                <div class="dex-card-header">
-                    <h2 id="card-name">NAME</h2>
-                    <span id="card-id">#00</span>
-                </div>
-                <div class="dex-card-body">
-                    <div id="card-sprite-container">
-                        <canvas id="cardCanvas" width="120" height="120"></canvas>
-                    </div>
-                    <div class="dex-card-info">
-                        <p><strong>Type:</strong> <span id="card-type">---</span></p>
-                        <p><strong>Level:</strong> <span id="card-level">1</span></p>
-                        <p><strong>Unit:</strong> <span id="card-unit">0</span></p>
-                        <div class="stats-mini">
-                            <span>HP: <span id="card-hp">0</span></span>
-                            <span>ATK: <span id="card-atk">0</span></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="dex-card-footer">
-                    <p id="card-desc">Description goes here...</p>
-                </div>
-            </div>
-        </div>
-
-        <section id="screen-characterSelect" class="screen active">
-            <h2>Select Your Instructor</h2>
-            <div class="character-grid">
-                <div class="character-card">
-                    <h3>Mr. V</h3>
-                    <p class="theme-text">Digital Electronics</p>
-                    <button class="starter-btn" onclick="selectStarter('MrV', 61)">ArchaeopXORyx</button>
-                    <button class="starter-btn" onclick="selectStarter('MrV', 62)">Countertle</button>
-                    <button class="starter-btn" onclick="selectStarter('MrV', 63)">Latchander</button>
-                </div>
-                <div class="character-card">
-                    <h3>Mrs. G</h3>
-                    <p class="theme-text">Aerospace Engineering</p>
-                    <button class="starter-btn" onclick="selectStarter('MrsG', 64)">Liftander</button>
-                    <button class="starter-btn" onclick="selectStarter('MrsG', 65)">Propellite</button>
-                    <button class="starter-btn" onclick="selectStarter('MrsG', 66)">Turburtle</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="screen-map" class="screen hidden">
-            <h2 id="map-label">Unit 1: The Leveraged Lowlands</h2>
-            <div class="canvas-container">
-                <canvas id="gameCanvas" width="600" height="400"></canvas>
-            </div>
-            <p class="controls-hint">WASD to Move | Green = Wild | Blue = Clinic | Grey = Train</p>
-        </section>
-
-        <section id="screen-battle" class="screen hidden">
-            <div class="battle-stage">
-                <div class="combatant enemy">
-                    <div class="stats-box">
-                        <h3 id="enemy-name">???</h3>
-                        <div class="hp-bar-bg"><div id="enemy-hp" class="hp-bar-fill"></div></div>
-                    </div>
-                    <div class="placeholder-sprite"></div>
-                </div>
-                <div class="combatant player">
-                    <div id="player-sprite" class="placeholder-sprite player-placeholder"></div>
-                    <div class="stats-box">
-                        <h3 id="player-mon-name">Your Mon</h3>
-                        <div class="hp-bar-bg"><div id="player-hp" class="hp-bar-fill"></div></div>
-                    </div>
-                </div>
-            </div>
-            <div class="battle-ui">
-                <div id="dialogue-box"></div>
-                <div id="action-menu" class="hidden"></div>
-                <div id="question-container" class="hidden">
-                    <p id="question-text"></p>
-                    <div id="answer-grid"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="screen-dex" class="screen hidden">
-            <h2 style="color: #0033a0; margin-bottom: 10px;">Current Party (Max 6)</h2>
-            <div id="party-grid" class="party-grid"></div>
-            
-            <h2 style="color: #555; margin: 20px 0 10px 0;">PoEkedex Record</h2>
-            <div id="dex-grid"></div>
-        </section>
-
-        <section id="screen-trainStation" class="screen hidden">
-            <h2 style="color: #0033a0; margin-bottom: 20px;">Waltonia Central Station</h2>
-            <div style="display: flex; gap: 20px; width: 100%;">
-                <div style="flex: 1; border: 4px solid var(--border-color); padding: 15px; background: white; max-height: 400px; overflow-y: auto;">
-                    <h3 style="margin-bottom: 15px;">Departures</h3>
-                    <div id="unit-travel-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
-                </div>
-                <div style="flex: 1; border: 4px solid var(--border-color); padding: 15px; background: #fffde7; text-align: center;">
-                    <h3 style="color: #c8102e; margin-bottom: 10px;">Data Terminal</h3>
-                    <button onclick="downloadSaveFile()" class="action-btn catch-btn" style="width: 100%; margin-bottom: 15px;">Download Save</button>
-                    <label for="save-upload" class="action-btn attack-btn" style="display: inline-block; width: 100%; cursor: pointer;">Upload Save</label>
-                    <input type="file" id="save-upload" accept=".json" class="hidden" onchange="uploadSaveFile(event)">
-                    <button onclick="window.showScreen('map')" class="nav-btn" style="margin-top: 30px; width: 100%;">Exit Station</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="screen-quedex" class="screen hidden">
-            <h2 style="color: #0033a0; margin-bottom: 10px;">PoEQuedex: Study Guide</h2>
-            <div style="margin-bottom: 20px; text-align: center;">
-                <label for="quedex-unit-select" style="font-size: 10px; margin-right: 10px;">Select Unit: </label>
-                <select id="quedex-unit-select" onchange="renderQuedex()" style="font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 5px; border: 2px solid var(--border-color);">
-                    <option value="1">Unit 1: Mechanisms</option>
-                    <option value="2">Unit 2: Machine Control</option>
-                    <option value="3">Unit 3: Energy</option>
-                    <option value="4">Unit 4: Statics</option>
-                    <option value="5">Unit 5: Transportation</option>
-                    <option value="6">Unit 6: Kinematics & AI</option>
-                </select>
-            </div>
-            <p style="font-size: 8px; color: #555; margin-bottom: 15px;">Click a card to reveal the answer and explanation.</p>
-            <div id="quedex-grid" class="quedex-grid"></div>
-        </section>
-
     </div>
 
-    <script src="world.js"></script>
-    <script src="poekedex.js"></script>
-    <script src="questions.js"></script>
-    <script src="trainers.js"></script>
-    <script src="script.js"></script>
+    <div id="screen-map" class="screen hidden">
+        <h2 id="map-label">Waltonia Map</h2>
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+        </div>
+        <p class="controls-hint">Use W,A,S,D or Arrow Keys to move. Blue = Clinic. Grey = Train Station. Green/Red = Wild Grass.</p>
+    </div>
+
+    <div id="screen-trainStation" class="screen hidden">
+        <h2>Waltonia Train Station</h2>
+        <p>Select a Unit Region to travel to:</p>
+        <div id="unit-travel-list" style="margin-top: 20px; width: 80%;"></div>
+        
+        <div class="data-section" style="margin-top: 40px; border-top: 4px dashed var(--border-color); padding-top: 20px; width: 80%; text-align: center;">
+            <h3 style="color: var(--walton-red); margin-bottom: 15px;">System Data</h3>
+            <button class="starter-btn" onclick="downloadSaveFile()">Export Save File</button>
+            <p style="font-size: 8px; margin: 10px 0;">Import Save:</p>
+            <input type="file" id="save-upload" accept=".json" onchange="uploadSaveFile(event)" style="font-size: 8px; margin-bottom: 20px;">
+            <br>
+            <button id="btn-reset-data" class="action-btn" style="background: var(--walton-red); color: white; width: 100%;">Erase All Save Data</button>
+        </div>
+    </div>
+
+    <div id="screen-battle" class="screen hidden">
+        <div class="battle-stage">
+            <div class="combatant enemy">
+                <div class="stats-box">
+                    <h3 id="enemy-name">Enemy</h3>
+                    <div class="hp-bar-bg"><div id="enemy-hp" class="hp-bar-fill hp-green" style="width: 100%;"></div></div>
+                </div>
+                <div class="placeholder-sprite"></div>
+            </div>
+            <div class="combatant player">
+                <div class="stats-box">
+                    <h3 id="player-mon-name">Player</h3>
+                    <div class="hp-bar-bg"><div id="player-hp" class="hp-bar-fill hp-green" style="width: 100%;"></div></div>
+                </div>
+                <div id="player-sprite" class="placeholder-sprite"></div>
+            </div>
+        </div>
+        <div class="battle-ui">
+            <p id="dialogue-box" style="line-height: 1.5; font-size: 10px; height: 30px;">Wild PoEkemon appeared!</p>
+            <div id="action-menu"></div>
+            <div id="question-container" class="hidden">
+                <p id="question-text" style="color: var(--walton-blue); margin-bottom: 10px;"></p>
+                <div id="answer-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-dex" class="screen hidden">
+        <h2>Your Party</h2>
+        <div id="party-grid" class="party-grid" style="margin-bottom: 20px;"></div>
+        <h2>POEkedex</h2>
+        <div id="dex-grid"></div>
+    </div>
+
+    <div id="screen-quedex" class="screen hidden">
+        <h2>PoEQuedex Study Guide</h2>
+        <div style="margin-bottom: 20px;">
+            <label for="quedex-unit-select">Select Unit: </label>
+            <select id="quedex-unit-select" onchange="renderQuedex()" style="font-family: 'Press Start 2P'; font-size: 8px; padding: 5px;">
+                <option value="1">Unit 1: Mechanisms</option>
+                <option value="2">Unit 2: Machine Control</option>
+            </select>
+        </div>
+        <div id="quedex-grid" class="quedex-grid"></div>
+    </div>
+
+    <div id="message-overlay" class="hidden">
+        <div class="message-content">
+            <p id="message-text">Message</p>
+            <div class="msg-btn-container">
+                <button id="msg-btn-ok" class="nav-btn">OK</button>
+                <button id="msg-btn-cancel" class="nav-btn hidden">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="release-overlay" class="hidden">
+        <div class="settings-content" style="width: 80%;">
+            <h2 style="color: var(--walton-red); margin-bottom: 15px;">Party is Full!</h2>
+            <p style="font-size: 8px; line-height: 1.6; margin-bottom: 20px;">You must release a PoEkemon from your party to make room.</p>
+            <div id="release-grid" class="character-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
+            <button id="release-new-btn" class="nav-btn" style="margin-top: 20px;">Release New Catch</button>
+        </div>
+    </div>
+
+    <div id="dex-card-overlay" class="hidden">
+        <div class="dex-card">
+            <button class="close-card" onclick="closeDexCard()">X</button>
+            <div class="dex-card-header">
+                <h2 id="card-name">NAME</h2>
+                <span id="card-id">#00</span>
+            </div>
+            <div class="dex-card-body">
+                <div id="card-sprite-container">
+                    <canvas id="cardCanvas" width="120" height="120"></canvas>
+                </div>
+                <div class="dex-card-info">
+                    <p><strong>Type:</strong> <span id="card-type">Unknown</span></p>
+                    <p><strong>Evo Level:</strong> <span id="card-level">1</span></p>
+                    <p><strong>Found In:</strong> Unit <span id="card-unit">1</span></p>
+                    <div class="stats-mini">
+                        <span>HP: <span id="card-hp">0</span></span>
+                        <span>ATK: <span id="card-atk">0</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="dex-card-footer">
+                <p id="card-desc">Description goes here.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="trainer-card-overlay" class="hidden">
+        <div class="tc-card">
+            <button class="close-card" onclick="document.getElementById('trainer-card-overlay').classList.add('hidden')">X</button>
+            <div class="tc-header">
+                <canvas id="tc-avatar-canvas" width="60" height="60"></canvas>
+                <div>
+                    <h2 id="tc-name">Trainer</h2>
+                    <p>Waltonia ID: <span id="tc-id-num">00001</span></p>
+                </div>
+            </div>
+            
+            <div class="tc-badges">
+                <h3>Gym Badges</h3>
+                <div id="tc-badge-grid" class="tc-badge-grid"></div>
+            </div>
+
+            <div class="tc-body">
+                <div class="tc-stats">
+                    <h3>Performance</h3>
+                    <p>Trivia Accuracy: <span id="tc-accuracy" class="stat-highlight">0%</span></p>
+                    <p>Questions Ans: <span id="tc-questions">0</span></p>
+                    <p>Battles Won: <span id="tc-battles">0</span></p>
+                    <p>POEkedex: <span id="tc-caught" class="stat-highlight">0</span>/66</p>
+                </div>
+                <div class="tc-favorite">
+                    <h3>Most Deployed</h3>
+                    <div class="tc-fav-box">
+                        <canvas id="tc-fav-canvas" width="80" height="80"></canvas>
+                    </div>
+                    <p id="tc-fav-name">None</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="world.js"></script>
+<script src="poekedex.js"></script>
+<script src="questions.js"></script>
+<script src="trainers.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
