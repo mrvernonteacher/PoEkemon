@@ -1,5 +1,5 @@
 // ==========================================
-// POEKEDEX DATA (66 Creatures) - EVOLUTION UPDATE
+// POEKEDEX DATA (66 Creatures) - LEVEL 1-3 SYSTEM
 // ==========================================
 
 const poekedex = [
@@ -57,7 +57,7 @@ const poekedex = [
     { 
         id: 10, name: "Maw-ment", unit: 1, type: "Gear Train", desc: "Boss: Manipulates the Moment of any object to freeze it.", 
         hp: 80, baseAtk: 12, basicAtkName: "Gear Spin",
-        evolutions: [] // Bosses don't evolve
+        evolutions: [] 
     },
 
     // ------------------------------------------
@@ -343,11 +343,11 @@ const poekedex = [
     // STARTERS: Digital Electronics (Mr. V)
     // ------------------------------------------
     { 
-        id: 61, name: "ORchaeopteryx", unit: 0, type: "Digital Logic", desc: "Emits logical signals (AND, OR, NOT) to process information.", 
+        id: 61, name: "ArXORopteryx", unit: 0, type: "Digital Logic", desc: "Emits logical signals (XOR, OR, NAND) to process information.", 
         hp: 30, baseAtk: 6, basicAtkName: "Bit Shift",
         evolutions: [
-            { reqXP: 10, name: "PterANDadon", desc: "Grew a massive universal gate on its back.", hpBonus: 12, atkBonus: 4, specialAtkName: "NAND Blast", specialAtkPower: 18 },
-            { reqXP: 50, name: "NANDragon", desc: "Can process millions of logic combinations instantly.", hpBonus: 25, atkBonus: 9, specialAtkName: "Universal Truth", specialAtkPower: 34 }
+            { reqXP: 10, name: "PterORdactyl", desc: "Its wings span wide like an OR gate.", hpBonus: 12, atkBonus: 4, specialAtkName: "OR Sweep", specialAtkPower: 18 },
+            { reqXP: 50, name: "NANDragon", desc: "The ultimate universal logic beast.", hpBonus: 25, atkBonus: 9, specialAtkName: "NAND Breath", specialAtkPower: 34 }
         ]
     },
     { 
