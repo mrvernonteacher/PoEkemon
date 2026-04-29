@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Waltonia PoEkemon</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -46,12 +46,21 @@
         <div class="canvas-container">
             <canvas id="gameCanvas" width="600" height="400"></canvas>
         </div>
-        <p class="controls-hint">Use W,A,S,D or Arrow Keys to move. Blue = Clinic. Grey = Train Station. Green/Red = Wild Grass.</p>
+        <p class="controls-hint">Use W,A,S,D or Arrow Keys to move. Blue = Clinic. Grey = Station.</p>
+        
+        <div id="mobile-controls" class="mobile-controls">
+            <button class="dpad-btn" id="dpad-up">▲</button>
+            <div class="dpad-row">
+                <button class="dpad-btn" id="dpad-left">◀</button>
+                <button class="dpad-btn" id="dpad-right">▶</button>
+            </div>
+            <button class="dpad-btn" id="dpad-down">▼</button>
+        </div>
     </div>
 
     <div id="screen-trainStation" class="screen hidden">
         <h2 style="margin-bottom: 10px;">Waltonia Train Station</h2>
-        <p style="margin-bottom: 20px;">Select a Unit Region to travel or manage your data.</p>
+        <p style="margin-bottom: 20px; font-size: 8px;">Select a Unit Region to travel or manage your data.</p>
         
         <div class="station-layout">
             <div class="station-left">
@@ -131,7 +140,14 @@
         </div>
     </div>
 
-    <div id="release-overlay" class="hidden"></div>
+    <div id="release-overlay" class="hidden">
+        <div class="settings-content" style="width: 90%; max-width: 600px;">
+            <h2 style="color: var(--walton-red); margin-bottom: 15px;">Party is Full!</h2>
+            <p style="font-size: 8px; line-height: 1.6; margin-bottom: 20px;">You must release a PoEkemon from your party to make room.</p>
+            <div id="release-grid" class="character-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
+            <button id="release-new-btn" class="nav-btn" style="margin-top: 20px;">Release New Catch</button>
+        </div>
+    </div>
 
     <div id="dex-card-overlay" class="hidden">
         <div class="dex-card">
@@ -198,7 +214,7 @@
     <div id="kennel-overlay" class="hidden">
         <div class="kennel-card">
             <button class="close-card" onclick="document.getElementById('kennel-overlay').classList.add('hidden')">X</button>
-            <h2 style="color: var(--walton-blue); margin-bottom: 20px; border-bottom: 4px solid var(--walton-blue); padding-bottom: 10px;">PoEkennel Storage System</h2>
+            <h2 style="color: var(--walton-blue); margin-bottom: 20px; border-bottom: 4px solid var(--walton-blue); padding-bottom: 10px;">PoEkennel Storage</h2>
             
             <div class="kennel-layout">
                 <div class="kennel-party">
