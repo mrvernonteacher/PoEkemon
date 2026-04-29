@@ -301,6 +301,13 @@ window.loadGame = function() {
             gameState = { ...gameState, ...loadedState };
         }
         
+        // --- ANTI-SOFT-LOCK FIX ---
+        // If the game loads, automatically kill any ghost battles caused by refreshing
+        gameState.inBattle = false;
+        gameState.currentEnemy = null;
+        gameState.currentTrainer = null;
+        gameState.gymQueue = [];
+        
         // Enforce data types to prevent crashes
         if (!Array.isArray(gameState.playerTeam)) gameState.playerTeam = [];
         if (!Array.isArray(gameState.pokedexCaught)) gameState.pokedexCaught = [];
@@ -806,6 +813,7 @@ window.enemyTurn = function() {
                 
                 gameState.currentTrainer = null;
                 gameState.gymQueue = [];
+                window.saveGame(); // Save restored HP and wipe queue
                 window.endBattle();
             });
         } else {
@@ -928,6 +936,7 @@ window.endBattle = function() {
             }
         } else {
             gameState.inBattle = false;
+            window.saveGame(); // The crucial missing link!
             window.showScreen('map');
         }
     };
