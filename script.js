@@ -55,7 +55,7 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 3. SPRITE ENGINE
+// 3. SPRITE ENGINE (NEW FILE NAMING SYSTEM)
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -82,19 +82,27 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
 
 window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
     if (!mon) return;
-    if (spriteCache[mon.id] === undefined) {
+    
+    // Ensure the level defaults to 1 for rendering if undefined
+    const currentLevel = mon.evolutionLevel || 1;
+    const spriteKey = `${mon.id}-${currentLevel}`;
+
+    if (spriteCache[spriteKey] === undefined) {
         const img = new Image();
-        img.src = `assets/${mon.id}.png`; 
+        
+        // Looks for id.1.png, id.2.png, or id.3.png
+        img.src = `assets/${mon.id}.${currentLevel}.png`; 
+        
         img.onload = () => {
-            spriteCache[mon.id] = img;
+            spriteCache[spriteKey] = img;
             if (document.getElementById('screen-battle').classList.contains('active')) window.updateHP(); 
         };
-        img.onerror = () => spriteCache[mon.id] = null; 
-        spriteCache[mon.id] = 'loading';
+        img.onerror = () => spriteCache[spriteKey] = null; 
+        spriteCache[spriteKey] = 'loading';
     }
 
-    if (spriteCache[mon.id] && spriteCache[mon.id] !== 'loading') {
-        ctx.drawImage(spriteCache[mon.id], x, y, size, size);
+    if (spriteCache[spriteKey] && spriteCache[spriteKey] !== 'loading') {
+        ctx.drawImage(spriteCache[spriteKey], x, y, size, size);
     } else {
         const s = size / 40;
         ctx.save();
@@ -227,7 +235,7 @@ window.loadGame = function() {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
         
-        // DEEP PATCH: Syncs old saves with new poekedex.js names/stats
+        // DEEP PATCH: Syncs old saves with new poekedex.js and upgrades to Level 1, 2, 3 system
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
             if (masterDex) {
@@ -235,15 +243,25 @@ window.loadGame = function() {
                 mon.baseAtk = masterDex.baseAtk;
                 mon.evolutions = JSON.parse(JSON.stringify(masterDex.evolutions));
                 
-                // Keep the names synced with their current evolution level!
-                if (mon.evolutionLevel === undefined) mon.evolutionLevel = 0;
                 if (mon.xp === undefined) mon.xp = 0;
                 
-                if (mon.evolutionLevel === 0) {
-                    mon.name = masterDex.name;
-                } else {
-                    mon.name = masterDex.evolutions[mon.evolutionLevel - 1].name;
+                // Intelligent Level Re-Calculation based on name matching
+                let correctLevel = 1;
+                if (mon.name === masterDex.name) {
+                    correctLevel = 1;
+                } else if (masterDex.evolutions.length > 0 && mon.name === masterDex.evolutions[0].name) {
+                    correctLevel = 2;
+                } else if (masterDex.evolutions.length > 1 && mon.name === masterDex.evolutions[1].name) {
+                    correctLevel = 3;
+                } else if (mon.evolutionLevel === 0) {
+                    correctLevel = 1; // Catch all legacy level 0
                 }
+                
+                mon.evolutionLevel = correctLevel;
+                
+                // Enforce names
+                if (mon.evolutionLevel === 1) mon.name = masterDex.name;
+                else mon.name = masterDex.evolutions[mon.evolutionLevel - 2].name;
             }
         });
     }
@@ -293,7 +311,7 @@ window.selectStarter = function(char, id) {
     gameState.playerCharacter = char;
     const mon = poekedex.find(p => p.id === id);
     if (mon) {
-        gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp, xp: 0, evolutionLevel: 0 }];
+        gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp, xp: 0, evolutionLevel: 1 }];
         gameState.pokedexCaught.push(id); 
         playerPos = { x: 25, y: 25 }; 
         window.saveGame();
@@ -396,6 +414,8 @@ window.startEncounter = function(unit, isGym) {
     const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
     gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
     gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
+    // Wild enemies are always Level 1
+    gameState.currentEnemy.evolutionLevel = 1; 
 
     document.getElementById('enemy-name').textContent = gameState.currentEnemy.name;
     document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
@@ -429,8 +449,10 @@ window.renderBattleMenu = function() {
     btnBasic.onclick = () => window.prepareAttack('basic');
     menu.appendChild(btnBasic);
 
-    if (mon.evolutionLevel > 0) {
-        const currentEvo = mon.evolutions[mon.evolutionLevel - 1];
+    // Show special attack if Level 2 or Level 3
+    if (mon.evolutionLevel > 1) {
+        // -2 because level 2 uses index 0 in the evolutions array
+        const currentEvo = mon.evolutions[mon.evolutionLevel - 2];
         const btnSpecial = document.createElement('button');
         btnSpecial.className = 'action-btn attack-btn';
         btnSpecial.style.background = '#e67e22'; 
@@ -459,7 +481,7 @@ window.renderBattleMenu = function() {
 
 window.prepareAttack = function(type) {
     const mon = gameState.playerTeam[0];
-    if (type === 'basic' && mon.evolutionLevel > 0) {
+    if (type === 'basic' && mon.evolutionLevel > 1) {
         window.executeAttack('basic', true, false); 
         return;
     }
@@ -527,13 +549,13 @@ window.executeAttack = function(type, success, earnXP) {
     let msg = "";
     
     let attackName = mon.basicAtkName;
-    if (type === 'special' && mon.evolutionLevel > 0) {
-        attackName = mon.evolutions[mon.evolutionLevel - 1].specialAtkName;
+    if (type === 'special' && mon.evolutionLevel > 1) {
+        attackName = mon.evolutions[mon.evolutionLevel - 2].specialAtkName;
     }
     
     if (success) {
         if (type === 'special') {
-            const power = mon.evolutions[mon.evolutionLevel - 1].specialAtkPower || 10; 
+            const power = mon.evolutions[mon.evolutionLevel - 2].specialAtkPower || 10; 
             dmg = power + Math.floor(Math.random() * 5); 
         } else {
             dmg = (mon.baseAtk || 5) + Math.floor(Math.random() * 4);
@@ -603,7 +625,7 @@ window.attemptCapture = function() {
                 
                 if (Math.random() <= catchChance) {
                     window.showMessage(`Correct! You caught ${gameState.currentEnemy.name}!`, () => {
-                        const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 0 };
+                        const newCatch = { ...gameState.currentEnemy, currentHP: gameState.currentEnemy.hp, maxHP: gameState.currentEnemy.hp, xp: 0, evolutionLevel: 1 };
                         if (!gameState.pokedexCaught.includes(newCatch.id)) gameState.pokedexCaught.push(newCatch.id);
 
                         if (gameState.playerTeam.length < 6) {
@@ -670,9 +692,11 @@ window.endBattle = function() {
     gameState.inBattle = false;
     let evoQueue = [];
     
+    // Check entire party for evolutions
     gameState.playerTeam.forEach(mon => {
-        if (mon.evolutions && mon.evolutionLevel < mon.evolutions.length) {
-            const nextEvo = mon.evolutions[mon.evolutionLevel];
+        // -1 to compare Level to the length of the array correctly
+        if (mon.evolutions && (mon.evolutionLevel - 1) < mon.evolutions.length) {
+            const nextEvo = mon.evolutions[mon.evolutionLevel - 1];
             if (mon.xp >= nextEvo.reqXP) {
                 evoQueue.push(mon);
             }
@@ -685,7 +709,7 @@ window.endBattle = function() {
             return;
         }
         const mon = evoQueue.shift();
-        const nextEvo = mon.evolutions[mon.evolutionLevel];
+        const nextEvo = mon.evolutions[mon.evolutionLevel - 1];
         window.showMessage(`What?! Your ${mon.name} is evolving into ${nextEvo.name}!`, () => {
             mon.name = nextEvo.name;
             mon.maxHP += nextEvo.hpBonus;
