@@ -9,6 +9,7 @@ let gameState = {
     playerCharacter: null,
     playerTeam: [],       
     pokedexCaught: [],    
+    answeredQuestions: [], // Tracks question IDs for the PoEQuedex
     badges: [],
     currentUnit: 1,
     currentEnemy: null,
@@ -236,6 +237,7 @@ window.loadGame = function() {
     if (saved) {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
+        if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
         
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
@@ -330,7 +332,6 @@ window.onload = () => {
         window.showScreen('dex');
     };
 
-    // The Missing Button Link for the Study Guide!
     document.getElementById('btn-quedex').onclick = () => {
         if (gameState.inBattle) {
             window.showMessage("No studying during a battle! Focus on your opponent!");
@@ -342,6 +343,15 @@ window.onload = () => {
 
     if (!gameState.playerTeam || gameState.playerTeam.length === 0) window.showScreen('characterSelect');
     else window.showScreen('map');
+};
+
+// Helper function to track unlocked questions
+window.unlockQuestion = function(qId) {
+    if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
+    if (!gameState.answeredQuestions.includes(qId)) {
+        gameState.answeredQuestions.push(qId);
+        window.saveGame();
+    }
 };
 
 // ==========================================
@@ -367,6 +377,7 @@ window.triggerClinic = function() {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
+            window.unlockQuestion(q.id); // Track question!
             document.querySelector('.battle-stage').style.display = 'block';
             if (i === q.ans) {
                 gameState.playerTeam.forEach(mon => mon.currentHP = mon.maxHP);
@@ -486,7 +497,6 @@ window.renderBattleMenu = function() {
 };
 
 window.getQuestion = function() {
-    // Determine if we need regular or gym questions. Gym questions aren't fully implemented yet, so default to regular for standard encounters.
     let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
     if (qArray.length === 0) return null;
     return qArray[Math.floor(Math.random() * qArray.length)];
@@ -517,6 +527,7 @@ window.prepareAttack = function(type) {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
+            window.unlockQuestion(q.id); // Track question!
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) window.executeAttack(gameState.queuedAttack, true, true);
             else window.executeAttack(gameState.queuedAttack, false, false);
@@ -540,6 +551,7 @@ window.prepareEscape = function() {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
+            window.unlockQuestion(q.id); // Track question!
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) {
                 if (Math.random() < 0.5) window.showMessage("Got away safely!", () => window.endBattle());
@@ -627,6 +639,7 @@ window.attemptCapture = function() {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
+            window.unlockQuestion(q.id); // Track question!
             if (i === q.ans) {
                 const eRatio = gameState.currentEnemy.currentHP / gameState.currentEnemy.hp;
                 const catchChance = eRatio <= 0.33 ? 0.90 : 0.50;
@@ -862,38 +875,53 @@ window.renderQuedex = function() {
 
     if (!questionBank[unit]) return;
 
-    // Combine regular and gym questions for study review
     const allQuestions = [...questionBank[unit].regular, ...questionBank[unit].gym];
 
     allQuestions.forEach((q, index) => {
+        // Check if the student has seen and answered this question yet
+        const isUnlocked = gameState.answeredQuestions && gameState.answeredQuestions.includes(q.id);
+
         const container = document.createElement('div');
         container.className = 'flashcard-container';
-        // The click event that triggers the 3D flip!
-        container.onclick = function() {
-            this.querySelector('.flashcard').classList.toggle('flipped');
-        };
-
+        
         const card = document.createElement('div');
         card.className = 'flashcard';
 
-        // --- FRONT OF CARD ---
-        const front = document.createElement('div');
-        front.className = 'flashcard-front';
-        let badgeType = q.id.includes('_g') ? '<span style="color:#c8102e;">[GYM]</span>' : '';
-        front.innerHTML = `<h4>Question #${index + 1} ${badgeType}</h4><p>${q.q}</p>`;
+        if (isUnlocked) {
+            // Unlocked Card Logic
+            container.onclick = function() {
+                this.querySelector('.flashcard').classList.toggle('flipped');
+            };
 
-        // --- BACK OF CARD ---
-        const back = document.createElement('div');
-        back.className = 'flashcard-back';
-        const correctAnswerText = q.options[q.ans];
-        back.innerHTML = `
-            <h4>Answer</h4>
-            <p class="ans-text">${correctAnswerText}</p>
-            <p class="exp-text">${q.exp || "No explanation provided."}</p>
-        `;
+            const front = document.createElement('div');
+            front.className = 'flashcard-front';
+            let badgeType = q.id.includes('_g') ? '<span style="color:#c8102e;">[GYM]</span>' : '';
+            front.innerHTML = `<h4>Question #${index + 1} ${badgeType}</h4><p>${q.q}</p>`;
 
-        card.appendChild(front);
-        card.appendChild(back);
+            const back = document.createElement('div');
+            back.className = 'flashcard-back';
+            const correctAnswerText = q.options[q.ans];
+            back.innerHTML = `
+                <h4>Answer</h4>
+                <p class="ans-text">${correctAnswerText}</p>
+                <p class="exp-text">${q.exp || "No explanation provided."}</p>
+            `;
+
+            card.appendChild(front);
+            card.appendChild(back);
+        } else {
+            // Locked Card Logic
+            container.classList.add('locked');
+            card.classList.add('locked');
+
+            const front = document.createElement('div');
+            front.className = 'flashcard-front';
+            let badgeType = q.id.includes('_g') ? '<span style="color:#c8102e;">[GYM]</span>' : '';
+            front.innerHTML = `<h4>Question #${index + 1} ${badgeType}</h4><p>???</p>`;
+            
+            card.appendChild(front);
+        }
+
         container.appendChild(card);
         grid.appendChild(container);
     });
