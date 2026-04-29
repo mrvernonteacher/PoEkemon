@@ -168,3 +168,11 @@ const questionBank = {
             { id: "u2_g20", q: "A student writes pseudocode: 'Turn right until wall.' Which sensor is best to implement this?", options: ["Bumper Switch", "Ultrasonic Distance Sensor (Sonar)", "Line Tracker", "Potentiometer"], ans: 1, exp: "While a bump switch requires crashing into the wall, sonar allows you to detect it from a safe distance." }
         ]
     },
+// ------------------------------------------
+    // SYSTEM PLACEHOLDERS (DO NOT DELETE)
+    // ------------------------------------------
+    3: { regular: [], gym: [] },
+    4: { regular: [], gym: [] },
+    5: { regular: [], gym: [] },
+    6: { regular: [], gym: [] }
+};
