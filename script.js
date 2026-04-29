@@ -211,7 +211,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
 };
 
 // ==========================================
-// 4. MAP NAVIGATION 
+// 4. MAP NAVIGATION & CONTROLS
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
@@ -256,18 +256,16 @@ window.drawMap = function() {
     window.drawCharacterSprite(ctx, px, py, TILE_SIZE);
 };
 
-window.addEventListener('keydown', (e) => {
+// NEW: Extracted movement logic so keyboard and touch buttons can share it
+window.movePlayer = function(dx, dy) {
     const screenMap = document.getElementById('screen-map');
     const msgOverlay = document.getElementById('message-overlay');
     
     if (!screenMap || !screenMap.classList.contains('active')) return;
     if (msgOverlay && !msgOverlay.classList.contains('hidden')) return;
 
-    let nx = playerPos.x, ny = playerPos.y;
-    if (['ArrowUp', 'w'].includes(e.key)) ny--;
-    if (['ArrowDown', 's'].includes(e.key)) ny++;
-    if (['ArrowLeft', 'a'].includes(e.key)) nx--;
-    if (['ArrowRight', 'd'].includes(e.key)) nx++;
+    let nx = playerPos.x + dx;
+    let ny = playerPos.y + dy;
 
     const map = unitMaps[gameState.currentUnit];
     if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
@@ -279,6 +277,13 @@ window.addEventListener('keydown', (e) => {
         else if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
         else if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
     }
+};
+
+window.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'w'].includes(e.key)) window.movePlayer(0, -1);
+    if (['ArrowDown', 's'].includes(e.key)) window.movePlayer(0, 1);
+    if (['ArrowLeft', 'a'].includes(e.key)) window.movePlayer(-1, 0);
+    if (['ArrowRight', 'd'].includes(e.key)) window.movePlayer(1, 0);
 });
 
 // ==========================================
@@ -562,6 +567,24 @@ window.onload = () => {
 
     const btnTrainer = document.getElementById('btn-trainer');
     if (btnTrainer) btnTrainer.onclick = window.openTrainerCard;
+
+    // NEW: Wiring up the Touch D-Pad for Mobile
+    const setupDpad = (id, dx, dy) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        // Handle both touch and mouse interactions seamlessly
+        const handleMove = (e) => {
+            e.preventDefault(); // Stop double-firing on touch screens
+            window.movePlayer(dx, dy);
+        };
+        btn.addEventListener('touchstart', handleMove, {passive: false});
+        btn.addEventListener('mousedown', handleMove);
+    };
+
+    setupDpad('dpad-up', 0, -1);
+    setupDpad('dpad-down', 0, 1);
+    setupDpad('dpad-left', -1, 0);
+    setupDpad('dpad-right', 1, 0);
 
     if (!gameState.playerTeam || gameState.playerTeam.length === 0) {
         window.showScreen('characterSelect');
