@@ -70,7 +70,7 @@ header h1 { font-size: 16px; color: #ffd700; }
 
 .hidden { display: none !important; }
 
-#settings-overlay, #release-overlay, #message-overlay, #dex-card-overlay { 
+#release-overlay, #message-overlay, #dex-card-overlay, #trainer-card-overlay { 
     position: absolute; 
     top: 0; 
     left: 0; 
@@ -102,40 +102,6 @@ header h1 { font-size: 16px; color: #ffd700; }
 
 #message-text { margin-bottom: 25px; font-size: 10px; }
 .msg-btn-container { display: flex; justify-content: center; gap: 15px; }
-
-/* --- POEKEDEX DETAIL CARD --- */
-.dex-card {
-    width: 450px; background: white; border: 8px solid var(--border-color);
-    padding: 20px; position: relative; box-shadow: 0 0 20px rgba(255,255,255,0.2);
-}
-
-.dex-card-header {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 4px solid var(--walton-blue); padding-bottom: 10px; margin-bottom: 15px;
-}
-
-.dex-card-header h2 { font-size: 14px; color: var(--walton-blue); }
-
-.dex-card-body { display: flex; gap: 20px; align-items: center; margin-bottom: 15px; }
-
-#card-sprite-container {
-    width: 130px; height: 130px; background: #e0f7fa;
-    border: 4px solid var(--border-color); display: flex; justify-content: center; align-items: center;
-}
-
-.dex-card-info p { font-size: 8px; margin-bottom: 8px; }
-.stats-mini { font-size: 8px; color: var(--walton-red); display: flex; gap: 10px; margin-top: 10px; }
-
-.dex-card-footer {
-    background: #eee; padding: 10px; border: 2px inset #ccc;
-    font-size: 8px; line-height: 1.6; min-height: 60px;
-}
-
-.close-card {
-    position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
-    background: var(--walton-red); color: white; border: 4px solid var(--border-color);
-    font-family: 'Press Start 2P'; cursor: pointer; z-index: 2001;
-}
 
 /* --- MAP --- */
 .canvas-container { background: #333; padding: 5px; border: 4px solid var(--border-color); margin: 10px 0; }
@@ -186,6 +152,129 @@ header h1 { font-size: 16px; color: #ffd700; }
 .character-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 20px; }
 .character-card { background: #ddd; border: 4px solid var(--border-color); padding: 20px; text-align: center; }
 .starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; }
+
+/* --- CLOSE CARD BUTTON (Used in Dex and Trainer Card) --- */
+.close-card {
+    position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
+    background: var(--walton-red); color: white; border: 4px solid var(--border-color);
+    font-family: 'Press Start 2P'; cursor: pointer; z-index: 2001;
+}
+
+/* --- POEKEDEX DETAIL CARD --- */
+.dex-card {
+    width: 450px; background: white; border: 8px solid var(--border-color);
+    padding: 20px; position: relative; box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.dex-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 4px solid var(--walton-blue); padding-bottom: 10px; margin-bottom: 15px;
+}
+
+.dex-card-header h2 { font-size: 14px; color: var(--walton-blue); }
+
+.dex-card-body { display: flex; gap: 20px; align-items: center; margin-bottom: 15px; }
+
+#card-sprite-container {
+    width: 130px; height: 130px; background: #e0f7fa;
+    border: 4px solid var(--border-color); display: flex; justify-content: center; align-items: center;
+}
+
+.dex-card-info p { font-size: 8px; margin-bottom: 8px; }
+.stats-mini { font-size: 8px; color: var(--walton-red); display: flex; gap: 10px; margin-top: 10px; }
+
+.dex-card-footer {
+    background: #eee; padding: 10px; border: 2px inset #ccc;
+    font-size: 8px; line-height: 1.6; min-height: 60px;
+}
+
+/* --- TRAINER CARD --- */
+.tc-card {
+    width: 450px; 
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+    border: 8px solid var(--walton-blue); 
+    border-radius: 12px; /* ID badge aesthetic */
+    padding: 20px; 
+    position: relative; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.tc-header {
+    display: flex; 
+    align-items: center; 
+    gap: 20px; 
+    border-bottom: 4px solid var(--walton-red); 
+    padding-bottom: 15px; 
+    margin-bottom: 15px;
+}
+
+#tc-avatar-canvas {
+    background: #e0f7fa; 
+    border: 4px solid var(--border-color); 
+    border-radius: 4px;
+}
+
+.tc-header h2 { font-size: 16px; color: var(--walton-blue); margin-bottom: 8px; }
+.tc-header p { font-size: 8px; color: #555; }
+
+.tc-badges {
+    background: #fff8d0; 
+    border: 4px solid var(--border-color); 
+    padding: 12px; 
+    margin-bottom: 15px; 
+    text-align: center;
+}
+
+.tc-badges h3 { font-size: 10px; color: var(--walton-red); margin-bottom: 12px; }
+
+.tc-badge-grid {
+    display: flex; 
+    justify-content: center; 
+    gap: 12px;
+}
+
+.tc-body {
+    display: flex; 
+    gap: 20px; 
+    align-items: flex-start;
+}
+
+.tc-stats {
+    flex: 1; 
+    background: #eee; 
+    border: 4px solid var(--border-color); 
+    padding: 15px; 
+    font-size: 8px; 
+    line-height: 2.0;
+}
+
+.tc-stats h3 { font-size: 10px; color: var(--walton-blue); margin-bottom: 12px; border-bottom: 2px solid var(--walton-blue); padding-bottom: 5px; }
+.stat-highlight { color: var(--walton-red); font-weight: bold; font-size: 10px; }
+
+.tc-favorite {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    background: #eee; 
+    border: 4px solid var(--border-color); 
+    padding: 12px; 
+    width: 130px;
+}
+
+.tc-favorite h3 { font-size: 8px; margin-bottom: 10px; text-align: center; color: var(--walton-blue); line-height: 1.4; }
+
+.tc-fav-box {
+    width: 68px; 
+    height: 68px;
+    background: white; 
+    border: 4px inset #ccc; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+#tc-fav-name { font-size: 8px; font-weight: bold; color: var(--walton-red); text-align: center; }
 
 /* --- POEQUEDEX (STUDY GUIDE 3D FLASHCARDS) --- */
 .quedex-grid {
