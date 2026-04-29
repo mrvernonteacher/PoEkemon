@@ -63,6 +63,8 @@
             <div class="station-right data-section">
                 <h3 style="color: var(--walton-red); margin-bottom: 20px;">System Data</h3>
                 
+                <button class="action-btn" onclick="openKennel()" style="background: var(--walton-blue); color: white; width: 100%; margin-bottom: 25px;">Access PoEkennel</button>
+                
                 <button class="action-btn catch-btn" onclick="downloadSaveFile()" style="width: 100%; margin-bottom: 15px;">Export Save</button>
                 
                 <input type="file" id="save-upload" accept=".json" onchange="uploadSaveFile(event)" class="hidden">
@@ -129,14 +131,7 @@
         </div>
     </div>
 
-    <div id="release-overlay" class="hidden">
-        <div class="settings-content" style="width: 80%;">
-            <h2 style="color: var(--walton-red); margin-bottom: 15px;">Party is Full!</h2>
-            <p style="font-size: 8px; line-height: 1.6; margin-bottom: 20px;">You must release a PoEkemon from your party to make room.</p>
-            <div id="release-grid" class="character-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
-            <button id="release-new-btn" class="nav-btn" style="margin-top: 20px;">Release New Catch</button>
-        </div>
-    </div>
+    <div id="release-overlay" class="hidden"></div>
 
     <div id="dex-card-overlay" class="hidden">
         <div class="dex-card">
@@ -195,6 +190,25 @@
                         <canvas id="tc-fav-canvas" width="80" height="80"></canvas>
                     </div>
                     <p id="tc-fav-name">None</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="kennel-overlay" class="hidden">
+        <div class="kennel-card">
+            <button class="close-card" onclick="document.getElementById('kennel-overlay').classList.add('hidden')">X</button>
+            <h2 style="color: var(--walton-blue); margin-bottom: 20px; border-bottom: 4px solid var(--walton-blue); padding-bottom: 10px;">PoEkennel Storage System</h2>
+            
+            <div class="kennel-layout">
+                <div class="kennel-party">
+                    <h3 style="font-size: 10px; margin-bottom: 15px; color: var(--walton-red);">Current Party</h3>
+                    <div id="kennel-party-grid" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+                
+                <div class="kennel-storage">
+                    <h3 style="font-size: 10px; margin-bottom: 15px; color: #333;">Storage Box</h3>
+                    <div id="kennel-box-grid" class="kennel-box-grid"></div>
                 </div>
             </div>
         </div>
