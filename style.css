@@ -70,7 +70,8 @@ header h1 { font-size: 16px; color: #ffd700; }
 
 .hidden { display: none !important; }
 
-#release-overlay, #message-overlay, #dex-card-overlay, #trainer-card-overlay { 
+/* FIX: Added #kennel-overlay to this absolute positioning block! */
+#release-overlay, #message-overlay, #dex-card-overlay, #trainer-card-overlay, #kennel-overlay { 
     position: absolute; 
     top: 0; 
     left: 0; 
@@ -419,4 +420,75 @@ header h1 { font-size: 16px; color: #ffd700; }
 
 .station-right {
     text-align: center;
+}
+
+/* --- POEKENNEL STORAGE UI --- */
+#kennel-overlay {
+    z-index: 2005; /* Must sit above everything else */
+}
+
+.kennel-card {
+    width: 700px;
+    height: 500px;
+    background: #fdfdfd;
+    border: 8px solid var(--border-color);
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.kennel-layout {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    overflow: hidden;
+}
+
+.kennel-party {
+    width: 200px;
+    background: #fff8d0;
+    border: 4px solid var(--border-color);
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.kennel-storage {
+    flex: 1;
+    background: #e0f7fa;
+    border: 4px solid var(--border-color);
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.kennel-box-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+/* FIX: Redesigned kennel slots to keep text and buttons separate */
+.kennel-slot {
+    background: white;
+    border: 3px solid var(--border-color);
+    padding: 10px;
+    text-align: center;
+    font-size: 8px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+}
+
+.kennel-slot.empty {
+    background: transparent;
+    border: 2px dashed #999;
+    color: #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60px;
+    box-shadow: none;
 }
