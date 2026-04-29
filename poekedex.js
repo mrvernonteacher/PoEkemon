@@ -343,7 +343,7 @@ const poekedex = [
     // STARTERS: Digital Electronics (Mr. V)
     // ------------------------------------------
     { 
-        id: 61, name: "ArXORpteryx", unit: 0, type: "Digital Logic", desc: "Emits logical signals (XOR, OR, NAND) to process information.", 
+        id: 61, name: "ArchaeopXORyx", unit: 0, type: "Digital Logic", desc: "Emits logical signals (XOR, OR, NAND) to process information.", 
         hp: 30, baseAtk: 6, basicAtkName: "Bit Shift",
         evolutions: [
             { reqXP: 10, name: "PterORdactyl", desc: "Its wings span wide like an OR gate.", hpBonus: 12, atkBonus: 4, specialAtkName: "OR Sweep", specialAtkPower: 18 },
