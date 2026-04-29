@@ -118,6 +118,35 @@ window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
 
         ctx.fillStyle = "#d2b48c"; 
         ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
+    } else if (trainerId === 'hubbard') {
+        // Lord Hubbard - Bald, beard, glasses, green jacket
+        ctx.fillStyle = "#f5cbad"; // Skin Tone
+        ctx.fillRect(x + 16*s, y + 6*s, 18*s, 16*s); // Bald head
+        
+        ctx.fillStyle = "#555555"; // Solid Beard
+        ctx.fillRect(x + 16*s, y + 18*s, 18*s, 8*s); 
+        ctx.fillStyle = "#f5cbad"; // Mouth cutout
+        ctx.fillRect(x + 22*s, y + 20*s, 6*s, 2*s);
+
+        ctx.fillStyle = "#ffffff"; // Glasses
+        ctx.fillRect(x + 18*s, y + 14*s, 5*s, 4*s); ctx.fillRect(x + 27*s, y + 14*s, 5*s, 4*s);
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(x + 20*s, y + 15*s, 2*s, 2*s); ctx.fillRect(x + 27*s, y + 15*s, 2*s, 2*s);
+        ctx.fillRect(x + 23*s, y + 15*s, 4*s, 2*s); // Glasses bridge
+
+        ctx.fillStyle = "#2e7d32"; // Green Quilted Jacket
+        ctx.fillRect(x + 12*s, y + 26*s, 26*s, 16*s);
+        // Quilt pattern lines
+        ctx.fillStyle = "#1b5e20";
+        for(let i = 14; i < 38; i+=6) {
+            ctx.fillRect(x + i*s, y + 26*s, 2*s, 16*s);
+        }
+
+        ctx.fillStyle = "#f5cbad"; // Arms
+        ctx.fillRect(x + 8*s, y + 28*s, 4*s, 12*s); ctx.fillRect(x + 38*s, y + 28*s, 4*s, 12*s);
+
+        ctx.fillStyle = "#333333"; // Dark pants
+        ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
     }
     ctx.restore();
 };
@@ -301,7 +330,6 @@ window.loadGame = function() {
             gameState = { ...gameState, ...loadedState };
         }
         
-        // --- ANTI-SOFT-LOCK FIX ---
         gameState.inBattle = false;
         gameState.currentEnemy = null;
         gameState.currentTrainer = null;
@@ -363,7 +391,6 @@ window.downloadSaveFile = async function() {
     const defaultFilename = `poekedex_save_${timestamp}.json`;
 
     try {
-        // Try using the modern File System Access API (prompts for location)
         if (window.showSaveFilePicker) {
             const handle = await window.showSaveFilePicker({
                 suggestedName: defaultFilename,
@@ -380,12 +407,10 @@ window.downloadSaveFile = async function() {
             return;
         }
     } catch (err) {
-        // If user cancelled the prompt, abort silently. Otherwise log.
         if (err.name !== 'AbortError') console.error("File System Access API error:", err);
         else return; 
     }
 
-    // Fallback for browsers that don't support showSaveFilePicker
     const encodedData = "data:text/json;charset=utf-8," + encodeURIComponent(dataStr);
     const a = document.createElement('a');
     a.setAttribute("href", encodedData);
@@ -570,7 +595,7 @@ window.triggerTrainStation = function() {
 };
 
 // ==========================================
-// 7. MULTI-BATTLE SYSTEM
+// 7. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
 // ==========================================
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
@@ -619,10 +644,25 @@ window.startEncounter = function(unit, isGym) {
         });
 
     } else {
+        // WILD ENCOUNTER LOGIC
         gameState.currentTrainer = null;
         gameState.gymQueue = [];
-        const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
-        gameState.currentEnemy = window.generateEnemy(unitMons[Math.floor(Math.random() * unitMons.length)].id, 1);
+        
+        let selectedMon;
+        const hasBadge = gameState.badges.includes(unit);
+        
+        // Split the unit's poekemon into regular and boss pools
+        const regularMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
+        const bossMons = poekedex.filter(p => p.unit === unit && p.type.includes("Boss"));
+        
+        // If they have the badge and there are bosses, 1% chance to spawn a boss.
+        if (hasBadge && bossMons.length > 0 && Math.random() < 0.01) {
+            selectedMon = bossMons[Math.floor(Math.random() * bossMons.length)];
+        } else {
+            selectedMon = regularMons[Math.floor(Math.random() * regularMons.length)];
+        }
+        
+        gameState.currentEnemy = window.generateEnemy(selectedMon.id, 1);
         
         document.getElementById('dialogue-box').textContent = `Wild ${gameState.currentEnemy.name} appeared!`;
         window.initBattleScene();
