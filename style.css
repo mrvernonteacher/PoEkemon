@@ -197,10 +197,14 @@ header h1 { font-size: 16px; color: #ffd700; }
 }
 
 .flashcard-container {
-    perspective: 1000px; /* Gives the 3D depth effect */
+    perspective: 1000px;
     width: 100%;
     height: 240px;
     cursor: pointer;
+}
+
+.flashcard-container.locked {
+    cursor: default;
 }
 
 .flashcard {
@@ -208,7 +212,7 @@ header h1 { font-size: 16px; color: #ffd700; }
     height: 100%;
     position: relative;
     transition: transform 0.6s;
-    transform-style: preserve-3d; /* Required for 3D flip */
+    transform-style: preserve-3d;
 }
 
 .flashcard.flipped {
@@ -219,7 +223,7 @@ header h1 { font-size: 16px; color: #ffd700; }
     position: absolute;
     width: 100%;
     height: 100%;
-    backface-visibility: hidden; /* Hides the backside when not flipped */
+    backface-visibility: hidden;
     border: 4px solid var(--border-color);
     padding: 15px;
     display: flex;
@@ -250,10 +254,10 @@ header h1 { font-size: 16px; color: #ffd700; }
 }
 
 .flashcard-back {
-    background: #e8f5e9; /* Light green to indicate answer */
+    background: #e8f5e9;
     color: var(--text-color);
     transform: rotateY(180deg);
-    overflow-y: auto; /* Allows scrolling if explanation is long */
+    overflow-y: auto;
     box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
 }
 
@@ -269,13 +273,36 @@ header h1 { font-size: 16px; color: #ffd700; }
     font-weight: bold;
     font-size: 9px;
     margin-bottom: 10px;
-    color: #c8102e; /* Highlight answer in red */
+    color: #c8102e;
 }
 
 .flashcard-back p.exp-text {
     font-size: 7px;
     line-height: 1.6;
     color: #333;
+}
+
+/* Locked Flashcard Styles */
+.flashcard.locked { 
+    opacity: 0.5; 
+    filter: grayscale(100%); 
+}
+
+.flashcard.locked .flashcard-front { 
+    background: #ccc; 
+    border-color: #555; 
+}
+
+.flashcard.locked .flashcard-front h4 { 
+    color: #555; 
+    border-bottom-color: #555; 
+}
+
+.flashcard.locked .flashcard-front p { 
+    font-size: 24px; 
+    color: #555; 
+    margin-top: 15px; 
+    font-weight: bold;
 }
 
 /* Custom Scrollbar for Flashcard Back */
