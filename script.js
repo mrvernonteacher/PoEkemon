@@ -13,8 +13,8 @@ let gameState = {
     badges: [],
     currentUnit: 1,
     currentEnemy: null,
-    currentTrainer: null, // Tracks active Gym Leader
-    gymQueue: [],         // Tracks remaining PoEkemon in a trainer battle
+    currentTrainer: null, 
+    gymQueue: [],         
     queuedAttack: null,   
     inBattle: false
 };
@@ -27,6 +27,7 @@ const spriteCache = {};
 // ==========================================
 window.showMessage = function(text, callback) {
     const overlay = document.getElementById('message-overlay');
+    if (!overlay) return;
     document.getElementById('message-text').textContent = text;
     const btnOk = document.getElementById('msg-btn-ok');
     const btnCancel = document.getElementById('msg-btn-cancel');
@@ -41,6 +42,7 @@ window.showMessage = function(text, callback) {
 
 window.showConfirm = function(text, onYes, onNo) {
     const overlay = document.getElementById('message-overlay');
+    if (!overlay) return;
     document.getElementById('message-text').textContent = text;
     const btnOk = document.getElementById('msg-btn-ok');
     const btnCancel = document.getElementById('msg-btn-cancel');
@@ -58,7 +60,7 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 3. SPRITE ENGINE (TRAINERS & MONS)
+// 3. SPRITE ENGINE 
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -88,34 +90,33 @@ window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
     ctx.save();
     
     if (trainerId === 'wes') {
-        // Professor Wes - Physics & Kangol Hat
-        ctx.fillStyle = "#333333"; // Kangol Hat
+        ctx.fillStyle = "#333333"; 
         ctx.fillRect(x + 12*s, y + 4*s, 26*s, 8*s); 
-        ctx.fillRect(x + 10*s, y + 10*s, 32*s, 4*s); // Brim
+        ctx.fillRect(x + 10*s, y + 10*s, 32*s, 4*s); 
 
-        ctx.fillStyle = "#e0ac69"; // Skin Tone
+        ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 16*s, y + 14*s, 18*s, 12*s);
         
-        ctx.fillStyle = "#5d4037"; // Beard
+        ctx.fillStyle = "#5d4037"; 
         ctx.fillRect(x + 16*s, y + 20*s, 18*s, 8*s); 
-        ctx.fillStyle = "#e0ac69"; // Mouth cutout
+        ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 22*s, y + 22*s, 6*s, 2*s);
 
-        ctx.fillStyle = "#ffffff"; // Glasses/Eyes
+        ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + 18*s, y + 16*s, 5*s, 4*s); ctx.fillRect(x + 27*s, y + 16*s, 5*s, 4*s);
         ctx.fillStyle = "#000000";
         ctx.fillRect(x + 20*s, y + 17*s, 2*s, 2*s); ctx.fillRect(x + 27*s, y + 17*s, 2*s, 2*s);
-        ctx.fillRect(x + 23*s, y + 17*s, 4*s, 2*s); // Glasses bridge
+        ctx.fillRect(x + 23*s, y + 17*s, 4*s, 2*s); 
 
-        ctx.fillStyle = "#0033a0"; // Walton Royal Blue Shirt
+        ctx.fillStyle = "#0033a0"; 
         ctx.fillRect(x + 12*s, y + 26*s, 26*s, 16*s);
-        ctx.fillStyle = "#c8102e"; // Walton Red Accent
+        ctx.fillStyle = "#c8102e"; 
         ctx.fillRect(x + 23*s, y + 30*s, 4*s, 4*s); 
 
-        ctx.fillStyle = "#e0ac69"; // Arms
+        ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 8*s, y + 28*s, 4*s, 12*s); ctx.fillRect(x + 38*s, y + 28*s, 4*s, 12*s);
 
-        ctx.fillStyle = "#d2b48c"; // Khakis
+        ctx.fillStyle = "#d2b48c"; 
         ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
     }
     ctx.restore();
@@ -133,11 +134,16 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
-            if (document.getElementById('screen-battle').classList.contains('active')) window.updateHP(); 
-            if (!document.getElementById('dex-card-overlay').classList.contains('hidden')) {
-                const cardCtx = document.getElementById('cardCanvas').getContext('2d');
-                cardCtx.clearRect(0, 0, 120, 120);
-                cardCtx.drawImage(img, 0, 0, 120, 120);
+            const screenBattle = document.getElementById('screen-battle');
+            if (screenBattle && screenBattle.classList.contains('active')) window.updateHP(); 
+            const cardOverlay = document.getElementById('dex-card-overlay');
+            if (cardOverlay && !cardOverlay.classList.contains('hidden')) {
+                const cardCanvas = document.getElementById('cardCanvas');
+                if(cardCanvas) {
+                    const cardCtx = cardCanvas.getContext('2d');
+                    cardCtx.clearRect(0, 0, 120, 120);
+                    cardCtx.drawImage(img, 0, 0, 120, 120);
+                }
             }
         };
         img.onerror = () => spriteCache[spriteKey] = null; 
@@ -173,7 +179,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
 };
 
 // ==========================================
-// 4. MAP NAVIGATION
+// 4. MAP NAVIGATION 
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
@@ -219,8 +225,11 @@ window.drawMap = function() {
 };
 
 window.addEventListener('keydown', (e) => {
-    if (!document.getElementById('screen-map').classList.contains('active')) return;
-    if (!document.getElementById('message-overlay').classList.contains('hidden')) return;
+    const screenMap = document.getElementById('screen-map');
+    const msgOverlay = document.getElementById('message-overlay');
+    
+    if (!screenMap || !screenMap.classList.contains('active')) return;
+    if (msgOverlay && !msgOverlay.classList.contains('hidden')) return;
 
     let nx = playerPos.x, ny = playerPos.y;
     if (['ArrowUp', 'w'].includes(e.key)) ny--;
@@ -241,7 +250,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================
-// 5. MENUS, FILE I/O & INITIALIZATION
+// 5. FILE I/O & BULLETPROOF INITIALIZATION
 // ==========================================
 window.showScreen = function(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden', 'active'));
@@ -253,57 +262,80 @@ window.showScreen = function(name) {
     }
 
     const mapBtn = document.getElementById('btn-map');
-    if (gameState.inBattle) {
-        mapBtn.textContent = "Battle";
-        mapBtn.style.background = "#ff6b6b"; 
-        mapBtn.style.color = "white";
-    } else {
-        mapBtn.textContent = "Map";
-        mapBtn.style.background = "white";
-        mapBtn.style.color = "black";
+    if (mapBtn) {
+        if (gameState.inBattle) {
+            mapBtn.textContent = "Battle";
+            mapBtn.style.background = "#ff6b6b"; 
+            mapBtn.style.color = "white";
+        } else {
+            mapBtn.textContent = "Map";
+            mapBtn.style.background = "white";
+            mapBtn.style.color = "black";
+        }
     }
 
     if (name === 'map') {
         const region = waltoniaRegions[gameState.currentUnit];
-        document.getElementById('map-label').textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
+        const label = document.getElementById('map-label');
+        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
         setTimeout(window.drawMap, 50);
     }
 };
 
-window.saveGame = function() { localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState)); };
+window.saveGame = function() { 
+    try {
+        localStorage.setItem('PoEkemon_Waltonia_Save', JSON.stringify(gameState)); 
+    } catch (e) {
+        console.error("Save failed", e);
+    }
+};
 
 window.loadGame = function() { 
-    const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); 
-    if (saved) {
-        gameState = JSON.parse(saved);
-        if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
-        if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
-        if (!gameState.badges) gameState.badges = [];
-        
-        gameState.playerTeam.forEach(mon => {
-            const masterDex = poekedex.find(p => p.id === mon.id);
-            if (masterDex) {
-                mon.basicAtkName = masterDex.basicAtkName;
-                mon.baseAtk = masterDex.baseAtk;
-                mon.evolutions = JSON.parse(JSON.stringify(masterDex.evolutions));
-                if (mon.xp === undefined) mon.xp = 0;
-                
-                let correctLevel = 1;
-                if (mon.name === masterDex.name) {
-                    correctLevel = 1;
-                } else if (masterDex.evolutions.length > 0 && mon.name === masterDex.evolutions[0].name) {
-                    correctLevel = 2;
-                } else if (masterDex.evolutions.length > 1 && mon.name === masterDex.evolutions[1].name) {
-                    correctLevel = 3;
-                } else if (mon.evolutionLevel === 0) {
-                    correctLevel = 1; 
+    try {
+        const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); 
+        if (saved) {
+            const loadedState = JSON.parse(saved);
+            
+            // Safe merge to prevent missing properties from crashing game
+            gameState = { ...gameState, ...loadedState };
+
+            if (!gameState.playerTeam || !Array.isArray(gameState.playerTeam)) gameState.playerTeam = [];
+            if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
+            if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
+            if (!gameState.badges) gameState.badges = [];
+            if (!gameState.gymQueue) gameState.gymQueue = [];
+            
+            gameState.playerTeam.forEach(mon => {
+                if (!mon) return;
+                const masterDex = poekedex.find(p => p.id === mon.id);
+                if (masterDex) {
+                    mon.basicAtkName = masterDex.basicAtkName;
+                    mon.baseAtk = masterDex.baseAtk;
+                    mon.evolutions = JSON.parse(JSON.stringify(masterDex.evolutions));
+                    if (mon.xp === undefined) mon.xp = 0;
+                    
+                    let correctLevel = mon.evolutionLevel || 1;
+                    if (mon.name === masterDex.name) {
+                        correctLevel = 1;
+                    } else if (masterDex.evolutions.length > 0 && mon.name === masterDex.evolutions[0].name) {
+                        correctLevel = 2;
+                    } else if (masterDex.evolutions.length > 1 && mon.name === masterDex.evolutions[1].name) {
+                        correctLevel = 3;
+                    } else if (mon.evolutionLevel === 0) {
+                        correctLevel = 1; 
+                    }
+                    
+                    mon.evolutionLevel = correctLevel;
+                    if (mon.evolutionLevel === 1) mon.name = masterDex.name;
+                    else if (mon.evolutionLevel > 1 && masterDex.evolutions[mon.evolutionLevel - 2]) {
+                        mon.name = masterDex.evolutions[mon.evolutionLevel - 2].name;
+                    }
                 }
-                
-                mon.evolutionLevel = correctLevel;
-                if (mon.evolutionLevel === 1) mon.name = masterDex.name;
-                else mon.name = masterDex.evolutions[mon.evolutionLevel - 2].name;
-            }
-        });
+            });
+        }
+    } catch (err) {
+        console.error("Save file corrupted. Resetting memory.", err);
+        localStorage.removeItem('PoEkemon_Waltonia_Save');
     }
 };
 
@@ -339,7 +371,11 @@ window.uploadSaveFile = function(event) {
     reader.readAsText(file);
 };
 
-window.toggleSettings = function() { document.getElementById('settings-overlay').classList.toggle('hidden'); };
+window.toggleSettings = function() { 
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) overlay.classList.toggle('hidden'); 
+};
+
 window.resetGame = function() { 
     window.showConfirm("Are you sure you want to reset all progress?", () => {
         localStorage.removeItem('PoEkemon_Waltonia_Save'); 
@@ -348,32 +384,42 @@ window.resetGame = function() {
 };
 
 window.selectStarter = function(char, id) {
-    gameState.playerCharacter = char;
-    const mon = poekedex.find(p => p.id === id);
-    if (mon) {
-        gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp, xp: 0, evolutionLevel: 1 }];
-        gameState.pokedexCaught.push(id); 
-        playerPos = { x: 25, y: 25 }; 
-        window.saveGame();
-        window.showScreen('map');
+    try {
+        gameState.playerCharacter = char;
+        const mon = poekedex.find(p => p.id === id);
+        if (mon) {
+            gameState.playerTeam = [{ ...mon, currentHP: mon.hp, maxHP: mon.hp, xp: 0, evolutionLevel: 1 }];
+            if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
+            gameState.pokedexCaught.push(id); 
+            playerPos = { x: 25, y: 25 }; 
+            window.saveGame();
+            window.showScreen('map');
+        }
+    } catch(e) {
+        console.error("Error in selectStarter", e);
     }
 };
 
 window.onload = () => {
     window.loadGame();
-    document.getElementById('btn-settings').onclick = window.toggleSettings;
     
-    document.getElementById('btn-map').onclick = () => {
+    const btnSettings = document.getElementById('btn-settings');
+    if(btnSettings) btnSettings.onclick = window.toggleSettings;
+    
+    const btnMap = document.getElementById('btn-map');
+    if (btnMap) btnMap.onclick = () => {
         if (gameState.inBattle) window.showScreen('battle');
         else window.showScreen('map');
     };
     
-    document.getElementById('btn-dex').onclick = () => {
+    const btnDex = document.getElementById('btn-dex');
+    if (btnDex) btnDex.onclick = () => {
         window.renderDex();
         window.showScreen('dex');
     };
 
-    document.getElementById('btn-quedex').onclick = () => {
+    const btnQuedex = document.getElementById('btn-quedex');
+    if (btnQuedex) btnQuedex.onclick = () => {
         if (gameState.inBattle) {
             window.showMessage("No studying during a battle! Focus on your opponent!");
             return;
@@ -382,8 +428,11 @@ window.onload = () => {
         window.showScreen('quedex');
     };
 
-    if (!gameState.playerTeam || gameState.playerTeam.length === 0) window.showScreen('characterSelect');
-    else window.showScreen('map');
+    if (!gameState.playerTeam || gameState.playerTeam.length === 0) {
+        window.showScreen('characterSelect');
+    } else {
+        window.showScreen('map');
+    }
 };
 
 window.unlockQuestion = function(qId) {
@@ -395,11 +444,11 @@ window.unlockQuestion = function(qId) {
 };
 
 // ==========================================
-// 6. MAP BUILDINGS (CLINIC & STATION)
+// 6. MAP BUILDINGS
 // ==========================================
 window.triggerClinic = function() {
     let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
-    if (qArray.length === 0) return window.showMessage("Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); });
+    if (!qArray || qArray.length === 0) return window.showMessage("Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); });
 
     const q = qArray[Math.floor(Math.random() * qArray.length)];
     
@@ -467,16 +516,14 @@ window.triggerTrainStation = function() {
 };
 
 // ==========================================
-// 7. COMBAT, TRIVIA & EVOLUTION (MULTI-BATTLE)
+// 7. MULTI-BATTLE SYSTEM
 // ==========================================
-
-// Helper to build a statted enemy from ID and Level
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
     let enemy = JSON.parse(JSON.stringify(masterMon)); 
     enemy.evolutionLevel = level;
     
-    if (level > 1 && enemy.evolutions.length > 0) {
+    if (level > 1 && enemy.evolutions && enemy.evolutions.length > 0) {
         enemy.name = enemy.evolutions[level - 2].name;
         for(let i=0; i < level - 1; i++) {
             if (enemy.evolutions[i]) {
@@ -493,8 +540,9 @@ window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
     
     if (isGym) {
-        // Find the trainer for this unit
+        if (!typeof trainerBank !== 'undefined') return window.showMessage("Trainer data missing!", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
         const trainer = Object.values(trainerBank).find(t => t.unit === unit);
+        
         if (!trainer) return window.showMessage("Gym Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
         
         if (gameState.badges.includes(unit)) {
@@ -502,17 +550,19 @@ window.startEncounter = function(unit, isGym) {
         }
 
         gameState.currentTrainer = trainer;
-        gameState.gymQueue = JSON.parse(JSON.stringify(trainer.team)); // Copy team queue
+        gameState.gymQueue = JSON.parse(JSON.stringify(trainer.team)); 
         
-        const jokeId = trainer.jokeIDs[Math.floor(Math.random() * trainer.jokeIDs.length)];
-        const jokeText = dialoguePool[jokeId];
+        let jokeText = "Let's battle!";
+        if (trainer.jokeIDs && trainer.jokeIDs.length > 0) {
+            const jokeId = trainer.jokeIDs[Math.floor(Math.random() * trainer.jokeIDs.length)];
+            if (dialoguePool && dialoguePool[jokeId]) jokeText = dialoguePool[jokeId];
+        }
         
         window.showMessage(`${trainer.intro}\n\n"${jokeText}"`, () => {
             window.sendNextTrainerMon();
         });
 
     } else {
-        // Wild Encounter
         gameState.currentTrainer = null;
         gameState.gymQueue = [];
         const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
@@ -524,7 +574,7 @@ window.startEncounter = function(unit, isGym) {
 };
 
 window.sendNextTrainerMon = function() {
-    if (gameState.gymQueue.length === 0) return;
+    if (!gameState.gymQueue || gameState.gymQueue.length === 0) return;
     
     const nextData = gameState.gymQueue.shift();
     gameState.currentEnemy = window.generateEnemy(nextData.id, nextData.level);
@@ -551,7 +601,6 @@ window.initBattleScene = function() {
     const eCtx = document.getElementById('eCanvas').getContext('2d');
     
     if (gameState.currentTrainer && gameState.currentEnemy.currentHP === gameState.currentEnemy.hp) {
-        // Temporarily draw trainer if it's the start of their turn
         window.drawTrainerSprite(eCtx, gameState.currentTrainer.id, 0, 0, 80);
         setTimeout(() => {
             eCtx.clearRect(0, 0, 80, 80);
@@ -594,7 +643,6 @@ window.renderBattleMenu = function() {
     btnRun.style.background = '#95a5a6';
     btnRun.style.color = 'white';
 
-    // Lock out running and catching during trainer battles
     if (gameState.currentTrainer) {
         btnCapture.disabled = true;
         btnCapture.textContent = "Trainer's Mon";
@@ -742,7 +790,6 @@ window.enemyTurn = function() {
                 gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
                 playerPos = { x: 25, y: 25 }; 
                 
-                // If player faints, battle is over. Reset gym queue.
                 gameState.currentTrainer = null;
                 gameState.gymQueue = [];
                 window.endBattle();
@@ -852,22 +899,20 @@ window.endBattle = function() {
     });
 
     const wrapUpBattle = () => {
-        // If fighting a trainer and player didn't faint
         if (gameState.currentTrainer && gameState.playerTeam[0].currentHP > 0) {
-            if (gameState.gymQueue.length > 0) {
+            if (gameState.gymQueue && gameState.gymQueue.length > 0) {
                 window.sendNextTrainerMon();
             } else {
                 window.showMessage(`You defeated ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`, () => {
                     if (!gameState.badges.includes(gameState.currentUnit)) gameState.badges.push(gameState.currentUnit);
                     gameState.currentTrainer = null;
                     gameState.inBattle = false;
-                    playerPos.y += 1; // Bump off gym tile
+                    playerPos.y += 1; 
                     window.saveGame();
                     window.showScreen('map');
                 });
             }
         } else {
-            // Wild battle or player fainted
             gameState.inBattle = false;
             window.showScreen('map');
         }
@@ -895,7 +940,7 @@ window.endBattle = function() {
 };
 
 // ==========================================
-// 8. PARTY LIMITS, DEX RENDERING & CARDS
+// 8. PARTY & CARDS
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
@@ -1017,7 +1062,7 @@ window.closeDexCard = function() {
 };
 
 // ==========================================
-// 9. POEQUEDEX (STUDY GUIDE FLASHCARDS)
+// 9. POEQUEDEX 
 // ==========================================
 window.renderQuedex = function() {
     const unit = document.getElementById('quedex-unit-select').value;
