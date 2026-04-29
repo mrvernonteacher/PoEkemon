@@ -13,6 +13,7 @@
             <nav>
                 <button id="btn-map" class="nav-btn">Map</button>
                 <button id="btn-dex" class="nav-btn">PoEkedex</button>
+                <button id="btn-quedex" class="nav-btn">PoEQuedex</button>
                 <button id="btn-settings" class="nav-btn">⚙️</button>
             </nav>
         </header>
@@ -151,6 +152,24 @@
                 </div>
             </div>
         </section>
+
+        <section id="screen-quedex" class="screen hidden">
+            <h2 style="color: #0033a0; margin-bottom: 10px;">PoEQuedex: Study Guide</h2>
+            <div style="margin-bottom: 20px; text-align: center;">
+                <label for="quedex-unit-select" style="font-size: 10px; margin-right: 10px;">Select Unit: </label>
+                <select id="quedex-unit-select" onchange="renderQuedex()" style="font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 5px; border: 2px solid var(--border-color);">
+                    <option value="1">Unit 1: Mechanisms</option>
+                    <option value="2">Unit 2: Machine Control</option>
+                    <option value="3">Unit 3: Energy</option>
+                    <option value="4">Unit 4: Statics</option>
+                    <option value="5">Unit 5: Transportation</option>
+                    <option value="6">Unit 6: Kinematics & AI</option>
+                </select>
+            </div>
+            <p style="font-size: 8px; color: #555; margin-bottom: 15px;">Click a card to reveal the answer and explanation.</p>
+            <div id="quedex-grid" class="quedex-grid"></div>
+        </section>
+
     </div>
 
     <script src="world.js"></script>
