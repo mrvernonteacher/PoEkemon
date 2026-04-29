@@ -714,11 +714,10 @@ window.startEncounter = function(unit, isGym) {
         let selectedMon;
         const hasBadge = gameState.badges.includes(unit);
         
-        // --- BULLETPROOF BOSS FILTERING USING `desc` ---
         let regularMons = poekedex.filter(p => p.unit === unit && (!p.desc || !p.desc.includes("Boss")));
         let bossMons = poekedex.filter(p => p.unit === unit && p.desc && p.desc.includes("Boss"));
         
-        if (regularMons.length === 0) regularMons = poekedex.filter(p => p.unit === unit); // Failsafe
+        if (regularMons.length === 0) regularMons = poekedex.filter(p => p.unit === unit); 
 
         if (hasBadge && bossMons.length > 0 && Math.random() < 0.01) {
             selectedMon = bossMons[Math.floor(Math.random() * bossMons.length)];
@@ -1008,7 +1007,6 @@ window.attemptCapture = function() {
                             window.saveGame();
                             window.endBattle();
                         } else {
-                            // REVERTED: TOUGH DECISION (Wild catch with full party)
                             window.showReleaseMenu(newCatch);
                         }
                     });
@@ -1123,7 +1121,7 @@ window.endBattle = function() {
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
-    if (!overlay) return window.endBattle(); // Safety fallback
+    if (!overlay) return window.endBattle(); 
     
     const grid = document.getElementById('release-grid');
     if (grid) {
@@ -1268,13 +1266,16 @@ window.renderKennel = function() {
     gameState.playerTeam.forEach((mon, index) => {
         const slot = document.createElement('div');
         slot.className = 'kennel-slot';
-        slot.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        
+        const info = document.createElement('div');
+        info.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        info.style.marginBottom = '10px';
+        slot.appendChild(info);
         
         if (gameState.playerTeam.length > 1) {
             const btn = document.createElement('button');
             btn.className = 'action-btn';
             btn.style.width = '100%';
-            btn.style.marginTop = '5px';
             btn.style.padding = '5px';
             btn.textContent = 'Deposit';
             btn.onclick = () => {
@@ -1285,7 +1286,11 @@ window.renderKennel = function() {
             };
             slot.appendChild(btn);
         } else {
-            slot.innerHTML += `<br><span style="color:var(--walton-red); font-size:6px; display:block; margin-top:5px;">Cannot Deposit Last Mon</span>`;
+            const err = document.createElement('span');
+            err.style.color = 'var(--walton-red)';
+            err.style.fontSize = '6px';
+            err.textContent = 'Cannot Deposit Last Mon';
+            slot.appendChild(err);
         }
         partyGrid.appendChild(slot);
     });
@@ -1302,13 +1307,17 @@ window.renderKennel = function() {
     gameState.kennel.forEach((mon, index) => {
         const slot = document.createElement('div');
         slot.className = 'kennel-slot';
-        slot.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        
+        const info = document.createElement('div');
+        info.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        info.style.marginBottom = '10px';
+        slot.appendChild(info);
         
         if (gameState.playerTeam.length < 6) {
             const btn = document.createElement('button');
             btn.className = 'action-btn catch-btn';
             btn.style.width = '100%';
-            btn.style.marginTop = '5px';
+            btn.style.marginBottom = '5px';
             btn.style.padding = '5px';
             btn.textContent = 'Withdraw';
             btn.onclick = () => {
@@ -1323,7 +1332,6 @@ window.renderKennel = function() {
         const releaseBtn = document.createElement('button');
         releaseBtn.className = 'action-btn attack-btn';
         releaseBtn.style.width = '100%';
-        releaseBtn.style.marginTop = '5px';
         releaseBtn.style.padding = '5px';
         releaseBtn.textContent = 'Release';
         releaseBtn.onclick = () => {
