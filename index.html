@@ -10,12 +10,13 @@
 
 <div id="game-container">
     <header>
-        <h1>PoEkemon</h1>
+        <h1>Waltonia PoEkemon</h1>
         <nav>
             <button id="btn-map" class="nav-btn">Map</button>
-            <button id="btn-dex" class="nav-btn">PoEkedex</button>
+            <button id="btn-dex" class="nav-btn">Party/Dex</button>
             <button id="btn-quedex" class="nav-btn">PoEQuedex</button>
-            <button id="btn-trainer" class="nav-btn">Trainer Card</button> </nav>
+            <button id="btn-trainer" class="nav-btn">Trainer Card</button>
+        </nav>
     </header>
 
     <div id="screen-characterSelect" class="screen active">
@@ -49,17 +50,26 @@
     </div>
 
     <div id="screen-trainStation" class="screen hidden">
-        <h2>Waltonia Train Station</h2>
-        <p>Select a Unit Region to travel to:</p>
-        <div id="unit-travel-list" style="margin-top: 20px; width: 80%;"></div>
+        <h2 style="margin-bottom: 10px;">Waltonia Train Station</h2>
+        <p style="margin-bottom: 20px;">Select a Unit Region to travel or manage your data.</p>
         
-        <div class="data-section" style="margin-top: 40px; border-top: 4px dashed var(--border-color); padding-top: 20px; width: 80%; text-align: center;">
-            <h3 style="color: var(--walton-red); margin-bottom: 15px;">System Data</h3>
-            <button class="starter-btn" onclick="downloadSaveFile()">Export Save File</button>
-            <p style="font-size: 8px; margin: 10px 0;">Import Save:</p>
-            <input type="file" id="save-upload" accept=".json" onchange="uploadSaveFile(event)" style="font-size: 8px; margin-bottom: 20px;">
-            <br>
-            <button id="btn-reset-data" class="action-btn" style="background: var(--walton-red); color: white; width: 100%;">Erase All Save Data</button>
+        <div class="station-layout">
+            <div class="station-left">
+                <h3 style="color: var(--walton-blue); margin-bottom: 15px;">Departures</h3>
+                <div id="unit-travel-list" style="margin-bottom: 20px; flex-grow: 1;"></div>
+                <button class="nav-btn" onclick="showScreen('map')" style="width: 100%; padding: 10px;">Exit Station</button>
+            </div>
+            
+            <div class="station-right data-section">
+                <h3 style="color: var(--walton-red); margin-bottom: 20px;">System Data</h3>
+                
+                <button class="action-btn catch-btn" onclick="downloadSaveFile()" style="width: 100%; margin-bottom: 15px;">Export Save</button>
+                
+                <input type="file" id="save-upload" accept=".json" onchange="uploadSaveFile(event)" class="hidden">
+                <label for="save-upload" class="action-btn" style="background: #95a5a6; color: white; display: block; margin-bottom: auto; cursor: pointer;">Import Save</label>
+                
+                <button id="btn-reset-data" class="action-btn attack-btn" onclick="resetGame()" style="width: 100%; margin-top: 30px;">Erase Data</button>
+            </div>
         </div>
     </div>
 
