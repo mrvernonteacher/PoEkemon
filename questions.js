@@ -1,164 +1,89 @@
 // ==========================================
-// QUESTION BANK DATA
+// POEKEDEX QUESTION BANK
+// Structure: { unit: { regular: [], gym: [] } }
 // ==========================================
 
 const questionBank = {
-    1: [ // Unit 1: Mechanisms
-        {
-            q: "Which class of lever always has the fulcrum located between the effort and resistance forces?",
-            options: ["Second-class", "First-class", "Third-class", "Fourth-class"],
-            ans: 1
-        },
-        {
-            q: "A wheelbarrow is a classic example of which type of lever?",
-            options: ["First-class", "Second-class", "Third-class", "It is not a lever"],
-            ans: 1
-        },
-        {
-            q: "What is the Ideal Mechanical Advantage (IMA) of a third-class lever?",
-            options: ["Always greater than 1", "Exactly 1", "Always less than 1", "Equal to the AMA"],
-            ans: 2
-        },
-        {
-            q: "If a lever has an effort arm of 12 ft and a resistance arm of 3 ft, what is its Ideal Mechanical Advantage (IMA)?",
-            options: ["0.25", "9", "36", "4"],
-            ans: 3
-        },
-        {
-            q: "A machine lifts a 100 lb resistance force using only 25 lbs of effort force. What is the Actual Mechanical Advantage (AMA)?",
-            options: ["4", "0.25", "125", "75"],
-            ans: 0
-        },
-        {
-            q: "On a wheel and axle, the wheel has a diameter of 20 inches and the axle has a diameter of 5 inches. If the effort is applied to the wheel, what is the IMA?",
-            options: ["0.25", "4", "15", "100"],
-            ans: 1
-        },
-        {
-            q: "What is a pulley system containing both fixed and movable pulleys called?",
-            options: ["Block and tackle", "Compound gear", "Sprocket array", "Static block"],
-            ans: 0
-        },
-        {
-            q: "If a pulley system has 5 supporting strands of rope holding up the load, what is its IMA?",
-            options: ["10", "2.5", "5", "1"],
-            ans: 2
-        },
-        {
-            q: "How much effort force is required to lift a 200 lb weight using a pulley system with an IMA of 4? (Assuming 100% efficiency)",
-            options: ["50 lbs", "800 lbs", "100 lbs", "400 lbs"],
-            ans: 0
-        },
-        {
-            q: "Which formula correctly represents Work?",
-            options: ["Work = Force / Distance", "Work = Mass x Acceleration", "Work = Force x Distance", "Work = Power / Time"],
-            ans: 2
-        },
-        {
-            q: "How much work is done if a student uses 20 lbs of force to push a box 10 feet across the classroom?",
-            options: ["200 ft-lbs", "2 ft-lbs", "30 ft-lbs", "10 ft-lbs"],
-            ans: 0
-        },
-        {
-            q: "Which term is defined as the rate at which work is done?",
-            options: ["Torque", "Efficiency", "Momentum", "Power"],
-            ans: 3
-        },
-        {
-            q: "An inclined plane is 15 feet long and 3 feet high. What is its IMA?",
-            options: ["45", "5", "12", "0.2"],
-            ans: 1
-        },
-        {
-            q: "A wedge has a length of 8 inches and a thickness of 2 inches. What is its IMA?",
-            options: ["4", "16", "0.25", "10"],
-            ans: 0
-        },
-        {
-            q: "How does thread pitch affect the mechanical advantage of a screw?",
-            options: ["Fewer threads per inch increases IMA", "More threads per inch increases IMA", "Thread pitch does not affect IMA", "More threads per inch decreases IMA"],
-            ans: 1
-        },
-        {
-            q: "If a screw has 16 threads per inch (16 TPI), what is its pitch?",
-            options: ["16 inches", "0.16 inches", "1/16 of an inch", "1.6 inches"],
-            ans: 2
-        },
-        {
-            q: "In a simple gear train, the drive gear has 10 teeth and the driven gear has 40 teeth. What is the gear ratio?",
-            options: ["4:1", "1:4", "400:1", "30:1"],
-            ans: 0
-        },
-        {
-            q: "If a gear train has a gear ratio greater than 1, what is the effect on the output?",
-            options: ["Torque increases, speed decreases", "Torque decreases, speed increases", "Both torque and speed increase", "Both torque and speed decrease"],
-            ans: 0
-        },
-        {
-            q: "What is the primary purpose of an idler gear in a simple gear train?",
-            options: ["To increase torque", "To change the direction of rotation", "To increase speed", "To change the overall gear ratio"],
-            ans: 1
-        },
-        {
-            q: "In a compound gear train, Gear A (10T) drives Gear B (20T). Gear B shares a shaft with Gear C (10T). Gear C drives Gear D (30T). What is the total gear ratio?",
-            options: ["6:1", "5:1", "60:1", "1:6"],
-            ans: 0
-        },
-        {
-            q: "Which mechanism transmits power over a distance using a chain?",
-            options: ["Belt and pulley", "Sprocket and chain", "Rack and pinion", "Cam and follower"],
-            ans: 1
-        },
-        {
-            q: "Unlike a sprocket and chain, a belt and pulley system can...",
-            options: ["Reverse directions without an idler", "Slip under heavy loads", "Only be used for linear motion", "Produce infinite torque"],
-            ans: 1
-        },
-        {
-            q: "Which formula calculates the efficiency of a machine?",
-            options: ["(IMA / AMA) * 100", "(Work In / Work Out) * 100", "(AMA / IMA) * 100", "(Force / Area) * 100"],
-            ans: 2
-        },
-        {
-            q: "Why is the Actual Mechanical Advantage (AMA) always less than the Ideal Mechanical Advantage (IMA) in the real world?",
-            options: ["Gravity", "Friction", "Loss of mass", "Excessive torque"],
-            ans: 1
-        },
-        {
-            q: "Torque is a measure of...",
-            options: ["Linear push or pull", "The rate of doing work", "Energy stored in a spring", "Rotational force"],
-            ans: 3
-        },
-        {
-            q: "For a lever to be in static equilibrium, what must be true?",
-            options: ["Effort Moment = Resistance Moment", "Effort Force = Resistance Force", "Effort Arm = Resistance Arm", "IMA = 1"],
-            ans: 0
-        },
-        {
-            q: "Which mechanism converts rotary motion into linear motion?",
-            options: ["Bevel gears", "Rack and pinion", "Worm and wheel", "Universal joint"],
-            ans: 1
-        },
-        {
-            q: "Which mechanism converts rotary motion into reciprocating (back and forth) motion?",
-            options: ["Cam and follower", "Block and tackle", "Lead screw", "Crown and pinion"],
-            ans: 0
-        },
-        {
-            q: "What is the gear ratio of a worm and wheel if the wheel has 24 teeth and the worm has a single thread?",
-            options: ["1:24", "12:1", "24:1", "48:1"],
-            ans: 2
-        },
-        {
-            q: "A mechanism is best defined as a device that...",
-            options: ["Creates energy from nothing", "Generates electricity for circuits", "Transmits power or modifies force/motion", "Stores potential energy indefinitely"],
-            ans: 2
-        }
-    ],
-    // Placeholders for future units so the engine doesn't break
-    2: [], 
-    3: [], 
-    4: [], 
-    5: [], 
-    6: []
+    1: {
+        regular: [
+            { id: "u1_r01", q: "Which class of lever always has the fulcrum between the effort and resistance?", options: ["1st Class", "2nd Class", "3rd Class", "4th Class"], ans: 0, exp: "In a 1st class lever, the fulcrum is in the middle, like a seesaw." },
+            { id: "u1_r02", q: "Which class of lever always has an IMA less than 1?", options: ["1st Class", "2nd Class", "3rd Class", "None"], ans: 2, exp: "3rd class levers always have the effort closer to the fulcrum than the resistance, meaning DE < DR, so IMA < 1." },
+            { id: "u1_r03", q: "What is the formula for Ideal Mechanical Advantage (IMA)?", options: ["AMA / Efficiency", "Resistance Force / Effort Force", "Effort Distance / Resistance Distance", "Work Out / Work In"], ans: 2, exp: "IMA is purely based on geometry: Distance of Effort divided by Distance of Resistance (DE / DR)." },
+            { id: "u1_r04", q: "What is the formula for Actual Mechanical Advantage (AMA)?", options: ["DE / DR", "Resistance Force / Effort Force", "Effort Force / Resistance Force", "Work In / Work Out"], ans: 1, exp: "AMA is based on physical forces measured: Resistance Force divided by Effort Force (FR / FE)." },
+            { id: "u1_r05", q: "If DE = 10 in and DR = 2 in, what is the IMA?", options: ["0.2", "5", "12", "20"], ans: 1, exp: "IMA = DE / DR. 10 / 2 = 5." },
+            { id: "u1_r06", q: "If FE = 20 lbs and FR = 80 lbs, what is the AMA?", options: ["0.25", "4", "100", "1600"], ans: 1, exp: "AMA = FR / FE. 80 / 20 = 4." },
+            { id: "u1_r07", q: "How is efficiency calculated?", options: ["(AMA / IMA) * 100", "(IMA / AMA) * 100", "(DE / DR) * 100", "(FR / FE) * 100"], ans: 0, exp: "Efficiency is the ratio of actual to ideal advantage, expressed as a percentage: (AMA / IMA) * 100." },
+            { id: "u1_r08", q: "What is the unit of measure for work in the US Customary system?", options: ["Joules", "Watts", "Foot-pounds", "Newtons"], ans: 2, exp: "Work is Force x Distance. In the US system, it is measured in Foot-pounds (ft-lbs)." },
+            { id: "u1_r09", q: "What simple machine is a wheelbarrow?", options: ["1st Class Lever", "2nd Class Lever", "3rd Class Lever", "Wheel and Axle"], ans: 1, exp: "A wheelbarrow is a 2nd class lever because the resistance (load) is between the fulcrum (wheel) and the effort (handles)." },
+            { id: "u1_r10", q: "What simple machine is a pair of tweezers?", options: ["1st Class Lever", "2nd Class Lever", "3rd Class Lever", "Wedge"], ans: 2, exp: "Tweezers are a 3rd class lever because the effort is applied between the fulcrum (the joined end) and the resistance (the open ends)." },
+            { id: "u1_r11", q: "In a wheel and axle, if the effort is applied to the axle, the IMA is...", options: ["Greater than 1", "Less than 1", "Exactly 1", "Zero"], ans: 1, exp: "If effort is on the axle, DE (axle radius) is smaller than DR (wheel radius), so DE / DR is less than 1." },
+            { id: "u1_r12", q: "How do you determine the IMA of a pulley system?", options: ["Count all strands", "Count only strands pulling up", "Count opposing strands pulling the load", "Measure the radius of the largest pulley"], ans: 2, exp: "The IMA of a pulley block and tackle is equal to the number of strands directly opposing the resistance (pulling the load)." },
+            { id: "u1_r13", q: "If a pulley system has an IMA of 4, how much effort force is needed to lift 100 lbs? (Assuming 100% efficiency)", options: ["25 lbs", "100 lbs", "400 lbs", "4 lbs"], ans: 0, exp: "If IMA = 4 and efficiency is perfect, AMA = 4. Since AMA = FR / FE, FE = 100 / 4 = 25 lbs." },
+            { id: "u1_r14", q: "A block and tackle has 3 supporting strands. If you pull 15 feet of rope, how high does the load lift?", options: ["45 feet", "15 feet", "5 feet", "3 feet"], ans: 2, exp: "IMA = 3. DE / DR = 3. If DE (rope pulled) is 15, then DR (load lifted) is 15 / 3 = 5 feet." },
+            { id: "u1_r15", q: "What is the IMA of an inclined plane that is 15 ft long and 3 ft high?", options: ["0.2", "5", "12", "45"], ans: 1, exp: "For an inclined plane, IMA = Length (Slope) / Height. 15 / 3 = 5." },
+            { id: "u1_r16", q: "What is the IMA of a wedge that is 10 inches long and 2 inches wide?", options: ["5", "0.2", "20", "8"], ans: 0, exp: "For a wedge, IMA = Length / Width. 10 / 2 = 5." },
+            { id: "u1_r17", q: "What do the numbers 1/4 - 20 UNC mean on a screw?", options: ["1/4 in length, 20 threads total", "1/4 in diameter, 20 threads per inch", "1/4 in pitch, 20 in long", "1/4 in diameter, 20 in long"], ans: 1, exp: "1/4 is the nominal diameter. 20 is the Threads Per Inch (TPI)." },
+            { id: "u1_r18", q: "What is the pitch of a 1/2 - 13 UNC screw?", options: ["1/2 in", "13 in", "1/13 in", "26 in"], ans: 2, exp: "Pitch is 1 / TPI. For 13 threads per inch, the pitch is 1/13 of an inch." },
+            { id: "u1_r19", q: "What is the formula for the IMA of a screw?", options: ["Circumference / Pitch", "Pitch / Circumference", "Length / Height", "Diameter / Pitch"], ans: 0, exp: "IMA of a screw is the effort circumference (2 * pi * r) divided by the pitch." },
+            { id: "u1_r20", q: "If two gears are meshed, how do they turn?", options: ["Same direction", "Opposite directions", "One turns, the other slides", "Randomly"], ans: 1, exp: "Meshed mating gears always rotate in opposite directions." },
+            { id: "u1_r21", q: "What is the purpose of an idler gear?", options: ["Increase torque", "Increase speed", "Change rotational direction", "Decrease friction"], ans: 2, exp: "An idler gear is placed between a driver and driven gear to make them turn in the same direction. It does not affect gear ratio." },
+            { id: "u1_r22", q: "How is Gear Ratio (GR) calculated using teeth?", options: ["Teeth in / Teeth out", "Teeth out / Teeth in", "Teeth out * Teeth in", "Teeth in - Teeth out"], ans: 1, exp: "Gear Ratio = N_out / N_in (Driven teeth / Driver teeth)." },
+            { id: "u1_r23", q: "If a 10-tooth driver gear turns a 40-tooth driven gear, what is the GR?", options: ["4", "0.25", "400", "30"], ans: 0, exp: "GR = N_out / N_in. 40 / 10 = 4." },
+            { id: "u1_r24", q: "If a gear train has a GR of 3, what happens to the output torque?", options: ["It is 1/3 of input", "It triples", "It stays the same", "It becomes zero"], ans: 1, exp: "Torque Out = Torque In * Gear Ratio. If GR is 3, torque triples." },
+            { id: "u1_r25", q: "If a gear train has a GR of 3, what happens to the output speed (RPM)?", options: ["It is 1/3 of input", "It triples", "It stays the same", "It becomes zero"], ans: 0, exp: "Speed Out = Speed In / Gear Ratio. If GR is 3, speed is divided by 3." },
+            { id: "u1_r26", q: "A 12-tooth driver gear rotates at 100 RPM and meshes with a 36-tooth gear. What is the output RPM?", options: ["33.3 RPM", "300 RPM", "432 RPM", "3 RPM"], ans: 0, exp: "GR = 36/12 = 3. Output RPM = Input RPM / GR. 100 / 3 = 33.3 RPM." },
+            { id: "u1_r27", q: "Which relationship is TRUE for gear trains?", options: ["High Speed = High Torque", "Low Speed = High Torque", "Low Speed = Low Torque", "Speed and Torque are unrelated"], ans: 1, exp: "Speed and torque are inversely proportional. Gearing down (lower speed) increases torque." },
+            { id: "u1_r28", q: "What connects two sprockets?", options: ["A belt", "Meshing teeth", "A chain", "A rope"], ans: 2, exp: "Sprockets use a chain to transfer power, preventing slip." },
+            { id: "u1_r29", q: "Do two sprockets connected by a chain turn in the same or opposite direction?", options: ["Same direction", "Opposite directions", "It depends on the sizes", "They don't turn"], ans: 0, exp: "Because the chain pulls them together, both sprockets rotate in the same direction." },
+            { id: "u1_r30", q: "What connects two pulleys in a power transmission system?", options: ["A chain", "Meshing teeth", "A belt", "A rigid shaft"], ans: 2, exp: "Pulleys use belts (like in a car engine) to transfer power." },
+            { id: "u1_r31", q: "How is Gear Ratio calculated using diameter?", options: ["D_in / D_out", "D_out / D_in", "D_out * D_in", "D_in - D_out"], ans: 1, exp: "Gear Ratio = D_out / D_in (Driven diameter / Driver diameter)." },
+            { id: "u1_r32", q: "How is Gear Ratio calculated using angular velocity (speed)?", options: ["W_in / W_out", "W_out / W_in", "W_out * W_in", "W_in + W_out"], ans: 0, exp: "Gear Ratio = W_in / W_out. Speed is inversely proportional to teeth/diameter." },
+            { id: "u1_r33", q: "What happens when you connect a large driver gear to a small driven gear?", options: ["Speed increases, torque decreases", "Speed decreases, torque increases", "Both increase", "Both decrease"], ans: 0, exp: "A large driver turning a small driven creates a GR < 1. This is 'gearing up', which increases speed but lowers torque." },
+            { id: "u1_r34", q: "What is Work?", options: ["Energy over time", "Force x Distance", "Mass x Acceleration", "Voltage x Current"], ans: 1, exp: "Work = Force x Distance (measured parallel to the direction of motion)." },
+            { id: "u1_r35", q: "If you push a 50 lb block 10 feet across the floor, how much work was done?", options: ["5 ft-lbs", "40 ft-lbs", "60 ft-lbs", "500 ft-lbs"], ans: 3, exp: "Work = F x d. 50 lbs * 10 ft = 500 ft-lbs." },
+            { id: "u1_r36", q: "What is the definition of Power?", options: ["Force x Distance", "Work / Time", "Mass / Volume", "Torque x RPM"], ans: 1, exp: "Power is the rate at which work is performed: Work divided by Time." },
+            { id: "u1_r37", q: "If a winch does 600 Joules of work in 10 seconds, what is its power output?", options: ["60 Watts", "6000 Watts", "60 Joules", "6000 Joules"], ans: 0, exp: "Power = Work / Time. 600 J / 10 s = 60 Watts." },
+            { id: "u1_r38", q: "One horsepower (hp) is equal to how many foot-pounds per second?", options: ["33,000", "550", "746", "100"], ans: 1, exp: "1 hp = 550 ft-lbs/sec (which is also 33,000 ft-lbs/min)." },
+            { id: "u1_r39", q: "Which simple machine consists of a cylindrical body with a spiral ridge?", options: ["Inclined Plane", "Wedge", "Screw", "Wheel and Axle"], ans: 2, exp: "A screw is essentially an inclined plane wrapped around a cylinder." },
+            { id: "u1_r40", q: "What factor accounts for the difference between IMA and AMA?", options: ["Gravity", "Friction", "Distance", "Mass"], ans: 1, exp: "Ideal Mechanical Advantage ignores friction. Actual Mechanical Advantage accounts for the energy lost to friction." },
+            { id: "u1_r41", q: "If a machine has an IMA of 10 and an AMA of 8, what is its efficiency?", options: ["20%", "80%", "125%", "8%"], ans: 1, exp: "Efficiency = (AMA / IMA) * 100. (8 / 10) * 100 = 80%." },
+            { id: "u1_r42", q: "Which of the following is an example of a 1st class lever?", options: ["Nutcracker", "Broom", "Scissors", "Wheelbarrow"], ans: 2, exp: "Scissors have the fulcrum (pin) between the effort (handles) and resistance (blades)." },
+            { id: "u1_r43", q: "Which of the following is an example of a 3rd class lever?", options: ["Crowbar", "Bottle Opener", "Baseball Bat", "Pliers"], ans: 2, exp: "When swinging a bat, your hands (effort) are between your shoulder/bottom hand (fulcrum) and the ball (resistance)." },
+            { id: "u1_r44", q: "If the gear ratio of a system is 1, what does the system do?", options: ["Nothing", "Increases speed", "Transfers power without changing speed or torque", "Locks the gears"], ans: 2, exp: "A 1:1 gear ratio changes direction (if meshed) or simply bridges distance, keeping torque and speed identical." },
+            { id: "u1_r45", q: "A compound gear train has two stages. Stage 1 GR is 2, Stage 2 GR is 4. What is the total GR?", options: ["2", "6", "8", "16"], ans: 2, exp: "Total GR of a compound gear train is the product of its individual gear ratios. 2 * 4 = 8." },
+            { id: "u1_r46", q: "If a gear train has 4 gears meshed in a row, the two middle gears are called...", options: ["Drivers", "Idler Gears", "Driven", "Sprockets"], ans: 1, exp: "Gears placed between the driver and final driven gear are idler gears." },
+            { id: "u1_r47", q: "What is torque?", options: ["Linear pushing force", "A twisting force causing rotation", "Speed of rotation", "Mass x Acceleration"], ans: 1, exp: "Torque is a measure of the force that can cause an object to rotate about an axis." },
+            { id: "u1_r48", q: "If you apply 10 lbs of force at the end of a 2 ft wrench, what is the torque?", options: ["5 ft-lbs", "12 ft-lbs", "20 ft-lbs", "100 ft-lbs"], ans: 2, exp: "Torque = Force x perpendicular distance. 10 lbs * 2 ft = 20 ft-lbs." },
+            { id: "u1_r49", q: "In a block and tackle pulley system, does a single fixed pulley provide a mechanical advantage?", options: ["Yes, IMA = 2", "No, IMA = 1", "Yes, IMA = 0.5", "No, IMA = 0"], ans: 1, exp: "A single fixed pulley only changes the direction of the force. IMA = 1." },
+            { id: "u1_r50", q: "Why are mating gears required to have the same diametral pitch?", options: ["So they look uniform", "So they rotate at the same speed", "So their teeth mesh without binding", "So they have the same diameter"], ans: 2, exp: "Diametral pitch refers to tooth size/spacing. If they don't match, the teeth will grind and bind." }
+        ],
+        gym: [
+            { id: "u1_g01", q: "A motor outputs 50 ft-lbs of torque at 120 RPM. It drives a gear train with a GR of 4. What is the output torque and RPM? (100% eff)", options: ["200 ft-lbs, 480 RPM", "12.5 ft-lbs, 30 RPM", "200 ft-lbs, 30 RPM", "12.5 ft-lbs, 480 RPM"], ans: 2, exp: "Torque OUT = 50 * 4 = 200. Speed OUT = 120 / 4 = 30 RPM." },
+            { id: "u1_g02", q: "A compound machine consists of a lever (IMA=3) attached to a pulley (IMA=4). What is the total IMA?", options: ["7", "12", "1.33", "0.75"], ans: 1, exp: "Total IMA of a compound machine is the product of individual IMAs. 3 * 4 = 12." },
+            { id: "u1_g03", q: "An inclined plane is 20 ft long and 4 ft high. You must push a 200 lb block up it. Actual force required is 50 lbs. What is the efficiency?", options: ["20%", "25%", "80%", "100%"], ans: 2, exp: "IMA = 20/4 = 5. AMA = 200/50 = 4. Eff = (4/5) * 100 = 80%." },
+            { id: "u1_g04", q: "A 1/4 - 20 UNC screw is turned with a 6-inch wrench. What is the IMA? (Use pi = 3.14)", options: ["753.6", "150.7", "376.8", "75.3"], ans: 0, exp: "Effort distance = 2 * pi * 6 = 37.68 in. Pitch = 1/20 = 0.05 in. IMA = 37.68 / 0.05 = 753.6." },
+            { id: "u1_g05", q: "A 10-tooth gear drives a 30-tooth gear, which shares a shaft with a 20-tooth gear. The 20-tooth gear drives a 40-tooth gear. Total GR?", options: ["6", "9", "4", "2"], ans: 0, exp: "Stage 1: 30/10 = 3. Stage 2: 40/20 = 2. Total GR = 3 * 2 = 6." },
+            { id: "u1_g06", q: "A motor uses 1200 Watts of electrical power to lift a 500 N load a distance of 2 meters in 1 second. What is the efficiency?", options: ["41.6%", "83.3%", "120%", "50%"], ans: 1, exp: "Work out = 500 N * 2 m = 1000 J. Power out = 1000 J / 1 s = 1000 W. Eff = 1000 / 1200 = 83.3%." },
+            { id: "u1_g07", q: "A wheel has a diameter of 20 in and an axle of 2 in. If a 10 lb effort is applied to the axle, what is the maximum resistance force it can overcome? (100% eff)", options: ["100 lbs", "1 lb", "50 lbs", "200 lbs"], ans: 1, exp: "Effort is on the axle, so DE=1, DR=10. IMA = 1/10 = 0.1. FR = FE * IMA = 10 * 0.1 = 1 lb." },
+            { id: "u1_g08", q: "In a block and tackle, the rope is pulled down 40 ft to lift a load 8 ft. What is the IMA?", options: ["5", "320", "0.2", "48"], ans: 0, exp: "IMA = DE / DR = 40 / 8 = 5." },
+            { id: "u1_g09", q: "A wedge has an IMA of 4. If an effort force of 50 lbs is applied with a hammer, what is the ideal splitting force?", options: ["12.5 lbs", "200 lbs", "54 lbs", "400 lbs"], ans: 1, exp: "IMA = FR / FE -> 4 = FR / 50 -> FR = 200 lbs." },
+            { id: "u1_g10", q: "A sprocket with 15 teeth drives a sprocket with 45 teeth. If the driver rotates at 90 RPM, what is the output torque if input torque is 10 in-lbs?", options: ["30 in-lbs", "3.33 in-lbs", "90 in-lbs", "135 in-lbs"], ans: 0, exp: "GR = 45/15 = 3. Torque Out = Torque In * GR = 10 * 3 = 30 in-lbs." },
+            { id: "u1_g11", q: "In a 3rd class lever, the effort force is 100 lbs applied 2 ft from the fulcrum. The resistance is 4 ft from the fulcrum. What is the max load? (100% eff)", options: ["200 lbs", "50 lbs", "25 lbs", "400 lbs"], ans: 1, exp: "IMA = DE / DR = 2 / 4 = 0.5. FR = FE * IMA = 100 * 0.5 = 50 lbs." },
+            { id: "u1_g12", q: "A gear train uses 4 meshed gears: 10T, 20T, 30T, and 40T. What is the overall Gear Ratio?", options: ["4", "24", "0.25", "10"], ans: 0, exp: "For a simple gear train (all in a row), only the first and last matter. GR = N_out / N_in = 40 / 10 = 4." },
+            { id: "u1_g13", q: "If you need to lift a 1000 lb engine with only 50 lbs of human force, what minimum IMA must your pulley system have?", options: ["20", "50", "100", "50000"], ans: 0, exp: "IMA required = FR / FE = 1000 / 50 = 20." },
+            { id: "u1_g14", q: "An electric winch lifts a 550 lb load a height of 10 ft in 5 seconds. How much horsepower is it outputting?", options: ["1 hp", "2 hp", "5 hp", "10 hp"], ans: 1, exp: "Work = 550 * 10 = 5500 ft-lbs. Power = 5500 / 5 s = 1100 ft-lbs/sec. Since 1 hp = 550 ft-lbs/sec, 1100 / 550 = 2 hp." },
+            { id: "u1_g15", q: "A screw with a pitch of 1/16 inch is turned 8 full rotations. How far does it advance linearly?", options: ["1/2 inch", "2 inches", "8 inches", "128 inches"], ans: 0, exp: "Linear distance = Rotations * Pitch = 8 * (1/16) = 8/16 = 1/2 inch." },
+            { id: "u1_g16", q: "A 5-inch diameter pulley is belted to a 20-inch diameter pulley. If the 20-inch pulley is the driver, what happens to speed?", options: ["Quadruples", "Quarters", "Stays the same", "Halves"], ans: 0, exp: "GR = D_out / D_in = 5 / 20 = 0.25. Speed Out = Speed In / GR. Since GR is < 1, speed increases (quadruples)." },
+            { id: "u1_g17", q: "A machine has an efficiency of 75% and an IMA of 8. What is the AMA?", options: ["6", "10.6", "1.5", "600"], ans: 0, exp: "Efficiency = AMA / IMA. 0.75 = AMA / 8. AMA = 6." },
+            { id: "u1_g18", q: "A 2nd class lever has a resistance placed 3 ft from the fulcrum. If the IMA is 4, how far from the fulcrum is the effort applied?", options: ["12 ft", "0.75 ft", "7 ft", "1 ft"], ans: 0, exp: "IMA = DE / DR -> 4 = DE / 3 -> DE = 12 ft." },
+            { id: "u1_g19", q: "Two mating gears have diametral pitches of 24. Gear A has 12 teeth, Gear B has 72 teeth. What is the center distance between their shafts?", options: ["1.75 in", "3.5 in", "84 in", "42 in"], ans: 0, exp: "Diameter = Teeth / Pitch. D_A = 12/24 = 0.5. D_B = 72/24 = 3. Center distance = (D_A + D_B)/2 = 3.5 / 2 = 1.75 inches." },
+            { id: "u1_g20", q: "If the input power to a gear train is 10 hp and the output power is 8 hp, what accounts for the 2 hp loss?", options: ["Friction (heat/sound)", "Gear Ratio reduction", "Speed increase", "Torque decrease"], ans: 0, exp: "The First Law of Thermodynamics states energy cannot be destroyed. Losses in mechanical systems are due to friction." }
+        ]
+    },
+    // Placeholders for Units 2-6 to prevent crashes
+    2: { regular: [{id: "u2_r01", q: "Unit 2 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u2_g01", q: "Gym 2 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
+    3: { regular: [{id: "u3_r01", q: "Unit 3 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u3_g01", q: "Gym 3 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
+    4: { regular: [{id: "u4_r01", q: "Unit 4 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u4_g01", q: "Gym 4 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
+    5: { regular: [{id: "u5_r01", q: "Unit 5 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u5_g01", q: "Gym 5 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] },
+    6: { regular: [{id: "u6_r01", q: "Unit 6 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}], gym: [{id: "u6_g01", q: "Gym 6 Placeholder", options: ["A", "B", "C", "D"], ans: 0, exp: ""}] }
 };
