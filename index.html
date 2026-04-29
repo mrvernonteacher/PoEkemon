@@ -43,32 +43,33 @@
                     <button id="msg-btn-cancel" class="action-btn attack-btn hidden">Cancel</button>
                 </div>
             </div>
-            <div id="dex-card-overlay" class="hidden">
-    <div class="dex-card">
-        <button class="close-card" onclick="closeDexCard()">X</button>
-        <div class="dex-card-header">
-            <h2 id="card-name">NAME</h2>
-            <span id="card-id">#00</span>
         </div>
-        <div class="dex-card-body">
-            <div id="card-sprite-container">
-                <canvas id="cardCanvas" width="120" height="120"></canvas>
-            </div>
-            <div class="dex-card-info">
-                <p><strong>Type:</strong> <span id="card-type">---</span></p>
-                <p><strong>Level:</strong> <span id="card-level">1</span></p>
-                <p><strong>Unit:</strong> <span id="card-unit">0</span></p>
-                <div class="stats-mini">
-                    <span>HP: <span id="card-hp">0</span></span>
-                    <span>ATK: <span id="card-atk">0</span></span>
+
+        <div id="dex-card-overlay" class="hidden">
+            <div class="dex-card">
+                <button class="close-card" onclick="closeDexCard()">X</button>
+                <div class="dex-card-header">
+                    <h2 id="card-name">NAME</h2>
+                    <span id="card-id">#00</span>
+                </div>
+                <div class="dex-card-body">
+                    <div id="card-sprite-container">
+                        <canvas id="cardCanvas" width="120" height="120"></canvas>
+                    </div>
+                    <div class="dex-card-info">
+                        <p><strong>Type:</strong> <span id="card-type">---</span></p>
+                        <p><strong>Level:</strong> <span id="card-level">1</span></p>
+                        <p><strong>Unit:</strong> <span id="card-unit">0</span></p>
+                        <div class="stats-mini">
+                            <span>HP: <span id="card-hp">0</span></span>
+                            <span>ATK: <span id="card-atk">0</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dex-card-footer">
+                    <p id="card-desc">Description goes here...</p>
                 </div>
             </div>
-        </div>
-        <div class="dex-card-footer">
-            <p id="card-desc">Description goes here...</p>
-        </div>
-    </div>
-</div>
         </div>
 
         <section id="screen-characterSelect" class="screen active">
@@ -77,7 +78,7 @@
                 <div class="character-card">
                     <h3>Mr. V</h3>
                     <p class="theme-text">Digital Electronics</p>
-                    <button class="starter-btn" onclick="selectStarter('MrV', 61)">ArXORpteryx</button>
+                    <button class="starter-btn" onclick="selectStarter('MrV', 61)">ArchaeopXORyx</button>
                     <button class="starter-btn" onclick="selectStarter('MrV', 62)">Countertle</button>
                     <button class="starter-btn" onclick="selectStarter('MrV', 63)">Latchander</button>
                 </div>
@@ -96,7 +97,7 @@
             <div class="canvas-container">
                 <canvas id="gameCanvas" width="600" height="400"></canvas>
             </div>
-            <p class="controls-hint">WASD to Move | Green = Encounters | Blue = Clinic | Grey = Station</p>
+            <p class="controls-hint">WASD to Move | Green = Wild | Blue = Clinic | Grey = Train</p>
         </section>
 
         <section id="screen-battle" class="screen hidden">
@@ -137,26 +138,19 @@
         <section id="screen-trainStation" class="screen hidden">
             <h2 style="color: #0033a0; margin-bottom: 20px;">Waltonia Central Station</h2>
             <div style="display: flex; gap: 20px; width: 100%;">
-                
                 <div style="flex: 1; border: 4px solid var(--border-color); padding: 15px; background: white; max-height: 400px; overflow-y: auto;">
                     <h3 style="margin-bottom: 15px;">Departures</h3>
                     <div id="unit-travel-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
-
                 <div style="flex: 1; border: 4px solid var(--border-color); padding: 15px; background: #fffde7; text-align: center;">
                     <h3 style="color: #c8102e; margin-bottom: 10px;">Data Terminal</h3>
-                    <p style="font-size: 8px; line-height: 1.5; margin-bottom: 20px;">Back up your save to your computer, or restore a previous game state.</p>
-                    
-                    <button onclick="downloadSaveFile()" class="action-btn catch-btn" style="width: 100%; margin-bottom: 15px;">Download Save Data</button>
-                    
-                    <label for="save-upload" class="action-btn attack-btn" style="display: inline-block; width: 100%; cursor: pointer;">Upload Save File</label>
+                    <button onclick="downloadSaveFile()" class="action-btn catch-btn" style="width: 100%; margin-bottom: 15px;">Download Save</button>
+                    <label for="save-upload" class="action-btn attack-btn" style="display: inline-block; width: 100%; cursor: pointer;">Upload Save</label>
                     <input type="file" id="save-upload" accept=".json" class="hidden" onchange="uploadSaveFile(event)">
-                    
                     <button onclick="window.showScreen('map')" class="nav-btn" style="margin-top: 30px; width: 100%;">Exit Station</button>
                 </div>
             </div>
         </section>
-
     </div>
 
     <script src="world.js"></script>
