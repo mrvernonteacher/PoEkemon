@@ -60,7 +60,7 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 3. SPRITE ENGINE 
+// 3. SPRITE ENGINE
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -253,8 +253,11 @@ window.addEventListener('keydown', (e) => {
 // 5. FILE I/O & BULLETPROOF INITIALIZATION
 // ==========================================
 window.showScreen = function(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden', 'active'));
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.add('hidden');
+        s.classList.remove('active');
+    });
+    
     const target = document.getElementById('screen-' + name);
     if (target) {
         target.classList.remove('hidden');
@@ -295,18 +298,19 @@ window.loadGame = function() {
         const saved = localStorage.getItem('PoEkemon_Waltonia_Save'); 
         if (saved) {
             const loadedState = JSON.parse(saved);
-            
-            // Safe merge to prevent missing properties from crashing game
             gameState = { ...gameState, ...loadedState };
-
-            if (!gameState.playerTeam || !Array.isArray(gameState.playerTeam)) gameState.playerTeam = [];
-            if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
-            if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
-            if (!gameState.badges) gameState.badges = [];
-            if (!gameState.gymQueue) gameState.gymQueue = [];
-            
-            gameState.playerTeam.forEach(mon => {
-                if (!mon) return;
+        }
+        
+        // Enforce data types to prevent crashes
+        if (!Array.isArray(gameState.playerTeam)) gameState.playerTeam = [];
+        if (!Array.isArray(gameState.pokedexCaught)) gameState.pokedexCaught = [];
+        if (!Array.isArray(gameState.answeredQuestions)) gameState.answeredQuestions = [];
+        if (!Array.isArray(gameState.badges)) gameState.badges = [];
+        if (!Array.isArray(gameState.gymQueue)) gameState.gymQueue = [];
+        
+        gameState.playerTeam.forEach(mon => {
+            if (!mon) return;
+            if (typeof poekedex !== 'undefined') {
                 const masterDex = poekedex.find(p => p.id === mon.id);
                 if (masterDex) {
                     mon.basicAtkName = masterDex.basicAtkName;
@@ -331,8 +335,8 @@ window.loadGame = function() {
                         mon.name = masterDex.evolutions[mon.evolutionLevel - 2].name;
                     }
                 }
-            });
-        }
+            }
+        });
     } catch (err) {
         console.error("Save file corrupted. Resetting memory.", err);
         localStorage.removeItem('PoEkemon_Waltonia_Save');
@@ -385,6 +389,10 @@ window.resetGame = function() {
 
 window.selectStarter = function(char, id) {
     try {
+        if (typeof poekedex === 'undefined') {
+            alert("Error: poekedex.js failed to load. Check for syntax errors.");
+            return;
+        }
         gameState.playerCharacter = char;
         const mon = poekedex.find(p => p.id === id);
         if (mon) {
@@ -401,6 +409,10 @@ window.selectStarter = function(char, id) {
 };
 
 window.onload = () => {
+    // Safety check to alert you immediately if a file is missing/broken
+    if (typeof poekedex === 'undefined') alert("WARNING: poekedex.js is missing or has a syntax error!");
+    if (typeof trainerBank === 'undefined') alert("WARNING: trainers.js is missing or has a syntax error!");
+
     window.loadGame();
     
     const btnSettings = document.getElementById('btn-settings');
@@ -444,7 +456,7 @@ window.unlockQuestion = function(qId) {
 };
 
 // ==========================================
-// 6. MAP BUILDINGS
+// 6. MAP BUILDINGS (CLINIC & STATION)
 // ==========================================
 window.triggerClinic = function() {
     let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
@@ -540,7 +552,9 @@ window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
     
     if (isGym) {
-        if (!typeof trainerBank !== 'undefined') return window.showMessage("Trainer data missing!", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
+        if (typeof trainerBank === 'undefined') {
+            return window.showMessage("Trainer data missing! Please ensure trainers.js loaded correctly.", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
+        }
         const trainer = Object.values(trainerBank).find(t => t.unit === unit);
         
         if (!trainer) return window.showMessage("Gym Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
@@ -555,7 +569,7 @@ window.startEncounter = function(unit, isGym) {
         let jokeText = "Let's battle!";
         if (trainer.jokeIDs && trainer.jokeIDs.length > 0) {
             const jokeId = trainer.jokeIDs[Math.floor(Math.random() * trainer.jokeIDs.length)];
-            if (dialoguePool && dialoguePool[jokeId]) jokeText = dialoguePool[jokeId];
+            if (typeof dialoguePool !== 'undefined' && dialoguePool[jokeId]) jokeText = dialoguePool[jokeId];
         }
         
         window.showMessage(`${trainer.intro}\n\n"${jokeText}"`, () => {
@@ -940,7 +954,7 @@ window.endBattle = function() {
 };
 
 // ==========================================
-// 8. PARTY & CARDS
+// 8. PARTY LIMITS, DEX RENDERING & CARDS
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
