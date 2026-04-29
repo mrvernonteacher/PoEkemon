@@ -9,10 +9,12 @@ let gameState = {
     playerCharacter: null,
     playerTeam: [],       
     pokedexCaught: [],    
-    answeredQuestions: [], // Tracks question IDs for the PoEQuedex
+    answeredQuestions: [], 
     badges: [],
     currentUnit: 1,
     currentEnemy: null,
+    currentTrainer: null, // Tracks active Gym Leader
+    gymQueue: [],         // Tracks remaining PoEkemon in a trainer battle
     queuedAttack: null,   
     inBattle: false
 };
@@ -56,7 +58,7 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 3. SPRITE ENGINE (LEVEL 1-3 SYSTEM)
+// 3. SPRITE ENGINE (TRAINERS & MONS)
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -77,6 +79,44 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillStyle = "#00acc1"; ctx.fillRect(x + (10*s), y + (22*s), 20*s, 10*s);
         ctx.fillStyle = "#ffffff"; ctx.fillRect(x + (9*s), y + (32*s), 22*s, 8*s);
         ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + (13*s), y + (40*s), 5*s, 6*s); ctx.fillRect(x + (22*s), y + (40*s), 5*s, 6*s);
+    }
+    ctx.restore();
+};
+
+window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
+    const s = size / 50; 
+    ctx.save();
+    
+    if (trainerId === 'wes') {
+        // Professor Wes - Physics & Kangol Hat
+        ctx.fillStyle = "#333333"; // Kangol Hat
+        ctx.fillRect(x + 12*s, y + 4*s, 26*s, 8*s); 
+        ctx.fillRect(x + 10*s, y + 10*s, 32*s, 4*s); // Brim
+
+        ctx.fillStyle = "#e0ac69"; // Skin Tone
+        ctx.fillRect(x + 16*s, y + 14*s, 18*s, 12*s);
+        
+        ctx.fillStyle = "#5d4037"; // Beard
+        ctx.fillRect(x + 16*s, y + 20*s, 18*s, 8*s); 
+        ctx.fillStyle = "#e0ac69"; // Mouth cutout
+        ctx.fillRect(x + 22*s, y + 22*s, 6*s, 2*s);
+
+        ctx.fillStyle = "#ffffff"; // Glasses/Eyes
+        ctx.fillRect(x + 18*s, y + 16*s, 5*s, 4*s); ctx.fillRect(x + 27*s, y + 16*s, 5*s, 4*s);
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(x + 20*s, y + 17*s, 2*s, 2*s); ctx.fillRect(x + 27*s, y + 17*s, 2*s, 2*s);
+        ctx.fillRect(x + 23*s, y + 17*s, 4*s, 2*s); // Glasses bridge
+
+        ctx.fillStyle = "#0033a0"; // Walton Royal Blue Shirt
+        ctx.fillRect(x + 12*s, y + 26*s, 26*s, 16*s);
+        ctx.fillStyle = "#c8102e"; // Walton Red Accent
+        ctx.fillRect(x + 23*s, y + 30*s, 4*s, 4*s); 
+
+        ctx.fillStyle = "#e0ac69"; // Arms
+        ctx.fillRect(x + 8*s, y + 28*s, 4*s, 12*s); ctx.fillRect(x + 38*s, y + 28*s, 4*s, 12*s);
+
+        ctx.fillStyle = "#d2b48c"; // Khakis
+        ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
     }
     ctx.restore();
 };
@@ -133,7 +173,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
 };
 
 // ==========================================
-// 4. MAP NAVIGATION (CAMERA)
+// 4. MAP NAVIGATION
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
@@ -238,6 +278,7 @@ window.loadGame = function() {
         gameState = JSON.parse(saved);
         if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
         if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
+        if (!gameState.badges) gameState.badges = [];
         
         gameState.playerTeam.forEach(mon => {
             const masterDex = poekedex.find(p => p.id === mon.id);
@@ -345,7 +386,6 @@ window.onload = () => {
     else window.showScreen('map');
 };
 
-// Helper function to track unlocked questions
 window.unlockQuestion = function(qId) {
     if (!gameState.answeredQuestions) gameState.answeredQuestions = [];
     if (!gameState.answeredQuestions.includes(qId)) {
@@ -377,7 +417,7 @@ window.triggerClinic = function() {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
-            window.unlockQuestion(q.id); // Track question!
+            window.unlockQuestion(q.id); 
             document.querySelector('.battle-stage').style.display = 'block';
             if (i === q.ans) {
                 gameState.playerTeam.forEach(mon => mon.currentHP = mon.maxHP);
@@ -427,18 +467,75 @@ window.triggerTrainStation = function() {
 };
 
 // ==========================================
-// 7. COMBAT, TRIVIA & EVOLUTION
+// 7. COMBAT, TRIVIA & EVOLUTION (MULTI-BATTLE)
 // ==========================================
+
+// Helper to build a statted enemy from ID and Level
+window.generateEnemy = function(id, level) {
+    const masterMon = poekedex.find(p => p.id === id);
+    let enemy = JSON.parse(JSON.stringify(masterMon)); 
+    enemy.evolutionLevel = level;
+    
+    if (level > 1 && enemy.evolutions.length > 0) {
+        enemy.name = enemy.evolutions[level - 2].name;
+        for(let i=0; i < level - 1; i++) {
+            if (enemy.evolutions[i]) {
+                enemy.hp += enemy.evolutions[i].hpBonus;
+                enemy.baseAtk += enemy.evolutions[i].atkBonus;
+            }
+        }
+    }
+    enemy.currentHP = enemy.hp;
+    return enemy;
+};
+
 window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
-    const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
-    gameState.currentEnemy = { ...unitMons[Math.floor(Math.random() * unitMons.length)] };
-    gameState.currentEnemy.currentHP = gameState.currentEnemy.hp;
-    gameState.currentEnemy.evolutionLevel = 1; 
+    
+    if (isGym) {
+        // Find the trainer for this unit
+        const trainer = Object.values(trainerBank).find(t => t.unit === unit);
+        if (!trainer) return window.showMessage("Gym Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
+        
+        if (gameState.badges.includes(unit)) {
+            return window.showMessage(`You already defeated ${trainer.name} and earned the Unit ${unit} Badge!`, () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
+        }
 
+        gameState.currentTrainer = trainer;
+        gameState.gymQueue = JSON.parse(JSON.stringify(trainer.team)); // Copy team queue
+        
+        const jokeId = trainer.jokeIDs[Math.floor(Math.random() * trainer.jokeIDs.length)];
+        const jokeText = dialoguePool[jokeId];
+        
+        window.showMessage(`${trainer.intro}\n\n"${jokeText}"`, () => {
+            window.sendNextTrainerMon();
+        });
+
+    } else {
+        // Wild Encounter
+        gameState.currentTrainer = null;
+        gameState.gymQueue = [];
+        const unitMons = poekedex.filter(p => p.unit === unit && !p.type.includes("Boss"));
+        gameState.currentEnemy = window.generateEnemy(unitMons[Math.floor(Math.random() * unitMons.length)].id, 1);
+        
+        document.getElementById('dialogue-box').textContent = `Wild ${gameState.currentEnemy.name} appeared!`;
+        window.initBattleScene();
+    }
+};
+
+window.sendNextTrainerMon = function() {
+    if (gameState.gymQueue.length === 0) return;
+    
+    const nextData = gameState.gymQueue.shift();
+    gameState.currentEnemy = window.generateEnemy(nextData.id, nextData.level);
+    
+    document.getElementById('dialogue-box').textContent = `${gameState.currentTrainer.name} sent out ${gameState.currentEnemy.name}!`;
+    window.initBattleScene();
+};
+
+window.initBattleScene = function() {
     document.getElementById('enemy-name').textContent = gameState.currentEnemy.name;
     document.getElementById('player-mon-name').textContent = gameState.playerTeam[0].name;
-    document.getElementById('dialogue-box').textContent = `Wild ${gameState.currentEnemy.name} appeared!`;
     
     window.renderBattleMenu(); 
     window.showScreen('battle');
@@ -452,7 +549,17 @@ window.startEncounter = function(unit, isGym) {
     const eSprite = document.querySelector('.enemy .placeholder-sprite');
     eSprite.innerHTML = '<canvas id="eCanvas" width="80" height="80"></canvas>';
     const eCtx = document.getElementById('eCanvas').getContext('2d');
-    window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 0, 0, 80);
+    
+    if (gameState.currentTrainer && gameState.currentEnemy.currentHP === gameState.currentEnemy.hp) {
+        // Temporarily draw trainer if it's the start of their turn
+        window.drawTrainerSprite(eCtx, gameState.currentTrainer.id, 0, 0, 80);
+        setTimeout(() => {
+            eCtx.clearRect(0, 0, 80, 80);
+            window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 0, 0, 80);
+        }, 1500);
+    } else {
+        window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 0, 0, 80);
+    }
 };
 
 window.renderBattleMenu = function() {
@@ -481,24 +588,41 @@ window.renderBattleMenu = function() {
     const btnCapture = document.createElement('button');
     btnCapture.id = 'btn-capture';
     btnCapture.className = 'action-btn catch-btn';
-    btnCapture.textContent = "Capture";
-    btnCapture.onclick = () => window.attemptCapture();
-    menu.appendChild(btnCapture);
     
     const btnRun = document.createElement('button');
     btnRun.className = 'action-btn';
     btnRun.style.background = '#95a5a6';
     btnRun.style.color = 'white';
-    btnRun.textContent = "Run";
-    btnRun.onclick = () => window.prepareEscape();
+
+    // Lock out running and catching during trainer battles
+    if (gameState.currentTrainer) {
+        btnCapture.disabled = true;
+        btnCapture.textContent = "Trainer's Mon";
+        
+        btnRun.disabled = true;
+        btnRun.textContent = "No Running!";
+    } else {
+        btnCapture.textContent = "Capture";
+        btnCapture.onclick = () => window.attemptCapture();
+        
+        btnRun.textContent = "Run";
+        btnRun.onclick = () => window.prepareEscape();
+    }
+    
+    menu.appendChild(btnCapture);
     menu.appendChild(btnRun);
     
     window.updateHP(); 
 };
 
 window.getQuestion = function() {
-    let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
-    if (qArray.length === 0) return null;
+    let qArray = [];
+    if (gameState.currentTrainer) {
+        qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].gym : [];
+    } else {
+        qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
+    }
+    if (!qArray || qArray.length === 0) return null;
     return qArray[Math.floor(Math.random() * qArray.length)];
 };
 
@@ -527,7 +651,7 @@ window.prepareAttack = function(type) {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
-            window.unlockQuestion(q.id); // Track question!
+            window.unlockQuestion(q.id); 
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) window.executeAttack(gameState.queuedAttack, true, true);
             else window.executeAttack(gameState.queuedAttack, false, false);
@@ -538,6 +662,7 @@ window.prepareAttack = function(type) {
 };
 
 window.prepareEscape = function() {
+    if (gameState.currentTrainer) return; 
     document.getElementById('action-menu').classList.add('hidden');
     const q = window.getQuestion();
     if (!q) return window.endBattle();
@@ -551,7 +676,7 @@ window.prepareEscape = function() {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
-            window.unlockQuestion(q.id); // Track question!
+            window.unlockQuestion(q.id); 
             document.getElementById('question-container').classList.add('hidden');
             if (i === q.ans) {
                 if (Math.random() < 0.5) window.showMessage("Got away safely!", () => window.endBattle());
@@ -616,6 +741,10 @@ window.enemyTurn = function() {
             window.showMessage("Your active PoEkemon fainted!", () => {
                 gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
                 playerPos = { x: 25, y: 25 }; 
+                
+                // If player faints, battle is over. Reset gym queue.
+                gameState.currentTrainer = null;
+                gameState.gymQueue = [];
                 window.endBattle();
             });
         } else {
@@ -626,6 +755,7 @@ window.enemyTurn = function() {
 };
 
 window.attemptCapture = function() {
+    if (gameState.currentTrainer) return; 
     document.getElementById('action-menu').classList.add('hidden');
     const q = window.getQuestion();
     if (!q) return window.endBattle();
@@ -639,7 +769,7 @@ window.attemptCapture = function() {
         btn.className = 'answer-btn';
         btn.textContent = opt;
         btn.onclick = () => {
-            window.unlockQuestion(q.id); // Track question!
+            window.unlockQuestion(q.id); 
             if (i === q.ans) {
                 const eRatio = gameState.currentEnemy.currentHP / gameState.currentEnemy.hp;
                 const catchChance = eRatio <= 0.33 ? 0.90 : 0.50;
@@ -698,7 +828,7 @@ window.updateHP = function() {
     else playerBar.classList.add('hp-red');
     
     const captureBtn = document.getElementById('btn-capture');
-    if (captureBtn) {
+    if (captureBtn && !gameState.currentTrainer) {
         if (eRatio > 0.66) {
             captureBtn.disabled = true;
             captureBtn.textContent = "HP Too High";
@@ -710,7 +840,6 @@ window.updateHP = function() {
 };
 
 window.endBattle = function() {
-    gameState.inBattle = false;
     let evoQueue = [];
     
     gameState.playerTeam.forEach(mon => {
@@ -722,9 +851,31 @@ window.endBattle = function() {
         }
     });
 
+    const wrapUpBattle = () => {
+        // If fighting a trainer and player didn't faint
+        if (gameState.currentTrainer && gameState.playerTeam[0].currentHP > 0) {
+            if (gameState.gymQueue.length > 0) {
+                window.sendNextTrainerMon();
+            } else {
+                window.showMessage(`You defeated ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`, () => {
+                    if (!gameState.badges.includes(gameState.currentUnit)) gameState.badges.push(gameState.currentUnit);
+                    gameState.currentTrainer = null;
+                    gameState.inBattle = false;
+                    playerPos.y += 1; // Bump off gym tile
+                    window.saveGame();
+                    window.showScreen('map');
+                });
+            }
+        } else {
+            // Wild battle or player fainted
+            gameState.inBattle = false;
+            window.showScreen('map');
+        }
+    };
+
     const processEvolutions = () => {
         if (evoQueue.length === 0) {
-            window.showScreen('map');
+            wrapUpBattle();
             return;
         }
         const mon = evoQueue.shift();
@@ -878,7 +1029,6 @@ window.renderQuedex = function() {
     const allQuestions = [...questionBank[unit].regular, ...questionBank[unit].gym];
 
     allQuestions.forEach((q, index) => {
-        // Check if the student has seen and answered this question yet
         const isUnlocked = gameState.answeredQuestions && gameState.answeredQuestions.includes(q.id);
 
         const container = document.createElement('div');
@@ -888,7 +1038,6 @@ window.renderQuedex = function() {
         card.className = 'flashcard';
 
         if (isUnlocked) {
-            // Unlocked Card Logic
             container.onclick = function() {
                 this.querySelector('.flashcard').classList.toggle('flipped');
             };
@@ -910,7 +1059,6 @@ window.renderQuedex = function() {
             card.appendChild(front);
             card.appendChild(back);
         } else {
-            // Locked Card Logic
             container.classList.add('locked');
             card.classList.add('locked');
 
