@@ -186,3 +186,99 @@ header h1 { font-size: 16px; color: #ffd700; }
 .character-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 20px; }
 .character-card { background: #ddd; border: 4px solid var(--border-color); padding: 20px; text-align: center; }
 .starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; }
+
+/* --- POEQUEDEX (STUDY GUIDE 3D FLASHCARDS) --- */
+.quedex-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+    padding-bottom: 20px;
+}
+
+.flashcard-container {
+    perspective: 1000px; /* Gives the 3D depth effect */
+    width: 100%;
+    height: 240px;
+    cursor: pointer;
+}
+
+.flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.6s;
+    transform-style: preserve-3d; /* Required for 3D flip */
+}
+
+.flashcard.flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden; /* Hides the backside when not flipped */
+    border: 4px solid var(--border-color);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.flashcard-front {
+    background: #fff;
+    color: var(--text-color);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+}
+
+.flashcard-front h4 {
+    color: var(--walton-blue);
+    font-size: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--walton-blue);
+    padding-bottom: 5px;
+    width: 100%;
+}
+
+.flashcard-front p {
+    font-size: 8px;
+    line-height: 1.6;
+}
+
+.flashcard-back {
+    background: #e8f5e9; /* Light green to indicate answer */
+    color: var(--text-color);
+    transform: rotateY(180deg);
+    overflow-y: auto; /* Allows scrolling if explanation is long */
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+}
+
+.flashcard-back h4 {
+    color: #1b5e20;
+    font-size: 10px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #1b5e20;
+    padding-bottom: 5px;
+}
+
+.flashcard-back p.ans-text {
+    font-weight: bold;
+    font-size: 9px;
+    margin-bottom: 10px;
+    color: #c8102e; /* Highlight answer in red */
+}
+
+.flashcard-back p.exp-text {
+    font-size: 7px;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Custom Scrollbar for Flashcard Back */
+.flashcard-back::-webkit-scrollbar { width: 6px; }
+.flashcard-back::-webkit-scrollbar-track { background: #c8e6c9; }
+.flashcard-back::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
