@@ -8,6 +8,7 @@
     --text-color: #333;
     --border-color: #222;
     --hp-green: #32cd32;
+    --hp-yellow: #ffd700;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,7 +70,7 @@ header h1 { font-size: 16px; color: #ffd700; }
 
 .hidden { display: none !important; }
 
-#settings-overlay, #release-overlay, #message-overlay { 
+#settings-overlay, #release-overlay, #message-overlay, #dex-card-overlay { 
     position: absolute; 
     top: 0; 
     left: 0; 
@@ -102,12 +103,39 @@ header h1 { font-size: 16px; color: #ffd700; }
 #message-text { margin-bottom: 25px; font-size: 10px; }
 .msg-btn-container { display: flex; justify-content: center; gap: 15px; }
 
-/* --- CHARACTER SELECT --- */
-.character-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 20px; }
-.character-card { background: #ddd; border: 4px solid var(--border-color); padding: 20px; text-align: center; }
-.theme-text { font-size: 8px; margin: 10px 0; color: var(--walton-blue); }
-.starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; }
-.starter-btn:hover { background: #ffd700; }
+/* --- POEKEDEX DETAIL CARD --- */
+.dex-card {
+    width: 450px; background: white; border: 8px solid var(--border-color);
+    padding: 20px; position: relative; box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.dex-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 4px solid var(--walton-blue); padding-bottom: 10px; margin-bottom: 15px;
+}
+
+.dex-card-header h2 { font-size: 14px; color: var(--walton-blue); }
+
+.dex-card-body { display: flex; gap: 20px; align-items: center; margin-bottom: 15px; }
+
+#card-sprite-container {
+    width: 130px; height: 130px; background: #e0f7fa;
+    border: 4px solid var(--border-color); display: flex; justify-content: center; align-items: center;
+}
+
+.dex-card-info p { font-size: 8px; margin-bottom: 8px; }
+.stats-mini { font-size: 8px; color: var(--walton-red); display: flex; gap: 10px; margin-top: 10px; }
+
+.dex-card-footer {
+    background: #eee; padding: 10px; border: 2px inset #ccc;
+    font-size: 8px; line-height: 1.6; min-height: 60px;
+}
+
+.close-card {
+    position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
+    background: var(--walton-red); color: white; border: 4px solid var(--border-color);
+    font-family: 'Press Start 2P'; cursor: pointer; z-index: 2001;
+}
 
 /* --- MAP --- */
 .canvas-container { background: #333; padding: 5px; border: 4px solid var(--border-color); margin: 10px 0; }
@@ -121,10 +149,13 @@ header h1 { font-size: 16px; color: #ffd700; }
 .player { bottom: 20px; left: 20px; flex-direction: row-reverse; }
 .stats-box { background: #fff8d0; border: 3px solid var(--border-color); padding: 8px; width: 180px; }
 .hp-bar-bg { height: 10px; background: #555; border: 2px solid #222; }
+
+/* DYNAMIC HP COLORS */
 .hp-bar-fill { height: 100%; width: 100%; transition: background-color 0.3s, width 0.3s; }
-.hp-green { background-color: #32cd32; }
-.hp-yellow { background-color: #ffd700; }
-.hp-red { background-color: #c8102e; }
+.hp-green { background-color: var(--hp-green); }
+.hp-yellow { background-color: var(--hp-yellow); }
+.hp-red { background-color: var(--walton-red); }
+
 .placeholder-sprite { width: 80px; height: 80px; background: transparent; display: flex; justify-content: center; align-items: center; }
 
 /* --- BATTLE UI --- */
@@ -132,26 +163,26 @@ header h1 { font-size: 16px; color: #ffd700; }
 #action-menu { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 .action-btn { font-family: 'Press Start 2P', monospace; padding: 10px; cursor: pointer; border: 2px solid #222; font-size: 10px; }
 
-/* BUTTON STATES */
 .attack-btn { background: #ff6b6b; color: white; }
 .catch-btn { background: #4da6ff; color: white; }
 .action-btn:disabled { background: #999 !important; border-color: #555 !important; color: #ccc !important; cursor: not-allowed; }
 
 #answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .answer-btn { font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 10px; text-align: left; background: #eee; cursor: pointer; border: 2px solid #222; }
-.answer-btn:hover { background: #ddd; }
 
-/* --- PARTY & DEX GRIDS --- */
+/* --- PARTY & DEX --- */
 .party-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
-.party-card { background: #fffde7; border: 4px solid var(--border-color); padding: 10px; text-align: center; }
-.party-card h4 { font-size: 10px; margin-bottom: 5px; color: var(--walton-blue); }
-.party-card p { font-size: 8px; margin-bottom: 5px; }
+.party-card { background: #fffde7; border: 4px solid var(--border-color); padding: 10px; text-align: center; cursor: pointer; }
+.party-card:hover { background: #fff9c4; }
 
 #dex-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; padding-bottom: 20px; }
-.dex-entry { background: #ccc; border: 4px solid #555; padding: 10px; text-align: center; opacity: 0.5; filter: grayscale(100%); }
-.dex-entry.captured { opacity: 1; filter: grayscale(0%); background: #fff; border-color: var(--walton-blue); }
-.dex-entry h4 { font-size: 8px; margin-bottom: 5px; }
-.dex-entry p { font-size: 6px; color: #555; }
+.dex-entry { background: #ccc; border: 4px solid #555; padding: 10px; text-align: center; opacity: 0.5; filter: grayscale(100%); cursor: default; }
+.dex-entry.captured { opacity: 1; filter: grayscale(0%); background: #fff; border-color: var(--walton-blue); cursor: pointer; }
 
 .deploy-btn { font-family: 'Press Start 2P', monospace; font-size: 8px; padding: 5px; background: #4da6ff; color: white; border: 2px solid #222; cursor: pointer; margin-top: 5px; width: 100%; }
 .active-badge { display: block; font-size: 8px; background: #ffd700; color: #000; padding: 5px; border: 2px solid #222; margin-top: 5px; }
+
+/* --- STARTER CARDS --- */
+.character-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 20px; }
+.character-card { background: #ddd; border: 4px solid var(--border-color); padding: 20px; text-align: center; }
+.starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; }
