@@ -40,7 +40,7 @@ window.toggleMusic = function() {
     musicEnabled = !musicEnabled;
     const btn = document.getElementById('btn-music');
     if (musicEnabled) {
-        btn.textContent = "🎵 Music: ON";
+        btn.textContent = "🔊";
         btn.style.background = "#e67e22"; 
         btn.style.color = "white";
         
@@ -54,7 +54,7 @@ window.toggleMusic = function() {
             window.playBGM('bgm-overworld');
         }
     } else {
-        btn.textContent = "🎵 Music: OFF";
+        btn.textContent = "🔇";
         btn.style.background = "white";
         btn.style.color = "black";
         window.stopBGM();
