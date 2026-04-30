@@ -29,8 +29,60 @@ let gameState = {
 let playerPos = { x: 25, y: 25 };
 const spriteCache = {}; 
 
+// NEW: AUDIO STATE
+let musicEnabled = false;
+let currentBGM = null;
+
 // ==========================================
-// 2. CUSTOM ALERTS
+// 2. AUDIO MANAGER
+// ==========================================
+window.toggleMusic = function() {
+    musicEnabled = !musicEnabled;
+    const btn = document.getElementById('btn-music');
+    if (musicEnabled) {
+        btn.textContent = "🎵 Music: ON";
+        btn.style.background = "#e67e22"; 
+        btn.style.color = "white";
+        
+        if (gameState.inBattle) {
+            if (gameState.currentTrainer) {
+                window.playBGM('bgm-gym' + gameState.currentUnit);
+            } else {
+                window.playBGM('bgm-battle');
+            }
+        } else {
+            window.playBGM('bgm-overworld');
+        }
+    } else {
+        btn.textContent = "🎵 Music: OFF";
+        btn.style.background = "white";
+        btn.style.color = "black";
+        window.stopBGM();
+    }
+};
+
+window.playBGM = function(trackId) {
+    if (!musicEnabled) return;
+    if (currentBGM && currentBGM.id === trackId) return; // Already playing this track
+
+    window.stopBGM();
+    const track = document.getElementById(trackId);
+    if (track) {
+        track.currentTime = 0;
+        track.play().catch(e => console.log("Audio play blocked by browser:", e));
+        currentBGM = track;
+    }
+};
+
+window.stopBGM = function() {
+    if (currentBGM) {
+        currentBGM.pause();
+        currentBGM = null;
+    }
+};
+
+// ==========================================
+// 3. CUSTOM ALERTS
 // ==========================================
 window.showMessage = function(text, callback) {
     const overlay = document.getElementById('message-overlay');
@@ -67,7 +119,7 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 3. SPRITE ENGINE
+// 4. SPRITE ENGINE
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
@@ -157,12 +209,9 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
-            
-            // THE FIX: Instantly clear and redraw the specific canvas that requested this image!
             ctx.clearRect(x, y, size, size);
             ctx.drawImage(img, x, y, size, size);
             
-            // Update HP if we happen to be in the battle screen
             const screenBattle = document.getElementById('screen-battle');
             if (screenBattle && screenBattle.classList.contains('active')) window.updateHP(); 
         };
@@ -199,7 +248,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
 };
 
 // ==========================================
-// 4. MAP NAVIGATION & CONTROLS
+// 5. MAP NAVIGATION & CONTROLS
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
@@ -244,7 +293,6 @@ window.drawMap = function() {
     window.drawCharacterSprite(ctx, px, py, TILE_SIZE);
 };
 
-// NEW: Extracted movement logic so keyboard and touch buttons can share it
 window.movePlayer = function(dx, dy) {
     const screenMap = document.getElementById('screen-map');
     const msgOverlay = document.getElementById('message-overlay');
@@ -275,7 +323,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================
-// 5. FILE I/O & UI INITIALIZATION
+// 6. FILE I/O & UI INITIALIZATION
 // ==========================================
 window.showScreen = function(name) {
     document.querySelectorAll('.screen').forEach(s => {
@@ -307,6 +355,11 @@ window.showScreen = function(name) {
         const label = document.getElementById('map-label');
         if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
         setTimeout(window.drawMap, 50);
+        
+        // Ensure overworld music plays when returning to map
+        if (!gameState.inBattle) {
+            window.playBGM('bgm-overworld');
+        }
     }
 };
 
@@ -531,6 +584,9 @@ window.onload = () => {
 
     window.loadGame();
     
+    const btnMusic = document.getElementById('btn-music');
+    if (btnMusic) btnMusic.onclick = window.toggleMusic;
+
     const btnMap = document.getElementById('btn-map');
     if (btnMap) btnMap.onclick = () => {
         if (gameState.inBattle) window.showScreen('battle');
@@ -556,13 +612,11 @@ window.onload = () => {
     const btnTrainer = document.getElementById('btn-trainer');
     if (btnTrainer) btnTrainer.onclick = window.openTrainerCard;
 
-    // NEW: Wiring up the Touch D-Pad for Mobile
     const setupDpad = (id, dx, dy) => {
         const btn = document.getElementById(id);
         if (!btn) return;
-        // Handle both touch and mouse interactions seamlessly
         const handleMove = (e) => {
-            e.preventDefault(); // Stop double-firing on touch screens
+            e.preventDefault(); 
             window.movePlayer(dx, dy);
         };
         btn.addEventListener('touchstart', handleMove, {passive: false});
@@ -590,7 +644,7 @@ window.unlockQuestion = function(qId) {
 };
 
 // ==========================================
-// 6. MAP BUILDINGS (CLINIC & STATION)
+// 7. MAP BUILDINGS (CLINIC & STATION)
 // ==========================================
 window.triggerClinic = function() {
     let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
@@ -666,7 +720,7 @@ window.triggerTrainStation = function() {
 };
 
 // ==========================================
-// 7. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
+// 8. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
 // ==========================================
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
@@ -688,6 +742,13 @@ window.generateEnemy = function(id, level) {
 
 window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
+    
+    // NEW: Music trigger for battles
+    if (isGym) {
+        window.playBGM('bgm-gym' + unit);
+    } else {
+        window.playBGM('bgm-battle');
+    }
     
     if (gameState.playerTeam.length > 0) {
         window.trackDeployment(gameState.playerTeam[0].id);
@@ -1128,7 +1189,7 @@ window.endBattle = function() {
 };
 
 // ==========================================
-// 8. PARTY LIMITS, DEX RENDERING & KENNEL
+// 9. PARTY LIMITS, DEX RENDERING & KENNEL
 // ==========================================
 window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
@@ -1368,7 +1429,7 @@ window.renderKennel = function() {
 };
 
 // ==========================================
-// 9. POEQUEDEX 
+// 10. POEQUEDEX 
 // ==========================================
 window.renderQuedex = function() {
     if (typeof questionBank === 'undefined') {
