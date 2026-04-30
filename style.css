@@ -20,13 +20,11 @@ body {
     justify-content: center; 
     align-items: center; 
     height: 100vh; 
-    /* Ensures the body doesn't bounce around on mobile browsers */
     height: 100dvh; 
     color: var(--text-color); 
     font-size: 12px; 
 }
 
-/* FIX: Made the container fluid and relative to viewport height */
 #game-container { 
     width: 100%; 
     max-width: 800px; 
@@ -88,6 +86,9 @@ header h1 { font-size: 14px; color: #ffd700; }
     z-index: 2000; 
 }
 
+/* FIX: Forces all confirm/alert messages to sit above every other menu */
+#message-overlay { z-index: 3000 !important; }
+
 .settings-content { 
     background: white; 
     padding: 30px; 
@@ -110,13 +111,12 @@ header h1 { font-size: 14px; color: #ffd700; }
 
 /* --- MAP --- */
 .canvas-container { background: #333; padding: 5px; border: 4px solid var(--border-color); margin: 10px 0; width: 100%; max-width: 600px; }
-/* FIX: Makes the canvas scale smoothly without overflowing */
 #gameCanvas { width: 100%; height: auto; display: block; image-rendering: pixelated; background-color: #78c850; }
 .controls-hint { font-size: 8px; color: #666; margin-top: 5px; }
 
 /* --- MOBILE CONTROLS --- */
 .mobile-controls {
-    display: none; /* Hidden on desktop */
+    display: none; 
     flex-direction: column;
     align-items: center;
     gap: 10px;
@@ -178,9 +178,21 @@ header h1 { font-size: 14px; color: #ffd700; }
 /* --- STARTER CARDS --- */
 .character-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 20px; }
 .character-card { background: #ddd; border: 4px solid var(--border-color); padding: 20px; text-align: center; }
-.starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; }
+.starter-btn { font-family: 'Press Start 2P', monospace; display: block; width: 100%; margin-bottom: 8px; padding: 10px; cursor: pointer; border: 2px solid var(--border-color); background: white; font-size: 8px; line-height: 1.4; }
 
-/* --- CLOSE CARD BUTTON (Used in Dex and Trainer Card) --- */
+/* --- NEW CATCH INFO (RELEASE MENU) --- */
+.new-catch-info {
+    background: #e0f7fa;
+    border: 3px solid var(--walton-blue);
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-size: 8px;
+    line-height: 1.6;
+}
+.release-stat { color: var(--walton-red); font-weight: bold; }
+
+/* --- CLOSE CARD BUTTON --- */
 .close-card {
     position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
     background: var(--walton-red); color: white; border: 4px solid var(--border-color);
@@ -242,7 +254,7 @@ header h1 { font-size: 14px; color: #ffd700; }
 .tc-fav-box { width: 68px; height: 68px; background: white; border: 4px inset #ccc; display: flex; justify-content: center; align-items: center; margin-bottom: 8px; }
 #tc-fav-name { font-size: 8px; font-weight: bold; color: var(--walton-red); text-align: center; }
 
-/* --- POEQUEDEX (STUDY GUIDE 3D FLASHCARDS) --- */
+/* --- POEQUEDEX --- */
 .quedex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; padding-bottom: 20px; }
 .flashcard-container { perspective: 1000px; width: 100%; height: 240px; cursor: pointer; }
 .flashcard-container.locked { cursor: default; }
@@ -284,33 +296,27 @@ header h1 { font-size: 14px; color: #ffd700; }
    RESPONSIVE DESIGN (MOBILE & SMALL SCREENS)
    ========================================== */
 @media (max-width: 768px) {
-    /* Hide the Desktop WASD hint and show the D-Pad */
     .controls-hint { display: none; }
     .mobile-controls { display: flex; }
 
-    /* Shrink navigation slightly */
     header { padding: 10px; flex-direction: column; gap: 10px; }
     nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
 
-    /* Stack grid elements */
     .character-grid { grid-template-columns: 1fr; }
     .party-grid { grid-template-columns: 1fr 1fr; }
     #dex-grid { grid-template-columns: repeat(3, 1fr); }
     .quedex-grid { grid-template-columns: 1fr; }
-    #answer-grid { grid-template-columns: 1fr; } /* Stack answer buttons */
-
-    /* Train Station Stacking */
-    .station-layout { flex-direction: column; }
+    #answer-grid { grid-template-columns: 1fr; } 
     
-    /* Trainer Card Adjustments */
+    /* Prevents the release menu from squishing 3 columns on a phone */
+    #release-grid { grid-template-columns: 1fr 1fr !important; }
+
+    .station-layout { flex-direction: column; }
     .tc-body { flex-direction: column; align-items: center; }
     .tc-favorite { width: 100%; margin-top: 10px; }
-
-    /* Dex Card Adjustments */
     .dex-card-body { flex-direction: column; text-align: center; }
     .stats-mini { justify-content: center; }
 
-    /* Kennel Stacking */
     .kennel-layout { flex-direction: column; overflow-y: auto; }
     .kennel-party { width: 100%; max-height: 300px; }
     .kennel-storage { overflow-y: visible; }
