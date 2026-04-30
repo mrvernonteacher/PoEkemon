@@ -29,7 +29,7 @@ let gameState = {
 let playerPos = { x: 25, y: 25 };
 const spriteCache = {}; 
 
-// NEW: AUDIO STATE
+// AUDIO STATE
 let musicEnabled = false;
 let currentBGM = null;
 
@@ -40,7 +40,7 @@ window.toggleMusic = function() {
     musicEnabled = !musicEnabled;
     const btn = document.getElementById('btn-music');
     if (musicEnabled) {
-        btn.textContent = "🔊";
+        btn.innerHTML = "🔊";
         btn.style.background = "#e67e22"; 
         btn.style.color = "white";
         
@@ -54,7 +54,7 @@ window.toggleMusic = function() {
             window.playBGM('bgm-overworld');
         }
     } else {
-        btn.textContent = "🔇";
+        btn.innerHTML = "🔇";
         btn.style.background = "white";
         btn.style.color = "black";
         window.stopBGM();
@@ -63,15 +63,30 @@ window.toggleMusic = function() {
 
 window.playBGM = function(trackId) {
     if (!musicEnabled) return;
-    if (currentBGM && currentBGM.id === trackId) return; // Already playing this track
+    const track = document.getElementById(trackId);
+    
+    if (!track) {
+        console.error("Audio track not found:", trackId);
+        return;
+    }
+
+    // Don't restart the track if it's already playing
+    if (currentBGM && currentBGM.id === trackId && !currentBGM.paused) {
+        return; 
+    }
 
     window.stopBGM();
-    const track = document.getElementById(trackId);
-    if (track) {
-        track.currentTime = 0;
-        track.play().catch(e => console.log("Audio play blocked by browser:", e));
-        currentBGM = track;
+    
+    // Set a reasonable volume so it doesn't blast headphones
+    track.volume = 0.4;
+    track.currentTime = 0;
+    
+    let playPromise = track.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(e => console.log("Audio play blocked by browser:", e));
     }
+    
+    currentBGM = track;
 };
 
 window.stopBGM = function() {
@@ -209,6 +224,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
+            
             ctx.clearRect(x, y, size, size);
             ctx.drawImage(img, x, y, size, size);
             
@@ -351,9 +367,13 @@ window.showScreen = function(name) {
     }
 
     if (name === 'map') {
-        const region = waltoniaRegions[gameState.currentUnit];
+        // Safe lookup to prevent silent crashes
+        const region = (typeof waltoniaRegions !== 'undefined' && waltoniaRegions[gameState.currentUnit]) 
+                       ? waltoniaRegions[gameState.currentUnit] 
+                       : { name: "Unknown Area" };
         const label = document.getElementById('map-label');
-        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
+        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region.name}`;
+        
         setTimeout(window.drawMap, 50);
         
         // Ensure overworld music plays when returning to map
@@ -743,7 +763,6 @@ window.generateEnemy = function(id, level) {
 window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
     
-    // NEW: Music trigger for battles
     if (isGym) {
         window.playBGM('bgm-gym' + unit);
     } else {
