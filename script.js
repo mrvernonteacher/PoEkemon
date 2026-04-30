@@ -70,14 +70,11 @@ window.playBGM = function(trackId) {
         return;
     }
 
-    // Don't restart the track if it's already playing
     if (currentBGM && currentBGM.id === trackId && !currentBGM.paused) {
         return; 
     }
 
     window.stopBGM();
-    
-    // Set a reasonable volume so it doesn't blast headphones
     track.volume = 0.4;
     track.currentTime = 0;
     
@@ -224,7 +221,6 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
-            
             ctx.clearRect(x, y, size, size);
             ctx.drawImage(img, x, y, size, size);
             
@@ -367,7 +363,6 @@ window.showScreen = function(name) {
     }
 
     if (name === 'map') {
-        // Safe lookup to prevent silent crashes
         const region = (typeof waltoniaRegions !== 'undefined' && waltoniaRegions[gameState.currentUnit]) 
                        ? waltoniaRegions[gameState.currentUnit] 
                        : { name: "Unknown Area" };
@@ -376,7 +371,6 @@ window.showScreen = function(name) {
         
         setTimeout(window.drawMap, 50);
         
-        // Ensure overworld music plays when returning to map
         if (!gameState.inBattle) {
             window.playBGM('bgm-overworld');
         }
@@ -1214,6 +1208,16 @@ window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
     if (!overlay) return window.endBattle(); 
     
+    // NEW: Populate New Catch Info
+    const newCatchDisplay = document.getElementById('new-catch-display');
+    if (newCatchDisplay) {
+        newCatchDisplay.innerHTML = `
+            <h3 style="color: var(--walton-blue); margin-bottom: 5px;">Caught: ${newCatch.name}</h3>
+            Type: ${newCatch.type} | Lvl: <span class="release-stat">${newCatch.evolutionLevel}</span><br>
+            HP: <span class="release-stat">${newCatch.maxHP}</span> | Atk: <span class="release-stat">${newCatch.baseAtk}</span>
+        `;
+    }
+
     const grid = document.getElementById('release-grid');
     if (grid) {
         grid.innerHTML = ''; 
@@ -1222,7 +1226,14 @@ window.showReleaseMenu = function(newCatch) {
             const btn = document.createElement('button');
             btn.className = 'starter-btn';
             btn.style.borderColor = '#c8102e'; 
-            btn.innerHTML = `<strong>${mon.name}</strong><br>HP: ${mon.maxHP}<br><em>Release</em>`;
+            btn.style.padding = '8px';
+            // NEW: Added Lvl, XP, HP, and Atk to the release buttons
+            btn.innerHTML = `
+                <strong>${mon.name}</strong><br>
+                <span style="font-size: 6px;">Lvl: ${mon.evolutionLevel} | XP: ${mon.xp}</span><br>
+                <span style="font-size: 6px;">HP: ${mon.maxHP} | Atk: ${mon.baseAtk}</span><br>
+                <em style="color: #c8102e; display: block; margin-top: 5px;">Release</em>
+            `;
             btn.onclick = () => {
                 window.showConfirm(`Release ${mon.name} and add ${newCatch.name}?`, () => {
                     gameState.playerTeam[index] = newCatch;
@@ -1238,7 +1249,7 @@ window.showReleaseMenu = function(newCatch) {
     const releaseNewBtn = document.getElementById('release-new-btn');
     if (releaseNewBtn) {
         releaseNewBtn.onclick = () => {
-            window.showMessage(`${newCatch.name} was released.`, () => {
+            window.showMessage(`You let ${newCatch.name} go.`, () => {
                 overlay.classList.add('hidden');
                 window.saveGame(); 
                 window.endBattle();
