@@ -144,11 +144,13 @@
     </div>
 
     <div id="release-overlay" class="hidden">
-        <div class="settings-content" style="width: 90%; max-width: 600px;">
+        <div class="settings-content" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
             <h2 style="color: var(--walton-red); margin-bottom: 15px;">Party is Full!</h2>
-            <p style="font-size: 8px; line-height: 1.6; margin-bottom: 20px;">You must release a PoEkemon from your party to make room.</p>
-            <div id="release-grid" class="character-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
-            <button id="release-new-btn" class="nav-btn" style="margin-top: 20px;">Release New Catch</button>
+            <div id="new-catch-display" class="new-catch-info"></div>
+            
+            <p style="font-size: 8px; line-height: 1.6; margin-bottom: 15px;">Select a party member to release to make room.</p>
+            <div id="release-grid" class="character-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+            <button id="release-new-btn" class="nav-btn" style="margin-top: 20px; width: 100%; background: #95a5a6; color: white;">Release New Catch</button>
         </div>
     </div>
 
