@@ -425,6 +425,5 @@ const questionBank = {
 // ------------------------------------------
     // SYSTEM PLACEHOLDERS (DO NOT DELETE)
     // ------------------------------------------
-    5: { regular: [], gym: [] },
     6: { regular: [], gym: [] }
 };
