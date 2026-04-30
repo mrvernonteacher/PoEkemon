@@ -1208,7 +1208,6 @@ window.showReleaseMenu = function(newCatch) {
     const overlay = document.getElementById('release-overlay');
     if (!overlay) return window.endBattle(); 
     
-    // NEW: Populate New Catch Info
     const newCatchDisplay = document.getElementById('new-catch-display');
     if (newCatchDisplay) {
         newCatchDisplay.innerHTML = `
@@ -1227,11 +1226,10 @@ window.showReleaseMenu = function(newCatch) {
             btn.className = 'starter-btn';
             btn.style.borderColor = '#c8102e'; 
             btn.style.padding = '8px';
-            // NEW: Added Lvl, XP, HP, and Atk to the release buttons
             btn.innerHTML = `
                 <strong>${mon.name}</strong><br>
                 <span style="font-size: 6px;">Lvl: ${mon.evolutionLevel} | XP: ${mon.xp}</span><br>
-                <span style="font-size: 6px;">HP: ${mon.maxHP} | Atk: ${mon.baseAtk}</span><br>
+                <span style="font-size: 6px;">HP: ${mon.currentHP}/${mon.maxHP} | Atk: ${mon.baseAtk}</span><br>
                 <em style="color: #c8102e; display: block; margin-top: 5px;">Release</em>
             `;
             btn.onclick = () => {
@@ -1370,7 +1368,11 @@ window.renderKennel = function() {
         slot.className = 'kennel-slot';
         
         const info = document.createElement('div');
-        info.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        info.innerHTML = `
+            <strong>${mon.name}</strong><br>
+            <span style="font-size: 6px;">Lvl: ${mon.evolutionLevel} | XP: ${mon.xp}</span><br>
+            <span style="font-size: 6px;">HP: ${mon.currentHP}/${mon.maxHP} | Atk: ${mon.baseAtk}</span>
+        `;
         info.style.marginBottom = '10px';
         slot.appendChild(info);
         
@@ -1411,7 +1413,11 @@ window.renderKennel = function() {
         slot.className = 'kennel-slot';
         
         const info = document.createElement('div');
-        info.innerHTML = `<strong>${mon.name}</strong><br>Lvl ${mon.evolutionLevel}<br>HP: ${mon.maxHP}`;
+        info.innerHTML = `
+            <strong>${mon.name}</strong><br>
+            <span style="font-size: 6px;">Lvl: ${mon.evolutionLevel} | XP: ${mon.xp}</span><br>
+            <span style="font-size: 6px;">HP: ${mon.currentHP}/${mon.maxHP} | Atk: ${mon.baseAtk}</span>
+        `;
         info.style.marginBottom = '10px';
         slot.appendChild(info);
         
