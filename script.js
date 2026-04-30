@@ -136,22 +136,121 @@ window.showConfirm = function(text, onYes, onNo) {
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
     ctx.save();
+    
     if (gameState.playerCharacter === 'MrV') {
-        ctx.fillStyle = "#5d4037"; ctx.fillRect(x + (8*s), y + (4*s), 24*s, 16*s);
-        ctx.fillStyle = "#e0ac69"; ctx.fillRect(x + (10*s), y + (6*s), 20*s, 10*s);
-        ctx.fillStyle = "#000000"; ctx.fillRect(x + (10*s), y + (8*s), 20*s, 4*s);
-        ctx.fillStyle = "#c62828"; ctx.fillRect(x + (10*s), y + (20*s), 20*s, 15*s);
-        ctx.fillStyle = "#8e0000"; 
-        ctx.fillRect(x + (10*s), y + (20*s), 5*s, 5*s); ctx.fillRect(x + (20*s), y + (20*s), 5*s, 5*s);
-        ctx.fillRect(x + (15*s), y + (25*s), 5*s, 5*s); ctx.fillRect(x + (25*s), y + (25*s), 5*s, 5*s);
-        ctx.fillStyle = "#1a237e"; ctx.fillRect(x + (12*s), y + (35*s), 7*s, 10*s); ctx.fillRect(x + (21*s), y + (35*s), 7*s, 10*s);
-    } else {
-        ctx.fillStyle = "#4e342e"; ctx.fillRect(x + (8*s), y + (4*s), 24*s, 18*s);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + (8*s), y + (4*s), 18*s, 4*s);
-        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + (12*s), y + (8*s), 16*s, 12*s);
-        ctx.fillStyle = "#00acc1"; ctx.fillRect(x + (10*s), y + (22*s), 20*s, 10*s);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + (9*s), y + (32*s), 22*s, 8*s);
-        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + (13*s), y + (40*s), 5*s, 6*s); ctx.fillRect(x + (22*s), y + (40*s), 5*s, 6*s);
+        // Hair & Head
+        ctx.fillStyle = "#5d4037"; 
+        ctx.fillRect(x + (8*s), y + (4*s), 24*s, 16*s);
+        // Face
+        ctx.fillStyle = "#e0ac69"; 
+        ctx.fillRect(x + (10*s), y + (6*s), 20*s, 12*s);
+        
+        // Beard (covers bottom of face and hangs down)
+        ctx.fillStyle = "#5d4037"; 
+        ctx.fillRect(x + (9*s), y + (14*s), 22*s, 6*s);
+        ctx.fillRect(x + (12*s), y + (18*s), 16*s, 3*s);
+
+        // Glasses
+        ctx.fillStyle = "#000000"; 
+        ctx.fillRect(x + (11*s), y + (8*s), 7*s, 5*s); // Left frame
+        ctx.fillRect(x + (22*s), y + (8*s), 7*s, 5*s); // Right frame
+        ctx.fillRect(x + (18*s), y + (9*s), 4*s, 2*s); // Bridge
+        // Lenses
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x + (12*s), y + (9*s), 5*s, 3*s); 
+        ctx.fillRect(x + (23*s), y + (9*s), 5*s, 3*s); 
+        // Pupils
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(x + (14*s), y + (10*s), 2*s, 2*s); 
+        ctx.fillRect(x + (25*s), y + (10*s), 2*s, 2*s); 
+        
+        // Lumberjack Plaid Shirt
+        ctx.fillStyle = "#c8102e"; // Base Red
+        ctx.fillRect(x + (10*s), y + (20*s), 20*s, 14*s); // Body
+        ctx.fillRect(x + (6*s), y + (20*s), 4*s, 10*s); // Left sleeve
+        ctx.fillRect(x + (30*s), y + (20*s), 4*s, 10*s); // Right sleeve
+        // Plaid Pattern (Dark Red/Black)
+        ctx.fillStyle = "#550000"; 
+        ctx.fillRect(x + (13*s), y + (20*s), 2*s, 14*s); // Vert 1
+        ctx.fillRect(x + (19*s), y + (20*s), 2*s, 14*s); // Vert 2
+        ctx.fillRect(x + (25*s), y + (20*s), 2*s, 14*s); // Vert 3
+        ctx.fillRect(x + (10*s), y + (23*s), 20*s, 2*s); // Horiz 1
+        ctx.fillRect(x + (10*s), y + (29*s), 20*s, 2*s); // Horiz 2
+        
+        // Hands
+        ctx.fillStyle = "#e0ac69"; 
+        ctx.fillRect(x + (6*s), y + (30*s), 4*s, 4*s); // Left hand
+        ctx.fillRect(x + (30*s), y + (30*s), 4*s, 4*s); // Right hand
+        
+        // Pants & Shoes
+        ctx.fillStyle = "#1a237e"; // Denim
+        ctx.fillRect(x + (10*s), y + (34*s), 8*s, 6*s); // Left leg
+        ctx.fillRect(x + (22*s), y + (34*s), 8*s, 6*s); // Right leg
+        ctx.fillStyle = "#3e2723"; // Brown boots
+        ctx.fillRect(x + (8*s), y + (38*s), 10*s, 3*s); // Left shoe
+        ctx.fillRect(x + (22*s), y + (38*s), 10*s, 3*s); // Right shoe
+
+    } else { // Ms. G
+        // Hair Back/Top
+        ctx.fillStyle = "#4e342e"; 
+        ctx.fillRect(x + (8*s), y + (3*s), 24*s, 6*s);
+        
+        // Visor (White/Cyan)
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (8*s), y + (6*s), 24*s, 3*s); // Band
+        ctx.fillRect(x + (6*s), y + (8*s), 28*s, 2*s); // Bill
+        
+        // Face
+        ctx.fillStyle = "#f5cbad"; 
+        ctx.fillRect(x + (10*s), y + (10*s), 20*s, 10*s);
+        // Hair sides/ponytail
+        ctx.fillStyle = "#4e342e";
+        ctx.fillRect(x + (8*s), y + (10*s), 2*s, 8*s);
+        ctx.fillRect(x + (30*s), y + (10*s), 2*s, 8*s);
+
+        // Eyes
+        ctx.fillStyle = "#ffffff"; // Whites
+        ctx.fillRect(x + (13*s), y + (12*s), 4*s, 4*s); 
+        ctx.fillRect(x + (23*s), y + (12*s), 4*s, 4*s); 
+        ctx.fillStyle = "#000000"; // Pupils
+        ctx.fillRect(x + (14*s), y + (13*s), 2*s, 2*s); 
+        ctx.fillRect(x + (24*s), y + (13*s), 2*s, 2*s); 
+
+        // Athletic Polo Shirt
+        ctx.fillStyle = "#00acc1"; 
+        ctx.fillRect(x + (11*s), y + (20*s), 18*s, 10*s);
+        // Sleeves
+        ctx.fillStyle = "#00838f"; 
+        ctx.fillRect(x + (7*s), y + (20*s), 4*s, 6*s); 
+        ctx.fillRect(x + (29*s), y + (20*s), 4*s, 6*s); 
+        // Hands
+        ctx.fillStyle = "#f5cbad"; 
+        ctx.fillRect(x + (7*s), y + (26*s), 4*s, 4*s); 
+        ctx.fillRect(x + (29*s), y + (26*s), 4*s, 4*s); 
+
+        // Tennis Skirt
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (9*s), y + (30*s), 22*s, 6*s);
+        // Skirt Pleats
+        ctx.fillStyle = "#dddddd";
+        ctx.fillRect(x + (13*s), y + (30*s), 1*s, 6*s);
+        ctx.fillRect(x + (18*s), y + (30*s), 1*s, 6*s);
+        ctx.fillRect(x + (23*s), y + (30*s), 1*s, 6*s);
+        ctx.fillRect(x + (28*s), y + (30*s), 1*s, 6*s);
+
+        // Legs
+        ctx.fillStyle = "#f5cbad"; 
+        ctx.fillRect(x + (12*s), y + (36*s), 4*s, 3*s); 
+        ctx.fillRect(x + (24*s), y + (36*s), 4*s, 3*s); 
+
+        // Tennis Shoes
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (10*s), y + (39*s), 6*s, 2*s); 
+        ctx.fillRect(x + (24*s), y + (39*s), 6*s, 2*s);
+        // Shoe accents
+        ctx.fillStyle = "#00acc1";
+        ctx.fillRect(x + (12*s), y + (39*s), 2*s, 2*s);
+        ctx.fillRect(x + (26*s), y + (39*s), 2*s, 2*s);
     }
     ctx.restore();
 };
@@ -221,6 +320,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
+            
             ctx.clearRect(x, y, size, size);
             ctx.drawImage(img, x, y, size, size);
             
