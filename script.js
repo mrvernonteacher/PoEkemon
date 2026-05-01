@@ -1,5 +1,5 @@
 // ==========================================
-// 1. ENGINE CONFIG
+// 1. ENGINE CONFIG & STATE
 // ==========================================
 const TILE_SIZE = 40;
 const VIEW_WIDTH = 15;
@@ -11,7 +11,8 @@ let gameState = {
     pokedexCaught: [],    
     answeredQuestions: [], 
     badges: [],
-    kennel: [], 
+    kennel: [], // PC Storage
+    trainerUpgrades: {}, // Tracks how many times trainers have been defeated
     stats: {
         questionsAnswered: 0,
         questionsCorrect: 0,
@@ -27,8 +28,12 @@ let gameState = {
 };
 
 let playerPos = { x: 25, y: 25 };
-const spriteCache = {}; 
+let targetPos = { x: 25, y: 25 };
+let isMoving = false;
+let activeKeys = {}; 
+let lastTime = Date.now();
 
+const spriteCache = {}; 
 let musicEnabled = false;
 let currentBGM = null;
 
@@ -63,15 +68,8 @@ window.toggleMusic = function() {
 window.playBGM = function(trackId) {
     if (!musicEnabled) return;
     const track = document.getElementById(trackId);
-    
-    if (!track) {
-        console.error("Audio track not found:", trackId);
-        return;
-    }
-
-    if (currentBGM && currentBGM.id === trackId && !currentBGM.paused) {
-        return; 
-    }
+    if (!track) return;
+    if (currentBGM && currentBGM.id === trackId && !currentBGM.paused) return; 
 
     window.stopBGM();
     track.volume = 0.4;
@@ -81,7 +79,6 @@ window.playBGM = function(trackId) {
     if (playPromise !== undefined) {
         playPromise.catch(e => console.log("Audio play blocked by browser:", e));
     }
-    
     currentBGM = track;
 };
 
@@ -130,27 +127,107 @@ window.showConfirm = function(text, onYes, onNo) {
 };
 
 // ==========================================
-// 4. SPRITE ENGINE
+// 4. ANIMATED SPRITE ENGINE
 // ==========================================
 window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
     ctx.save();
+    
+    const walkFrame = isMoving ? (Math.floor(Date.now() / 150) % 4) : 0;
+    let bob = (walkFrame === 1 || walkFrame === 3) ? -2 : 0; 
+    let leftLegOffset = (walkFrame === 1) ? -4 : 0;          
+    let rightLegOffset = (walkFrame === 3) ? -4 : 0;         
+
     if (gameState.playerCharacter === 'MrV') {
-        ctx.fillStyle = "#5d4037"; ctx.fillRect(x + (8*s), y + (4*s), 24*s, 16*s);
-        ctx.fillStyle = "#e0ac69"; ctx.fillRect(x + (10*s), y + (6*s), 20*s, 10*s);
-        ctx.fillStyle = "#000000"; ctx.fillRect(x + (10*s), y + (8*s), 20*s, 4*s);
-        ctx.fillStyle = "#c62828"; ctx.fillRect(x + (10*s), y + (20*s), 20*s, 15*s);
-        ctx.fillStyle = "#8e0000"; 
-        ctx.fillRect(x + (10*s), y + (20*s), 5*s, 5*s); ctx.fillRect(x + (20*s), y + (20*s), 5*s, 5*s);
-        ctx.fillRect(x + (15*s), y + (25*s), 5*s, 5*s); ctx.fillRect(x + (25*s), y + (25*s), 5*s, 5*s);
-        ctx.fillStyle = "#1a237e"; ctx.fillRect(x + (12*s), y + (35*s), 7*s, 10*s); ctx.fillRect(x + (21*s), y + (35*s), 7*s, 10*s);
-    } else {
-        ctx.fillStyle = "#4e342e"; ctx.fillRect(x + (8*s), y + (4*s), 24*s, 18*s);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + (8*s), y + (4*s), 18*s, 4*s);
-        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + (12*s), y + (8*s), 16*s, 12*s);
-        ctx.fillStyle = "#00acc1"; ctx.fillRect(x + (10*s), y + (22*s), 20*s, 10*s);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + (9*s), y + (32*s), 22*s, 8*s);
-        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + (13*s), y + (40*s), 5*s, 6*s); ctx.fillRect(x + (22*s), y + (40*s), 5*s, 6*s);
+        ctx.fillStyle = "#5d4037"; 
+        ctx.fillRect(x + (8*s), y + (4*s) + (bob*s), 24*s, 16*s);
+        ctx.fillStyle = "#e0ac69"; 
+        ctx.fillRect(x + (10*s), y + (6*s) + (bob*s), 20*s, 12*s);
+        ctx.fillStyle = "#5d4037"; 
+        ctx.fillRect(x + (9*s), y + (14*s) + (bob*s), 22*s, 6*s);
+        ctx.fillRect(x + (12*s), y + (18*s) + (bob*s), 16*s, 3*s);
+
+        ctx.fillStyle = "#000000"; 
+        ctx.fillRect(x + (11*s), y + (8*s) + (bob*s), 7*s, 5*s); 
+        ctx.fillRect(x + (22*s), y + (8*s) + (bob*s), 7*s, 5*s); 
+        ctx.fillRect(x + (18*s), y + (9*s) + (bob*s), 4*s, 2*s); 
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x + (12*s), y + (9*s) + (bob*s), 5*s, 3*s); 
+        ctx.fillRect(x + (23*s), y + (9*s) + (bob*s), 5*s, 3*s); 
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(x + (14*s), y + (10*s) + (bob*s), 2*s, 2*s); 
+        ctx.fillRect(x + (25*s), y + (10*s) + (bob*s), 2*s, 2*s); 
+        
+        ctx.fillStyle = "#c8102e"; 
+        ctx.fillRect(x + (10*s), y + (20*s) + (bob*s), 20*s, 14*s); 
+        ctx.fillRect(x + (6*s), y + (20*s) + (bob*s), 4*s, 10*s); 
+        ctx.fillRect(x + (30*s), y + (20*s) + (bob*s), 4*s, 10*s); 
+        ctx.fillStyle = "#550000"; 
+        ctx.fillRect(x + (13*s), y + (20*s) + (bob*s), 2*s, 14*s); 
+        ctx.fillRect(x + (19*s), y + (20*s) + (bob*s), 2*s, 14*s); 
+        ctx.fillRect(x + (25*s), y + (20*s) + (bob*s), 2*s, 14*s); 
+        ctx.fillRect(x + (10*s), y + (23*s) + (bob*s), 20*s, 2*s); 
+        ctx.fillRect(x + (10*s), y + (29*s) + (bob*s), 20*s, 2*s); 
+        
+        ctx.fillStyle = "#e0ac69"; 
+        ctx.fillRect(x + (6*s), y + (30*s) + (bob*s), 4*s, 4*s); 
+        ctx.fillRect(x + (30*s), y + (30*s) + (bob*s), 4*s, 4*s); 
+        
+        ctx.fillStyle = "#1a237e"; 
+        ctx.fillRect(x + (10*s), y + (34*s) + (leftLegOffset*s), 8*s, 6*s); 
+        ctx.fillRect(x + (22*s), y + (34*s) + (rightLegOffset*s), 8*s, 6*s); 
+        ctx.fillStyle = "#3e2723"; 
+        ctx.fillRect(x + (8*s), y + (38*s) + (leftLegOffset*s), 10*s, 3*s); 
+        ctx.fillRect(x + (22*s), y + (38*s) + (rightLegOffset*s), 10*s, 3*s); 
+
+    } else { // Ms. G
+        ctx.fillStyle = "#4e342e"; 
+        ctx.fillRect(x + (8*s), y + (3*s) + (bob*s), 24*s, 6*s);
+        
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (8*s), y + (6*s) + (bob*s), 24*s, 3*s); 
+        ctx.fillRect(x + (6*s), y + (8*s) + (bob*s), 28*s, 2*s); 
+        
+        ctx.fillStyle = "#f5cbad"; 
+        ctx.fillRect(x + (10*s), y + (10*s) + (bob*s), 20*s, 10*s);
+        ctx.fillStyle = "#4e342e";
+        ctx.fillRect(x + (8*s), y + (10*s) + (bob*s), 2*s, 8*s);
+        ctx.fillRect(x + (30*s), y + (10*s) + (bob*s), 2*s, 8*s);
+
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (13*s), y + (12*s) + (bob*s), 4*s, 4*s); 
+        ctx.fillRect(x + (23*s), y + (12*s) + (bob*s), 4*s, 4*s); 
+        ctx.fillStyle = "#000000"; 
+        ctx.fillRect(x + (14*s), y + (13*s) + (bob*s), 2*s, 2*s); 
+        ctx.fillRect(x + (24*s), y + (13*s) + (bob*s), 2*s, 2*s); 
+
+        ctx.fillStyle = "#00acc1"; 
+        ctx.fillRect(x + (11*s), y + (20*s) + (bob*s), 18*s, 10*s);
+        ctx.fillStyle = "#00838f"; 
+        ctx.fillRect(x + (7*s), y + (20*s) + (bob*s), 4*s, 6*s); 
+        ctx.fillRect(x + (29*s), y + (20*s) + (bob*s), 4*s, 6*s); 
+        ctx.fillStyle = "#f5cbad"; 
+        ctx.fillRect(x + (7*s), y + (26*s) + (bob*s), 4*s, 4*s); 
+        ctx.fillRect(x + (29*s), y + (26*s) + (bob*s), 4*s, 4*s); 
+
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (9*s), y + (30*s) + (bob*s), 22*s, 6*s);
+        ctx.fillStyle = "#dddddd";
+        ctx.fillRect(x + (13*s), y + (30*s) + (bob*s), 1*s, 6*s);
+        ctx.fillRect(x + (18*s), y + (30*s) + (bob*s), 1*s, 6*s);
+        ctx.fillRect(x + (23*s), y + (30*s) + (bob*s), 1*s, 6*s);
+        ctx.fillRect(x + (28*s), y + (30*s) + (bob*s), 1*s, 6*s);
+
+        ctx.fillStyle = "#f5cbad"; 
+        ctx.fillRect(x + (12*s), y + (36*s) + (leftLegOffset*s), 4*s, 3*s); 
+        ctx.fillRect(x + (24*s), y + (36*s) + (rightLegOffset*s), 4*s, 3*s); 
+
+        ctx.fillStyle = "#ffffff"; 
+        ctx.fillRect(x + (10*s), y + (39*s) + (leftLegOffset*s), 6*s, 2*s); 
+        ctx.fillRect(x + (24*s), y + (39*s) + (rightLegOffset*s), 6*s, 2*s);
+        ctx.fillStyle = "#00acc1";
+        ctx.fillRect(x + (12*s), y + (39*s) + (leftLegOffset*s), 2*s, 2*s);
+        ctx.fillRect(x + (26*s), y + (39*s) + (rightLegOffset*s), 2*s, 2*s);
     }
     ctx.restore();
 };
@@ -374,7 +451,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
 };
 
 // ==========================================
-// 5. MAP NAVIGATION & CONTROLS
+// 5. GAME LOOP & MAP RENDERING
 // ==========================================
 window.drawMap = function() {
     const canvas = document.getElementById('gameCanvas');
@@ -383,70 +460,139 @@ window.drawMap = function() {
     const map = unitMaps[gameState.currentUnit];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let offsetX = playerPos.x - Math.floor(VIEW_WIDTH / 2);
-    let offsetY = playerPos.y - Math.floor(VIEW_HEIGHT / 2);
-    offsetX = Math.max(0, Math.min(offsetX, MAP_WIDTH - VIEW_WIDTH));
-    offsetY = Math.max(0, Math.min(offsetY, MAP_HEIGHT - VIEW_HEIGHT));
+    let cameraX = playerPos.x - (VIEW_WIDTH / 2);
+    let cameraY = playerPos.y - (VIEW_HEIGHT / 2);
+    
+    cameraX = Math.max(0, Math.min(cameraX, MAP_WIDTH - VIEW_WIDTH));
+    cameraY = Math.max(0, Math.min(cameraY, MAP_HEIGHT - VIEW_HEIGHT));
 
-    for (let y = 0; y < VIEW_HEIGHT; y++) {
-        for (let x = 0; x < VIEW_WIDTH; x++) {
-            let tile = map[offsetY + y][offsetX + x];
-            if (tile === 0) ctx.fillStyle = "#e2e2e2"; 
-            if (tile === 1) ctx.fillStyle = "#78c850"; 
-            if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
-            if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
-            if (tile === 4) ctx.fillStyle = "#3498db"; 
-            if (tile === 5) ctx.fillStyle = "#95a5a6"; 
+    for (let y = 0; y < VIEW_HEIGHT + 1; y++) {
+        for (let x = 0; x < VIEW_WIDTH + 1; x++) {
+            let tileY = Math.floor(cameraY) + y;
+            let tileX = Math.floor(cameraX) + x;
             
-            ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            
-            if (tile === 4) {
-                ctx.fillStyle = "white";
-                ctx.fillRect(x * TILE_SIZE + 15, y * TILE_SIZE + 5, 10, 30);
-                ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 15, 30, 10);
-            }
-            if (tile === 5) {
-                ctx.fillStyle = "#333";
-                ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE, 5, 40);
-                ctx.fillRect(x * TILE_SIZE + 30, y * TILE_SIZE, 5, 40);
-                ctx.fillStyle = "#8b4513"; 
-                for(let t=5; t<40; t+=10) ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE + t, 40, 4);
+            if (tileY < MAP_HEIGHT && tileX < MAP_WIDTH) {
+                let tile = map[tileY][tileX];
+                if (tile === 0) ctx.fillStyle = "#e2e2e2"; 
+                if (tile === 1) ctx.fillStyle = "#78c850"; 
+                if (tile === 2) ctx.fillStyle = "#ff6b6b"; 
+                if (tile === 3) ctx.fillStyle = "#2d4c1e"; 
+                if (tile === 4) ctx.fillStyle = "#3498db"; 
+                if (tile === 5) ctx.fillStyle = "#95a5a6"; 
+                
+                let drawX = (tileX - cameraX) * TILE_SIZE;
+                let drawY = (tileY - cameraY) * TILE_SIZE;
+                
+                ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+                
+                if (tile === 4) {
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(drawX + 15, drawY + 5, 10, 30);
+                    ctx.fillRect(drawX + 5, drawY + 15, 30, 10);
+                }
+                if (tile === 5) {
+                    ctx.fillStyle = "#333";
+                    ctx.fillRect(drawX + 5, drawY, 5, 40);
+                    ctx.fillRect(drawX + 30, drawY, 5, 40);
+                    ctx.fillStyle = "#8b4513"; 
+                    for(let t=5; t<40; t+=10) ctx.fillRect(drawX, drawY + t, 40, 4);
+                }
             }
         }
     }
-    const px = (playerPos.x - offsetX) * TILE_SIZE;
-    const py = (playerPos.y - offsetY) * TILE_SIZE;
+    
+    let px = (playerPos.x - cameraX) * TILE_SIZE;
+    let py = (playerPos.y - cameraY) * TILE_SIZE;
     window.drawCharacterSprite(ctx, px, py, TILE_SIZE);
 };
 
-window.movePlayer = function(dx, dy) {
-    const screenMap = document.getElementById('screen-map');
-    const msgOverlay = document.getElementById('message-overlay');
-    
-    if (!screenMap || !screenMap.classList.contains('active')) return;
-    if (msgOverlay && !msgOverlay.classList.contains('hidden')) return;
+function gameLoop() {
+    const now = Date.now();
+    const dt = now - lastTime;
+    lastTime = now;
 
-    let nx = playerPos.x + dx;
-    let ny = playerPos.y + dy;
-
-    const map = unitMaps[gameState.currentUnit];
-    if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
-        playerPos.x = nx; playerPos.y = ny;
-        window.drawMap();
+    if (document.getElementById('screen-map').classList.contains('active') && !gameState.inBattle) {
         
-        if (map[ny][nx] === 4) window.triggerClinic();
-        else if (map[ny][nx] === 5) window.triggerTrainStation();
-        else if (map[ny][nx] === 1 && Math.random() < 0.12) window.startEncounter(gameState.currentUnit, false);
-        else if (map[ny][nx] === 2) window.startEncounter(gameState.currentUnit, true);
+        if (!isMoving) {
+            let dx = 0, dy = 0;
+            if (activeKeys['ArrowUp'] || activeKeys['w'] || activeKeys['dpad-up']) dy = -1;
+            else if (activeKeys['ArrowDown'] || activeKeys['s'] || activeKeys['dpad-down']) dy = 1;
+            else if (activeKeys['ArrowLeft'] || activeKeys['a'] || activeKeys['dpad-left']) dx = -1;
+            else if (activeKeys['ArrowRight'] || activeKeys['d'] || activeKeys['dpad-right']) dx = 1;
+
+            if (dx !== 0 || dy !== 0) {
+                const nx = Math.round(playerPos.x) + dx;
+                const ny = Math.round(playerPos.y) + dy;
+                const map = unitMaps[gameState.currentUnit];
+                
+                if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
+                    isMoving = true;
+                    targetPos = { x: nx, y: ny };
+                }
+            }
+        }
+
+        if (isMoving) {
+            const speed = 0.005 * dt; 
+            let reachedX = false;
+            let reachedY = false;
+
+            if (playerPos.x < targetPos.x) {
+                playerPos.x = Math.min(playerPos.x + speed, targetPos.x);
+            } else if (playerPos.x > targetPos.x) {
+                playerPos.x = Math.max(playerPos.x - speed, targetPos.x);
+            } else {
+                reachedX = true;
+            }
+
+            if (playerPos.y < targetPos.y) {
+                playerPos.y = Math.min(playerPos.y + speed, targetPos.y);
+            } else if (playerPos.y > targetPos.y) {
+                playerPos.y = Math.max(playerPos.y - speed, targetPos.y);
+            } else {
+                reachedY = true;
+            }
+
+            if (reachedX && reachedY) {
+                isMoving = false;
+                playerPos.x = Math.round(playerPos.x);
+                playerPos.y = Math.round(playerPos.y);
+                
+                const tile = unitMaps[gameState.currentUnit][playerPos.y][playerPos.x];
+                if (tile === 4) {
+                    activeKeys = {}; 
+                    window.triggerClinic();
+                }
+                else if (tile === 5) {
+                    activeKeys = {};
+                    window.triggerTrainStation();
+                }
+                else if (tile === 1 && Math.random() < 0.12) {
+                    activeKeys = {};
+                    window.startEncounter(gameState.currentUnit, false);
+                }
+                else if (tile === 2) {
+                    activeKeys = {};
+                    window.startEncounter(gameState.currentUnit, true);
+                }
+            }
+        }
+        
+        window.drawMap();
     }
-};
+    requestAnimationFrame(gameLoop);
+}
 
 window.addEventListener('keydown', (e) => {
-    if (['ArrowUp', 'w'].includes(e.key)) window.movePlayer(0, -1);
-    if (['ArrowDown', 's'].includes(e.key)) window.movePlayer(0, 1);
-    if (['ArrowLeft', 'a'].includes(e.key)) window.movePlayer(-1, 0);
-    if (['ArrowRight', 'd'].includes(e.key)) window.movePlayer(1, 0);
+    activeKeys[e.key.toLowerCase()] = true;
+    activeKeys[e.key] = true; 
 });
+
+window.addEventListener('keyup', (e) => {
+    activeKeys[e.key.toLowerCase()] = false;
+    activeKeys[e.key] = false;
+});
+
 
 // ==========================================
 // 6. FILE I/O & UI INITIALIZATION
@@ -477,10 +623,15 @@ window.showScreen = function(name) {
     }
 
     if (name === 'map') {
-        const region = waltoniaRegions[gameState.currentUnit];
+        const region = (typeof waltoniaRegions !== 'undefined' && waltoniaRegions[gameState.currentUnit]) 
+                       ? waltoniaRegions[gameState.currentUnit] 
+                       : { name: "Unknown Area" };
         const label = document.getElementById('map-label');
-        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region ? region.name : "Unknown Area"}`;
-        setTimeout(window.drawMap, 50);
+        if (label) label.textContent = `Unit ${gameState.currentUnit}: ${region.name}`;
+        
+        if (!gameState.inBattle) {
+            window.playBGM('bgm-overworld');
+        }
     }
 };
 
@@ -501,6 +652,7 @@ window.loadGame = function() {
         }
         
         gameState.inBattle = false;
+        isMoving = false; 
         gameState.currentEnemy = null;
         gameState.currentTrainer = null;
         gameState.gymQueue = [];
@@ -510,6 +662,7 @@ window.loadGame = function() {
         if (!Array.isArray(gameState.answeredQuestions)) gameState.answeredQuestions = [];
         if (!Array.isArray(gameState.badges)) gameState.badges = [];
         if (!Array.isArray(gameState.kennel)) gameState.kennel = [];
+        if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {};
         
         if (!gameState.stats) {
             gameState.stats = { questionsAnswered: 0, questionsCorrect: 0, battlesWon: 0, deployed: {} };
@@ -634,17 +787,26 @@ window.openTrainerCard = function() {
     
     const badgeGrid = document.getElementById('tc-badge-grid');
     badgeGrid.innerHTML = '';
+    
     for(let i=1; i<=6; i++) {
         if (gameState.badges.includes(i)) {
-            badgeGrid.innerHTML += `<div style="width:35px; height:35px; border-radius:50%; background:gold; border:3px solid #b8860b; color:#000; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">U${i}</div>`;
+            badgeGrid.innerHTML += `
+                <div class="gear-badge earned">
+                    <div class="gear-inner">U${i}</div>
+                </div>`;
         } else {
-            badgeGrid.innerHTML += `<div style="width:35px; height:35px; border-radius:50%; background:#ccc; border:3px dashed #999; color:#777; display:flex; align-items:center; justify-content:center; font-size:10px;">?</div>`;
+            badgeGrid.innerHTML += `
+                <div class="gear-badge locked">
+                    <div class="gear-inner">?</div>
+                </div>`;
         }
     }
 
     const avatarCtx = document.getElementById('tc-avatar-canvas').getContext('2d');
     avatarCtx.clearRect(0, 0, 60, 60);
+    let tempMove = isMoving; isMoving = false; 
     window.drawCharacterSprite(avatarCtx, -10, -5, 80); 
+    isMoving = tempMove;
 
     let favId = null;
     let maxUses = 0;
@@ -689,6 +851,7 @@ window.selectStarter = function(char, id) {
             if (!gameState.pokedexCaught) gameState.pokedexCaught = [];
             gameState.pokedexCaught.push(id); 
             playerPos = { x: 25, y: 25 }; 
+            targetPos = { x: 25, y: 25 };
             window.trackDeployment(mon.id);
             window.saveGame();
             window.showScreen('map');
@@ -705,6 +868,9 @@ window.onload = () => {
 
     window.loadGame();
     
+    const btnMusic = document.getElementById('btn-music');
+    if (btnMusic) btnMusic.onclick = window.toggleMusic;
+
     const btnMap = document.getElementById('btn-map');
     if (btnMap) btnMap.onclick = () => {
         if (gameState.inBattle) window.showScreen('battle');
@@ -730,11 +896,31 @@ window.onload = () => {
     const btnTrainer = document.getElementById('btn-trainer');
     if (btnTrainer) btnTrainer.onclick = window.openTrainerCard;
 
+    const setupDpad = (id, keyName) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const startMove = (e) => { e.preventDefault(); activeKeys[keyName] = true; };
+        const stopMove = (e) => { e.preventDefault(); activeKeys[keyName] = false; };
+        
+        btn.addEventListener('touchstart', startMove, {passive: false});
+        btn.addEventListener('touchend', stopMove);
+        btn.addEventListener('mousedown', startMove);
+        btn.addEventListener('mouseup', stopMove);
+        btn.addEventListener('mouseleave', stopMove);
+    };
+
+    setupDpad('dpad-up', 'dpad-up');
+    setupDpad('dpad-down', 'dpad-down');
+    setupDpad('dpad-left', 'dpad-left');
+    setupDpad('dpad-right', 'dpad-right');
+
     if (!gameState.playerTeam || gameState.playerTeam.length === 0) {
         window.showScreen('characterSelect');
     } else {
         window.showScreen('map');
     }
+    
+    requestAnimationFrame(gameLoop);
 };
 
 window.unlockQuestion = function(qId) {
@@ -750,7 +936,10 @@ window.unlockQuestion = function(qId) {
 // ==========================================
 window.triggerClinic = function() {
     let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
-    if (!qArray || qArray.length === 0) return window.showMessage("Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); });
+    if (!qArray || qArray.length === 0) {
+        playerPos.y += 1; targetPos.y += 1; 
+        return window.showMessage("Under Construction!", () => { window.showScreen('map'); });
+    }
 
     const q = qArray[Math.floor(Math.random() * qArray.length)];
     
@@ -777,13 +966,13 @@ window.triggerClinic = function() {
                 gameState.playerTeam.forEach(mon => mon.currentHP = mon.maxHP);
                 window.saveGame();
                 window.showMessage("Correct! Your PoEkemon are fully healed.", () => {
-                    playerPos.y += 1; 
+                    playerPos.y += 1; targetPos.y += 1; 
                     window.showScreen('map');
                 });
             } else {
                 window.saveGame();
                 window.showMessage("Incorrect. Study your notes and try again!", () => {
-                    playerPos.y += 1; 
+                    playerPos.y += 1; targetPos.y += 1; 
                     window.showScreen('map');
                 });
             }
@@ -797,7 +986,7 @@ window.triggerTrainStation = function() {
     window.showScreen('trainStation');
     const list = document.getElementById('unit-travel-list');
     list.innerHTML = '';
-    playerPos.y += 1; 
+    playerPos.y += 1; targetPos.y += 1; 
 
     for (let i = 1; i <= Object.keys(waltoniaRegions).length; i++) {
         const btn = document.createElement('button');
@@ -812,7 +1001,7 @@ window.triggerTrainStation = function() {
             btn.textContent = `Unit ${i}: ${waltoniaRegions[i].name}`;
             btn.onclick = () => {
                 gameState.currentUnit = i;
-                playerPos = { x: 25, y: 25 }; 
+                playerPos = { x: 25, y: 25 }; targetPos = { x: 25, y: 25 }; 
                 window.saveGame();
                 window.showScreen('map');
             };
@@ -824,6 +1013,7 @@ window.triggerTrainStation = function() {
 // ==========================================
 // 8. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
 // ==========================================
+
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
     let enemy = JSON.parse(JSON.stringify(masterMon)); 
@@ -847,17 +1037,27 @@ window.generateEnemy = function(id, level) {
 window.startEncounter = function(unit, isGym) {
     gameState.inBattle = true;
     
+    if (isGym) {
+        window.playBGM('bgm-gym' + unit);
+    } else {
+        window.playBGM('bgm-battle');
+    }
+    
     if (gameState.playerTeam.length > 0) {
         window.trackDeployment(gameState.playerTeam[0].id);
     }
     
     if (isGym) {
         if (typeof trainerBank === 'undefined') {
-            return window.showMessage("Trainer data missing! Please ensure trainers.js loaded correctly.", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
+            playerPos.y += 1; targetPos.y += 1; window.showScreen('map'); gameState.inBattle = false;
+            return window.showMessage("Trainer data missing! Please ensure trainers.js loaded correctly.");
         }
         const trainer = Object.values(trainerBank).find(t => t.unit === unit);
         
-        if (!trainer) return window.showMessage("Gym Under Construction!", () => { playerPos.y += 1; window.showScreen('map'); gameState.inBattle = false; });
+        if (!trainer) {
+            playerPos.y += 1; targetPos.y += 1; window.showScreen('map'); gameState.inBattle = false;
+            return window.showMessage("Gym Under Construction!");
+        }
 
         gameState.currentTrainer = trainer;
         gameState.gymQueue = JSON.parse(JSON.stringify(trainer.team)); 
@@ -932,7 +1132,9 @@ window.initBattleScene = function() {
     const pSprite = document.getElementById('player-sprite');
     pSprite.innerHTML = '<canvas id="pCanvas" width="80" height="80"></canvas>';
     const pCtx = document.getElementById('pCanvas').getContext('2d');
+    let tempMove = isMoving; isMoving = false; 
     window.drawPoekemonSprite(pCtx, gameState.playerTeam[0], 0, 0, 80);
+    isMoving = tempMove;
 
     const eSprite = document.querySelector('.enemy .placeholder-sprite');
     
@@ -1147,7 +1349,7 @@ window.enemyTurn = function() {
         if (gameState.playerTeam[0].currentHP <= 0) {
             window.showMessage("Your active PoEkemon fainted!", () => {
                 gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
-                playerPos.y += 1; 
+                playerPos.y += 1; targetPos.y += 1; 
                 
                 gameState.currentTrainer = null;
                 gameState.gymQueue = [];
@@ -1289,7 +1491,7 @@ window.endBattle = function() {
                     
                     gameState.currentTrainer = null;
                     gameState.inBattle = false;
-                    playerPos.y += 1; 
+                    playerPos.y += 1; targetPos.y += 1; 
                     window.saveGame();
                     window.showScreen('map');
                 });
@@ -1460,7 +1662,10 @@ window.openDexCard = function(mon, isOwned) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    let tempMove = isMoving; isMoving = false;
     window.drawPoekemonSprite(ctx, mon, 0, 0, 120);
+    isMoving = tempMove;
+    
     overlay.classList.remove('hidden');
 };
 
