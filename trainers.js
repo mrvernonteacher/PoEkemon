@@ -52,7 +52,8 @@ window.dialoguePool = {
 // ==========================================
 window.trainerBank = {
     // ------------------------------------------
-    // UNIT 1 BOSS: Captain Wes-beard (Projectile/Vectors)
+    // UNIT 1 BOSS: Captain Wes-beard
+    // Format: 1x Lvl 1, 1x Lvl 2, Boss Lvl 1
     // ------------------------------------------
     'wes': {
         unit: 1,
@@ -63,13 +64,15 @@ window.trainerBank = {
         winMsg: 'Well done! You navigate the currents of kinematics with impressive skill.',
         loseMsg: 'Back to the books with you! your logic was not quite ship-shape.',
         team: [
-            { id: 10, level: 12 }, 
-            { id: 10, level: 14 }  
+            { id: 1, level: 1 }, 
+            { id: 2, level: 2 }, 
+            { id: 10, level: 1 }  
         ],
         jokeIDs: ['joke_wes_1', 'joke_wes_2', 'joke_wes_3', 'joke_wes_4', 'joke_wes_5']
     },
     // ------------------------------------------
-    // UNIT 2 BOSS: Evil Dr. Vu (Machine/Material)
+    // UNIT 2 BOSS: Evil Dr. Vu
+    // Format: 2x Lvl 2, Boss Lvl 1
     // ------------------------------------------
     'vu': {
         unit: 2,
@@ -80,13 +83,15 @@ window.trainerBank = {
         winMsg: 'Improper execution! You found the flaw in my grand computational design... but the next system will be perfect!',
         loseMsg: 'Logic failure! My systems are perfectly optimized, and you, simple student, have been computed into obsolete data.',
         team: [
-            { id: 20, level: 18 }, 
-            { id: 20, level: 19 }  
+            { id: 11, level: 2 }, 
+            { id: 14, level: 2 }, 
+            { id: 20, level: 1 }  
         ],
         jokeIDs: ['joke_vu_1', 'joke_vu_2', 'joke_vu_3', 'joke_vu_4', 'joke_vu_5']
     },
     // ------------------------------------------
-    // UNIT 3 BOSS: The Vernonator (Ty Vernon / User)
+    // UNIT 3 BOSS: The Vernonator
+    // Format: 2x Lvl 1, 1x Lvl 2, Boss Lvl 1
     // ------------------------------------------
     'vernon': {
         unit: 3,
@@ -97,13 +102,16 @@ window.trainerBank = {
         winMsg: 'Impressive energy conversion! You absorbed my potential and converted it into victory. You might just make it in this showcase yet!',
         loseMsg: 'Inefficient system! You couldn\'t handle my raw kinetic output. go study your energy principles, student!',
         team: [
-            { id: 30, level: 23 }, 
-            { id: 30, level: 25 }  
+            { id: 21, level: 1 }, 
+            { id: 22, level: 1 }, 
+            { id: 23, level: 2 }, 
+            { id: 30, level: 1 }  
         ],
         jokeIDs: ['joke_vernon_1', 'joke_vernon_2', 'joke_vernon_3', 'joke_vernon_4', 'joke_vernon_5']
     },
     // ------------------------------------------
-    // UNIT 4 BOSS: Princess Guien-i-kitty (Structures)
+    // UNIT 4 BOSS: Princess Guien-i-kitty
+    // Format: 1x Lvl 1, 1x Lvl 2, 1x Lvl 3, Boss Lvl 1
     // ------------------------------------------
     'guie': {
         unit: 4,
@@ -114,13 +122,16 @@ window.trainerBank = {
         winMsg: 'YOUR STRUCTURE WAS TOO STRONG! You defeated me with calculated optimization. [Dark sparkle] I\'ll find that flaw next time... and then [happy tone returns] WE CAN ITERATE!',
         loseMsg: 'OOOPS! Your structural analysis failed. My kingdom remains perfectly stable while your design COLLAPSED IN A TRAGIC, LOGICAL DISASTER! [Joyful skip]',
         team: [
-            { id: 40, level: 28 }, 
-            { id: 40, level: 30 }  
+            { id: 31, level: 1 }, 
+            { id: 32, level: 2 }, 
+            { id: 36, level: 3 }, 
+            { id: 40, level: 1 }  
         ],
         jokeIDs: ['joke_guie_1', 'joke_guie_2', 'joke_guie_3', 'joke_guie_4', 'joke_guie_5']
     },
     // ------------------------------------------
-    // UNIT 5 BOSS: Tim the Guybrarian (Ballistics)
+    // UNIT 5 BOSS: Tim the Guybrarian
+    // Format: 1x Lvl 2, 2x Lvl 3, Boss Lvl 1
     // ------------------------------------------
     'tim': {
         unit: 5,
@@ -131,13 +142,16 @@ window.trainerBank = {
         winMsg: 'Incredible computation! You optimized your ballistic path perfectly. You\'re a calculated maker, for sure! Keep up that positive momentum!',
         loseMsg: 'No problem! Your system just needs another iteration. Ballistics is tricky! maybe a visit to the library for some research would provide the missing data?',
         team: [
-            { id: 50, level: 33 }, 
-            { id: 50, level: 35 }  
+            { id: 41, level: 2 }, 
+            { id: 42, level: 3 }, 
+            { id: 43, level: 3 }, 
+            { id: 50, level: 1 }  
         ],
         jokeIDs: ['joke_tim_1', 'joke_tim_2', 'joke_tim_3', 'joke_tim_4', 'joke_tim_5']
     },
     // ------------------------------------------
-    // UNIT 6 (FINALE) BOSS: Lord Hubbard (Algorithms/AI)
+    // UNIT 6 (FINALE) BOSS: Lord Hubbard
+    // Format: 2x Lvl 2, 2x Lvl 3, Boss Lvl 1
     // ------------------------------------------
     'hubbard': {
         unit: 6,
@@ -148,8 +162,11 @@ window.trainerBank = {
         winMsg: 'Algorithm error! You found the flaw... but my system is generative! I WILL REGENERATE and re-calculate your downfall!',
         loseMsg: 'System failure! Your simple logical parameters were computed, predicted, and Obsoleted by my vast, generative power! go study your logic, human!',
         team: [
-            { id: 60, level: 38 }, 
-            { id: 60, level: 40 }  
+            { id: 51, level: 2 }, 
+            { id: 53, level: 2 }, 
+            { id: 54, level: 3 }, 
+            { id: 55, level: 3 }, 
+            { id: 60, level: 1 }  
         ],
         jokeIDs: ['joke_hubbard_1', 'joke_hubbard_2', 'joke_hubbard_3', 'joke_hubbard_4', 'joke_hubbard_5']
     }
