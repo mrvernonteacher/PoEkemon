@@ -3,7 +3,7 @@
 // ==========================================
 
 const dialoguePool = {
-    // Professor Wes (Unit 1) - Mechanics & Physics Jokes
+    // Captain WesBeard (Unit 1) - Mechanics & Physics Jokes
     "wes1": "Why did the gear go to therapy? It had too many complex meshes!",
     "wes2": "I'm reading a book on anti-gravity and inclined planes... It's impossible to put down!",
     "wes3": "What did the fulcrum say to the lever? I've got your back, just don't push me!",
@@ -21,7 +21,7 @@ const dialoguePool = {
 const trainerBank = {
     "wes": {
         id: "wes",
-        name: "Professor Wes",
+        name: "Captain WesBeard",
         unit: 1, 
         isGym: true,
         jokeIDs: ["wes1", "wes2", "wes3", "wes4", "wes5"],
