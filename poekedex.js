@@ -123,7 +123,10 @@ const poekedex = [
     { 
         id: 21, name: "Sola-ray", unit: 3, type: "Renewable", desc: "Absorbs sunlight to charge its internal photovoltaic battery.", 
         hp: 28, baseAtk: 5, basicAtkName: "Energy Surge",
-        evolutions: [ { reqXP: 20, name: "Array-Z", desc: "Wired in series to double its voltage output.", hpBonus: 25, atkBonus: 8, specialAtkName: "Photon Flare", specialAtkPower: 26 } ]
+        evolutions: [ 
+            { reqXP: 15, name: "Array-Z", desc: "Wired in series to double its voltage output.", hpBonus: 15, atkBonus: 4, specialAtkName: "Photon Flare", specialAtkPower: 18 },
+            { reqXP: 45, name: "Dyson-Sphere", desc: "Harnesses the energy of an entire star.", hpBonus: 30, atkBonus: 9, specialAtkName: "Supernova", specialAtkPower: 35 }
+        ]
     },
     { 
         id: 22, name: "Hyd-ron", unit: 3, type: "Renewable", desc: "Combines Hydrogen and Oxygen to create a pure water blast.", 
@@ -239,12 +242,18 @@ const poekedex = [
     { 
         id: 42, name: "Flow-ey", unit: 5, type: "Traffic Flow", desc: "A fluid creature that moves significantly faster in a platoon.", 
         hp: 30, baseAtk: 5, basicAtkName: "Flow Control",
-        evolutions: [ { reqXP: 20, name: "Headway-Dash", desc: "Maintains perfect following distance to maximize speed.", hpBonus: 24, atkBonus: 8, specialAtkName: "Platoon Surge", specialAtkPower: 26 } ]
+        evolutions: [ 
+            { reqXP: 15, name: "Headway-Dash", desc: "Maintains perfect following distance to maximize speed.", hpBonus: 15, atkBonus: 4, specialAtkName: "Platoon Surge", specialAtkPower: 18 },
+            { reqXP: 45, name: "Shock-Wave", desc: "Moves as a unified, unstoppable traffic wave.", hpBonus: 30, atkBonus: 10, specialAtkName: "Tsunami Flow", specialAtkPower: 35 }
+        ]
     },
     { 
         id: 43, name: "Roun-about", unit: 5, type: "Infrastructure", desc: "A spinning top that keeps traffic moving smoothly without stopping.", 
         hp: 35, baseAtk: 4, basicAtkName: "Pave Over",
-        evolutions: [ { reqXP: 21, name: "Rotary-Prime", desc: "An endless circle that traps opponents in infinite delay.", hpBonus: 28, atkBonus: 7, specialAtkName: "Yield Spin", specialAtkPower: 25 } ]
+        evolutions: [ 
+            { reqXP: 16, name: "Rotary-Prime", desc: "An endless circle that traps opponents in infinite delay.", hpBonus: 18, atkBonus: 4, specialAtkName: "Yield Spin", specialAtkPower: 18 },
+            { reqXP: 48, name: "DDI-Vortex", desc: "A diverging diamond that confuses all opponents.", hpBonus: 35, atkBonus: 9, specialAtkName: "Crossover Crush", specialAtkPower: 30 }
+        ]
     },
     { 
         id: 44, name: "Grid-lock", unit: 5, type: "Traffic Flow", desc: "A heavy, slow beast that clogs up the entire battlefield.", 
@@ -303,7 +312,10 @@ const poekedex = [
     { 
         id: 54, name: "Dat-a", unit: 6, type: "Algorithm", desc: "A cloud of pixels that grows more complex and noisy over time.", 
         hp: 45, baseAtk: 5, basicAtkName: "Data Process",
-        evolutions: [ { reqXP: 20, name: "Clean-Set", desc: "Removed all outliers to focus its attack power perfectly.", hpBonus: 32, atkBonus: 8, specialAtkName: "Big Data Flood", specialAtkPower: 25 } ]
+        evolutions: [ 
+            { reqXP: 18, name: "Clean-Set", desc: "Removed all outliers to focus its attack power perfectly.", hpBonus: 18, atkBonus: 4, specialAtkName: "Big Data Flood", specialAtkPower: 18 },
+            { reqXP: 45, name: "Data-Lake", desc: "An ocean of perfect, optimized data.", hpBonus: 45, atkBonus: 10, specialAtkName: "Tsunami Sort", specialAtkPower: 35 }
+        ]
     },
     { 
         id: 55, name: "Train-er", unit: 6, type: "Algorithm", desc: "Starts very weak but gets smarter every single round.", 
