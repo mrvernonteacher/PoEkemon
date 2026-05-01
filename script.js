@@ -11,7 +11,8 @@ let gameState = {
     pokedexCaught: [],    
     answeredQuestions: [], 
     badges: [],
-    kennel: [], 
+    kennel: [], // PC Storage
+    trainerUpgrades: {}, // NEW: Tracks how many times trainers have been defeated
     stats: {
         questionsAnswered: 0,
         questionsCorrect: 0,
@@ -26,7 +27,6 @@ let gameState = {
     inBattle: false
 };
 
-// NEW: Continuous Movement State
 let playerPos = { x: 25, y: 25 };
 let targetPos = { x: 25, y: 25 };
 let isMoving = false;
@@ -133,26 +133,20 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
     const s = size / 40;
     ctx.save();
     
-    // NEW: Calculate animation frame offsets based on time
     const walkFrame = isMoving ? (Math.floor(Date.now() / 150) % 4) : 0;
-    let bob = (walkFrame === 1 || walkFrame === 3) ? -2 : 0; // Body bobs up slightly
-    let leftLegOffset = (walkFrame === 1) ? -4 : 0;          // Left leg lifts
-    let rightLegOffset = (walkFrame === 3) ? -4 : 0;         // Right leg lifts
+    let bob = (walkFrame === 1 || walkFrame === 3) ? -2 : 0; 
+    let leftLegOffset = (walkFrame === 1) ? -4 : 0;          
+    let rightLegOffset = (walkFrame === 3) ? -4 : 0;         
 
     if (gameState.playerCharacter === 'MrV') {
-        // Hair & Head
         ctx.fillStyle = "#5d4037"; 
         ctx.fillRect(x + (8*s), y + (4*s) + (bob*s), 24*s, 16*s);
-        // Face
         ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + (10*s), y + (6*s) + (bob*s), 20*s, 12*s);
-        
-        // Beard
         ctx.fillStyle = "#5d4037"; 
         ctx.fillRect(x + (9*s), y + (14*s) + (bob*s), 22*s, 6*s);
         ctx.fillRect(x + (12*s), y + (18*s) + (bob*s), 16*s, 3*s);
 
-        // Glasses
         ctx.fillStyle = "#000000"; 
         ctx.fillRect(x + (11*s), y + (8*s) + (bob*s), 7*s, 5*s); 
         ctx.fillRect(x + (22*s), y + (8*s) + (bob*s), 7*s, 5*s); 
@@ -164,7 +158,6 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillRect(x + (14*s), y + (10*s) + (bob*s), 2*s, 2*s); 
         ctx.fillRect(x + (25*s), y + (10*s) + (bob*s), 2*s, 2*s); 
         
-        // Lumberjack Plaid Shirt
         ctx.fillStyle = "#c8102e"; 
         ctx.fillRect(x + (10*s), y + (20*s) + (bob*s), 20*s, 14*s); 
         ctx.fillRect(x + (6*s), y + (20*s) + (bob*s), 4*s, 10*s); 
@@ -176,12 +169,10 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillRect(x + (10*s), y + (23*s) + (bob*s), 20*s, 2*s); 
         ctx.fillRect(x + (10*s), y + (29*s) + (bob*s), 20*s, 2*s); 
         
-        // Hands
         ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + (6*s), y + (30*s) + (bob*s), 4*s, 4*s); 
         ctx.fillRect(x + (30*s), y + (30*s) + (bob*s), 4*s, 4*s); 
         
-        // Pants & Shoes (Animated with offsets)
         ctx.fillStyle = "#1a237e"; 
         ctx.fillRect(x + (10*s), y + (34*s) + (leftLegOffset*s), 8*s, 6*s); 
         ctx.fillRect(x + (22*s), y + (34*s) + (rightLegOffset*s), 8*s, 6*s); 
@@ -190,23 +181,19 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillRect(x + (22*s), y + (38*s) + (rightLegOffset*s), 10*s, 3*s); 
 
     } else { // Ms. G
-        // Hair Back/Top
         ctx.fillStyle = "#4e342e"; 
         ctx.fillRect(x + (8*s), y + (3*s) + (bob*s), 24*s, 6*s);
         
-        // Visor
         ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + (8*s), y + (6*s) + (bob*s), 24*s, 3*s); 
         ctx.fillRect(x + (6*s), y + (8*s) + (bob*s), 28*s, 2*s); 
         
-        // Face
         ctx.fillStyle = "#f5cbad"; 
         ctx.fillRect(x + (10*s), y + (10*s) + (bob*s), 20*s, 10*s);
         ctx.fillStyle = "#4e342e";
         ctx.fillRect(x + (8*s), y + (10*s) + (bob*s), 2*s, 8*s);
         ctx.fillRect(x + (30*s), y + (10*s) + (bob*s), 2*s, 8*s);
 
-        // Eyes
         ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + (13*s), y + (12*s) + (bob*s), 4*s, 4*s); 
         ctx.fillRect(x + (23*s), y + (12*s) + (bob*s), 4*s, 4*s); 
@@ -214,7 +201,6 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillRect(x + (14*s), y + (13*s) + (bob*s), 2*s, 2*s); 
         ctx.fillRect(x + (24*s), y + (13*s) + (bob*s), 2*s, 2*s); 
 
-        // Shirt
         ctx.fillStyle = "#00acc1"; 
         ctx.fillRect(x + (11*s), y + (20*s) + (bob*s), 18*s, 10*s);
         ctx.fillStyle = "#00838f"; 
@@ -224,7 +210,6 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillRect(x + (7*s), y + (26*s) + (bob*s), 4*s, 4*s); 
         ctx.fillRect(x + (29*s), y + (26*s) + (bob*s), 4*s, 4*s); 
 
-        // Tennis Skirt
         ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + (9*s), y + (30*s) + (bob*s), 22*s, 6*s);
         ctx.fillStyle = "#dddddd";
@@ -233,12 +218,10 @@ window.drawCharacterSprite = function(ctx, x, y, size) {
         ctx.fillRect(x + (23*s), y + (30*s) + (bob*s), 1*s, 6*s);
         ctx.fillRect(x + (28*s), y + (30*s) + (bob*s), 1*s, 6*s);
 
-        // Legs (Animated with offsets)
         ctx.fillStyle = "#f5cbad"; 
         ctx.fillRect(x + (12*s), y + (36*s) + (leftLegOffset*s), 4*s, 3*s); 
         ctx.fillRect(x + (24*s), y + (36*s) + (rightLegOffset*s), 4*s, 3*s); 
 
-        // Tennis Shoes (Animated)
         ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x + (10*s), y + (39*s) + (leftLegOffset*s), 6*s, 2*s); 
         ctx.fillRect(x + (24*s), y + (39*s) + (rightLegOffset*s), 6*s, 2*s);
@@ -363,15 +346,12 @@ window.drawMap = function() {
     const map = unitMaps[gameState.currentUnit];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate sub-pixel camera bounds for smooth scrolling
     let cameraX = playerPos.x - (VIEW_WIDTH / 2);
     let cameraY = playerPos.y - (VIEW_HEIGHT / 2);
     
-    // Clamp camera to map edges
     cameraX = Math.max(0, Math.min(cameraX, MAP_WIDTH - VIEW_WIDTH));
     cameraY = Math.max(0, Math.min(cameraY, MAP_HEIGHT - VIEW_HEIGHT));
 
-    // Draw visible tiles (adding +1 to cover scrolling edges)
     for (let y = 0; y < VIEW_HEIGHT + 1; y++) {
         for (let x = 0; x < VIEW_WIDTH + 1; x++) {
             let tileY = Math.floor(cameraY) + y;
@@ -391,7 +371,6 @@ window.drawMap = function() {
                 
                 ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
                 
-                // Draw details for buildings
                 if (tile === 4) {
                     ctx.fillStyle = "white";
                     ctx.fillRect(drawX + 15, drawY + 5, 10, 30);
@@ -408,13 +387,11 @@ window.drawMap = function() {
         }
     }
     
-    // Draw player in the center (or offset if camera is clamped to map edge)
     let px = (playerPos.x - cameraX) * TILE_SIZE;
     let py = (playerPos.y - cameraY) * TILE_SIZE;
     window.drawCharacterSprite(ctx, px, py, TILE_SIZE);
 };
 
-// NEW: Core Engine Loop for continuous smooth movement
 function gameLoop() {
     const now = Date.now();
     const dt = now - lastTime;
@@ -422,7 +399,6 @@ function gameLoop() {
 
     if (document.getElementById('screen-map').classList.contains('active') && !gameState.inBattle) {
         
-        // 1. If we are standing still on a tile, check if a key is held to set a new target
         if (!isMoving) {
             let dx = 0, dy = 0;
             if (activeKeys['ArrowUp'] || activeKeys['w'] || activeKeys['dpad-up']) dy = -1;
@@ -435,7 +411,6 @@ function gameLoop() {
                 const ny = Math.round(playerPos.y) + dy;
                 const map = unitMaps[gameState.currentUnit];
                 
-                // If the next tile is within bounds and not a wall (3)
                 if (ny >= 0 && ny < MAP_HEIGHT && nx >= 0 && nx < MAP_WIDTH && map[ny][nx] !== 3) {
                     isMoving = true;
                     targetPos = { x: nx, y: ny };
@@ -443,13 +418,11 @@ function gameLoop() {
             }
         }
 
-        // 2. If we are moving, interpolate position smoothly
         if (isMoving) {
-            const speed = 0.005 * dt; // Adjust this float to change walking speed
+            const speed = 0.005 * dt; 
             let reachedX = false;
             let reachedY = false;
 
-            // X-axis glide
             if (playerPos.x < targetPos.x) {
                 playerPos.x = Math.min(playerPos.x + speed, targetPos.x);
             } else if (playerPos.x > targetPos.x) {
@@ -458,7 +431,6 @@ function gameLoop() {
                 reachedX = true;
             }
 
-            // Y-axis glide
             if (playerPos.y < targetPos.y) {
                 playerPos.y = Math.min(playerPos.y + speed, targetPos.y);
             } else if (playerPos.y > targetPos.y) {
@@ -467,16 +439,14 @@ function gameLoop() {
                 reachedY = true;
             }
 
-            // 3. Arrived at target tile
             if (reachedX && reachedY) {
                 isMoving = false;
                 playerPos.x = Math.round(playerPos.x);
                 playerPos.y = Math.round(playerPos.y);
                 
-                // Fire tile triggers ONLY when we successfully land completely on a tile
                 const tile = unitMaps[gameState.currentUnit][playerPos.y][playerPos.x];
                 if (tile === 4) {
-                    activeKeys = {}; // Clear keys to prevent sliding after exiting building
+                    activeKeys = {}; 
                     window.triggerClinic();
                 }
                 else if (tile === 5) {
@@ -499,10 +469,9 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Global Key Listeners to track held states
 window.addEventListener('keydown', (e) => {
     activeKeys[e.key.toLowerCase()] = true;
-    activeKeys[e.key] = true; // Catch uppercase arrows
+    activeKeys[e.key] = true; 
 });
 
 window.addEventListener('keyup', (e) => {
@@ -569,7 +538,7 @@ window.loadGame = function() {
         }
         
         gameState.inBattle = false;
-        isMoving = false; // Prevent sliding on load
+        isMoving = false; 
         gameState.currentEnemy = null;
         gameState.currentTrainer = null;
         gameState.gymQueue = [];
@@ -579,6 +548,7 @@ window.loadGame = function() {
         if (!Array.isArray(gameState.answeredQuestions)) gameState.answeredQuestions = [];
         if (!Array.isArray(gameState.badges)) gameState.badges = [];
         if (!Array.isArray(gameState.kennel)) gameState.kennel = [];
+        if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {}; // NEW
         
         if (!gameState.stats) {
             gameState.stats = { questionsAnswered: 0, questionsCorrect: 0, battlesWon: 0, deployed: {} };
@@ -713,7 +683,6 @@ window.openTrainerCard = function() {
 
     const avatarCtx = document.getElementById('tc-avatar-canvas').getContext('2d');
     avatarCtx.clearRect(0, 0, 60, 60);
-    // Draw without movement animation in the card
     let tempMove = isMoving; isMoving = false; 
     window.drawCharacterSprite(avatarCtx, -10, -5, 80); 
     isMoving = tempMove;
@@ -806,7 +775,6 @@ window.onload = () => {
     const btnTrainer = document.getElementById('btn-trainer');
     if (btnTrainer) btnTrainer.onclick = window.openTrainerCard;
 
-    // D-Pad setup to inject 'true/false' into the activeKeys object just like a keyboard
     const setupDpad = (id, keyName) => {
         const btn = document.getElementById(id);
         if (!btn) return;
@@ -831,7 +799,6 @@ window.onload = () => {
         window.showScreen('map');
     }
     
-    // Kick off the game loop
     requestAnimationFrame(gameLoop);
 };
 
@@ -925,18 +892,22 @@ window.triggerTrainStation = function() {
 // ==========================================
 // 8. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
 // ==========================================
+
+// NEW: Improved generateEnemy safely handles infinite leveling
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
     let enemy = JSON.parse(JSON.stringify(masterMon)); 
     enemy.evolutionLevel = level;
     
     if (level > 1 && enemy.evolutions && enemy.evolutions.length > 0) {
-        enemy.name = enemy.evolutions[level - 2].name;
+        let maxEvoIndex = enemy.evolutions.length - 1;
+        let evoIndex = Math.min(level - 2, maxEvoIndex);
+        enemy.name = enemy.evolutions[evoIndex].name;
+        
         for(let i=0; i < level - 1; i++) {
-            if (enemy.evolutions[i]) {
-                enemy.hp += enemy.evolutions[i].hpBonus;
-                enemy.baseAtk += enemy.evolutions[i].atkBonus;
-            }
+            let e = enemy.evolutions[Math.min(i, maxEvoIndex)];
+            enemy.hp += e.hpBonus;
+            enemy.baseAtk += e.atkBonus;
         }
     }
     enemy.currentHP = enemy.hp;
@@ -967,21 +938,32 @@ window.startEncounter = function(unit, isGym) {
             playerPos.y += 1; targetPos.y += 1; window.showScreen('map'); gameState.inBattle = false;
             return window.showMessage("Gym Under Construction!");
         }
-        if (gameState.badges.includes(unit)) {
-            playerPos.y += 1; targetPos.y += 1; window.showScreen('map'); gameState.inBattle = false;
-            return window.showMessage(`You already defeated ${trainer.name} and earned the Unit ${unit} Badge!`);
-        }
 
         gameState.currentTrainer = trainer;
         gameState.gymQueue = JSON.parse(JSON.stringify(trainer.team)); 
         
+        let hasBadge = gameState.badges.includes(unit);
+        let upgrades = 0;
+        if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {};
+        if (gameState.trainerUpgrades[unit]) upgrades = gameState.trainerUpgrades[unit];
+        
+        // Loop through the gym queue and distribute the level up upgrades
+        for (let i = 0; i < upgrades; i++) {
+            let idx = i % gameState.gymQueue.length;
+            gameState.gymQueue[idx].level += 1;
+        }
+
         let jokeText = "Let's battle!";
-        if (trainer.jokeIDs && trainer.jokeIDs.length > 0) {
+        if (hasBadge) {
+             jokeText = `You're back for more? My team has gained +${upgrades} level(s) since our last match!`;
+        } else if (trainer.jokeIDs && trainer.jokeIDs.length > 0) {
             const jokeId = trainer.jokeIDs[Math.floor(Math.random() * trainer.jokeIDs.length)];
             if (typeof dialoguePool !== 'undefined' && dialoguePool[jokeId]) jokeText = dialoguePool[jokeId];
         }
         
-        window.showMessage(`${trainer.intro}\n\n"${jokeText}"`, () => {
+        const introText = hasBadge ? `Trainer ${trainer.name} is ready for a rematch!\n\n"${jokeText}"` : `${trainer.intro}\n\n"${jokeText}"`;
+        
+        window.showMessage(introText, () => {
             window.sendNextTrainerMon();
         });
 
@@ -1031,21 +1013,34 @@ window.initBattleScene = function() {
     const pSprite = document.getElementById('player-sprite');
     pSprite.innerHTML = '<canvas id="pCanvas" width="80" height="80"></canvas>';
     const pCtx = document.getElementById('pCanvas').getContext('2d');
-    let tempMove = isMoving; isMoving = false; // Freeze walking anim for battle
+    let tempMove = isMoving; isMoving = false; 
     window.drawPoekemonSprite(pCtx, gameState.playerTeam[0], 0, 0, 80);
     isMoving = tempMove;
 
     const eSprite = document.querySelector('.enemy .placeholder-sprite');
-    eSprite.innerHTML = '<canvas id="eCanvas" width="80" height="80"></canvas>';
-    const eCtx = document.getElementById('eCanvas').getContext('2d');
     
-    if (gameState.currentTrainer && gameState.currentEnemy.currentHP === gameState.currentEnemy.hp) {
+    // NEW: Handles widening the canvas and drawing the trainer standing next to the PoEkemon
+    if (gameState.currentTrainer) {
+        eSprite.style.width = '160px'; 
+        eSprite.innerHTML = '<canvas id="eCanvas" width="160" height="80"></canvas>';
+        const eCtx = document.getElementById('eCanvas').getContext('2d');
+        
+        // Draw Trainer on Left
         window.drawTrainerSprite(eCtx, gameState.currentTrainer.id, 0, 0, 80);
-        setTimeout(() => {
-            eCtx.clearRect(0, 0, 80, 80);
-            window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 0, 0, 80);
-        }, 1500);
+        
+        if (gameState.currentEnemy.currentHP === gameState.currentEnemy.hp) {
+            // First appearance of the mon, delay drawing so the trainer is shown alone for 1.5s
+            setTimeout(() => {
+                window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 80, 0, 80);
+            }, 1500);
+        } else {
+            // Re-drawing during battle (e.g. after an attack)
+            window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 80, 0, 80);
+        }
     } else {
+        eSprite.style.width = '80px';
+        eSprite.innerHTML = '<canvas id="eCanvas" width="80" height="80"></canvas>';
+        const eCtx = document.getElementById('eCanvas').getContext('2d');
         window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 0, 0, 80);
     }
 };
@@ -1239,7 +1234,7 @@ window.enemyTurn = function() {
         if (gameState.playerTeam[0].currentHP <= 0) {
             window.showMessage("Your active PoEkemon fainted!", () => {
                 gameState.playerTeam[0].currentHP = gameState.playerTeam[0].maxHP; 
-                playerPos.y += 1; targetPos.y += 1; // Bump them down one tile
+                playerPos.y += 1; targetPos.y += 1; 
                 
                 gameState.currentTrainer = null;
                 gameState.gymQueue = [];
@@ -1359,8 +1354,19 @@ window.endBattle = function() {
             if (gameState.gymQueue && gameState.gymQueue.length > 0) {
                 window.sendNextTrainerMon();
             } else {
-                window.showMessage(`You defeated ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`, () => {
-                    if (!gameState.badges.includes(gameState.currentUnit)) gameState.badges.push(gameState.currentUnit);
+                // NEW: Upgrades trainer and provides dynamic victory message
+                let msg = `You defeated ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`;
+                if (gameState.badges.includes(gameState.currentUnit)) {
+                    msg = `You defeated ${gameState.currentTrainer.name} again! Their team will train harder for next time.`;
+                }
+                
+                window.showMessage(msg, () => {
+                    if (!gameState.badges.includes(gameState.currentUnit)) {
+                        gameState.badges.push(gameState.currentUnit);
+                    }
+                    if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {};
+                    gameState.trainerUpgrades[gameState.currentUnit] = (gameState.trainerUpgrades[gameState.currentUnit] || 0) + 1;
+                    
                     gameState.currentTrainer = null;
                     gameState.inBattle = false;
                     playerPos.y += 1; targetPos.y += 1; 
@@ -1534,7 +1540,6 @@ window.openDexCard = function(mon, isOwned) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw without movement bob in the static card
     let tempMove = isMoving; isMoving = false;
     window.drawPoekemonSprite(ctx, mon, 0, 0, 120);
     isMoving = tempMove;
