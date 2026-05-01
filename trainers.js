@@ -4,11 +4,11 @@
 
 const dialoguePool = {
     // Captain WesBeard (Unit 1) - Mechanics & Physics Jokes
-    "wes1": "Why did the gear go to therapy? It had too many complex meshes!",
-    "wes2": "I'm reading a book on anti-gravity and inclined planes... It's impossible to put down!",
-    "wes3": "What did the fulcrum say to the lever? I've got your back, just don't push me!",
-    "wes4": "Why was the belt drive always tired? It was stuck in an endless loop!",
-    "wes5": "You know what drives me crazy? Unlubricated sprockets. Really grinds my gears.",
+    "wes1": "Why did the geARRRR go to thARRRRapy? It had too many complex meshes!",
+    "wes2": "I'm reading a book on anti-gravity and inclined planes... It's impossible to get to the end!",
+    "wes3": "What did the fulcrum say to the levARRR? I've got your back, just don't push me!",
+    "wes4": "Why was the belt drive always tired? It was stuck in an endless loop, matey!",
+    "wes5": "You know what drives me crazy? Unlubricated sprockets. Really grinds my geARRRs.",
 
     // Lord Hubbard (Unit 2) - Computer Science & Machine Control Jokes
     "hub1": "Why did the open-loop system cross the road? It didn't know when to stop!",
