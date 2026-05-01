@@ -12,7 +12,7 @@ let gameState = {
     answeredQuestions: [], 
     badges: [],
     kennel: [], // PC Storage
-    trainerUpgrades: {}, // NEW: Tracks how many times trainers have been defeated
+    trainerUpgrades: {}, // Tracks how many times trainers have been defeated
     stats: {
         questionsAnswered: 0,
         questionsCorrect: 0,
@@ -548,7 +548,7 @@ window.loadGame = function() {
         if (!Array.isArray(gameState.answeredQuestions)) gameState.answeredQuestions = [];
         if (!Array.isArray(gameState.badges)) gameState.badges = [];
         if (!Array.isArray(gameState.kennel)) gameState.kennel = [];
-        if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {}; // NEW
+        if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {};
         
         if (!gameState.stats) {
             gameState.stats = { questionsAnswered: 0, questionsCorrect: 0, battlesWon: 0, deployed: {} };
@@ -893,7 +893,6 @@ window.triggerTrainStation = function() {
 // 8. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
 // ==========================================
 
-// NEW: Improved generateEnemy safely handles infinite leveling
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
     let enemy = JSON.parse(JSON.stringify(masterMon)); 
@@ -947,7 +946,6 @@ window.startEncounter = function(unit, isGym) {
         if (!gameState.trainerUpgrades) gameState.trainerUpgrades = {};
         if (gameState.trainerUpgrades[unit]) upgrades = gameState.trainerUpgrades[unit];
         
-        // Loop through the gym queue and distribute the level up upgrades
         for (let i = 0; i < upgrades; i++) {
             let idx = i % gameState.gymQueue.length;
             gameState.gymQueue[idx].level += 1;
@@ -961,7 +959,7 @@ window.startEncounter = function(unit, isGym) {
             if (typeof dialoguePool !== 'undefined' && dialoguePool[jokeId]) jokeText = dialoguePool[jokeId];
         }
         
-        const introText = hasBadge ? `Trainer ${trainer.name} is ready for a rematch!\n\n"${jokeText}"` : `${trainer.intro}\n\n"${jokeText}"`;
+        const introText = hasBadge ? `${trainer.name} is ready for a rematch!\n\n"${jokeText}"` : `${trainer.intro}\n\n"${jokeText}"`;
         
         window.showMessage(introText, () => {
             window.sendNextTrainerMon();
@@ -1019,22 +1017,18 @@ window.initBattleScene = function() {
 
     const eSprite = document.querySelector('.enemy .placeholder-sprite');
     
-    // NEW: Handles widening the canvas and drawing the trainer standing next to the PoEkemon
     if (gameState.currentTrainer) {
         eSprite.style.width = '160px'; 
         eSprite.innerHTML = '<canvas id="eCanvas" width="160" height="80"></canvas>';
         const eCtx = document.getElementById('eCanvas').getContext('2d');
         
-        // Draw Trainer on Left
         window.drawTrainerSprite(eCtx, gameState.currentTrainer.id, 0, 0, 80);
         
         if (gameState.currentEnemy.currentHP === gameState.currentEnemy.hp) {
-            // First appearance of the mon, delay drawing so the trainer is shown alone for 1.5s
             setTimeout(() => {
                 window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 80, 0, 80);
             }, 1500);
         } else {
-            // Re-drawing during battle (e.g. after an attack)
             window.drawPoekemonSprite(eCtx, gameState.currentEnemy, 80, 0, 80);
         }
     } else {
@@ -1352,9 +1346,17 @@ window.endBattle = function() {
     const wrapUpBattle = () => {
         if (gameState.currentTrainer && gameState.playerTeam[0].currentHP > 0) {
             if (gameState.gymQueue && gameState.gymQueue.length > 0) {
-                window.sendNextTrainerMon();
+                // NEW: Trigger a mid-battle taunt/joke before sending the next PoEkemon
+                let jokeText = "Let's see how you handle my next one!";
+                if (gameState.currentTrainer.jokeIDs && gameState.currentTrainer.jokeIDs.length > 0) {
+                    const jokeId = gameState.currentTrainer.jokeIDs[Math.floor(Math.random() * gameState.currentTrainer.jokeIDs.length)];
+                    if (typeof dialoguePool !== 'undefined' && dialoguePool[jokeId]) jokeText = dialoguePool[jokeId];
+                }
+                
+                window.showMessage(`${gameState.currentTrainer.name}:\n\n"${jokeText}"`, () => {
+                    window.sendNextTrainerMon();
+                });
             } else {
-                // NEW: Upgrades trainer and provides dynamic victory message
                 let msg = `You defeated ${gameState.currentTrainer.name}! You earned the Unit ${gameState.currentUnit} Badge!`;
                 if (gameState.badges.includes(gameState.currentUnit)) {
                     msg = `You defeated ${gameState.currentTrainer.name} again! Their team will train harder for next time.`;
