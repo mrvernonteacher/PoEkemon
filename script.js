@@ -37,7 +37,6 @@ const spriteCache = {};
 let musicEnabled = false;
 let currentBGM = null;
 
-// NEW: Question Shuffle Bags
 window.questionBags = {};
 
 // ==========================================
@@ -99,7 +98,6 @@ window.showMessage = function(text, callback) {
     const overlay = document.getElementById('message-overlay');
     if (!overlay) return;
     
-    // Using innerHTML to support forced line breaks if needed, while stripping tags in raw text
     document.getElementById('message-text').innerHTML = text.replace(/\n/g, '<br>');
     const btnOk = document.getElementById('msg-btn-ok');
     const btnCancel = document.getElementById('msg-btn-cancel');
@@ -131,7 +129,6 @@ window.showConfirm = function(text, onYes, onNo) {
     overlay.classList.remove('hidden');
 };
 
-// NEW: 5-Second Penalty Overlay for Incorrect Answers
 window.showPenalty = function(q, callback) {
     const overlay = document.getElementById('message-overlay');
     if (!overlay) return;
@@ -149,7 +146,6 @@ window.showPenalty = function(q, callback) {
     const btnCancel = document.getElementById('msg-btn-cancel');
     btnCancel.classList.add('hidden');
     
-    // Disable button and start countdown
     btnOk.disabled = true;
     btnOk.style.opacity = '0.5';
     btnOk.style.cursor = 'not-allowed';
@@ -860,9 +856,13 @@ window.openTrainerCard = function() {
     window.drawCharacterSprite(avatarCtx, -10, -5, 80); 
     isMoving = tempMove;
 
+    // NEW: Improved Most Deployed Logic
     let favId = null;
     let maxUses = 0;
+    let totalDeployments = 0;
+    
     for (const [id, uses] of Object.entries(gameState.stats.deployed)) {
+        totalDeployments += uses;
         if (uses > maxUses) {
             maxUses = uses;
             favId = parseInt(id);
@@ -873,9 +873,32 @@ window.openTrainerCard = function() {
     favCtx.clearRect(0, 0, 80, 80);
     
     if (favId) {
-        const favMon = poekedex.find(p => p.id === favId);
-        document.getElementById('tc-fav-name').textContent = favMon ? favMon.name.substring(0,10) : "Unknown";
-        window.drawPoekemonSprite(favCtx, {id: favId, type: favMon.type, evolutionLevel: 1}, 0, 0, 80);
+        // Search Party and Kennel for current evolution state
+        let actualMon = gameState.playerTeam.find(p => p.id === favId);
+        if (!actualMon && gameState.kennel) {
+            actualMon = gameState.kennel.find(p => p.id === favId);
+        }
+
+        const baseMon = poekedex.find(p => p.id === favId);
+        
+        let displayName = "Unknown";
+        let displayEvoLevel = 1;
+        let displayType = "Unknown";
+
+        if (actualMon) {
+            displayName = actualMon.name;
+            displayEvoLevel = actualMon.evolutionLevel;
+            displayType = actualMon.type;
+        } else if (baseMon) {
+            displayName = baseMon.name;
+            displayEvoLevel = 1;
+            displayType = baseMon.type;
+        }
+
+        const percent = totalDeployments > 0 ? Math.round((maxUses / totalDeployments) * 100) : 0;
+        
+        document.getElementById('tc-fav-name').innerHTML = `${displayName}<br><span style="font-size: 6px; color: #555;">${percent}% of battles</span>`;
+        window.drawPoekemonSprite(favCtx, {id: favId, type: displayType, evolutionLevel: displayEvoLevel}, 0, 0, 80);
     } else {
         document.getElementById('tc-fav-name').textContent = "None";
     }
@@ -1264,7 +1287,6 @@ window.renderBattleMenu = function() {
     window.updateHP(); 
 };
 
-// NEW: Shuffle Bag Question Logic
 window.getQuestionObject = function(type) {
     const unit = gameState.currentUnit;
     const bagKey = `${unit}_${type}`;
