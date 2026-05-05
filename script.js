@@ -37,6 +37,9 @@ const spriteCache = {};
 let musicEnabled = false;
 let currentBGM = null;
 
+// NEW: Question Shuffle Bags
+window.questionBags = {};
+
 // ==========================================
 // 2. AUDIO MANAGER
 // ==========================================
@@ -90,12 +93,14 @@ window.stopBGM = function() {
 };
 
 // ==========================================
-// 3. CUSTOM ALERTS
+// 3. CUSTOM ALERTS & PENALTIES
 // ==========================================
 window.showMessage = function(text, callback) {
     const overlay = document.getElementById('message-overlay');
     if (!overlay) return;
-    document.getElementById('message-text').textContent = text;
+    
+    // Using innerHTML to support forced line breaks if needed, while stripping tags in raw text
+    document.getElementById('message-text').innerHTML = text.replace(/\n/g, '<br>');
     const btnOk = document.getElementById('msg-btn-ok');
     const btnCancel = document.getElementById('msg-btn-cancel');
 
@@ -110,7 +115,7 @@ window.showMessage = function(text, callback) {
 window.showConfirm = function(text, onYes, onNo) {
     const overlay = document.getElementById('message-overlay');
     if (!overlay) return;
-    document.getElementById('message-text').textContent = text;
+    document.getElementById('message-text').innerHTML = text.replace(/\n/g, '<br>');
     const btnOk = document.getElementById('msg-btn-ok');
     const btnCancel = document.getElementById('msg-btn-cancel');
 
@@ -122,6 +127,54 @@ window.showConfirm = function(text, onYes, onNo) {
     btnCancel.onclick = () => {
         overlay.classList.add('hidden');
         if (onNo) onNo();
+    };
+    overlay.classList.remove('hidden');
+};
+
+// NEW: 5-Second Penalty Overlay for Incorrect Answers
+window.showPenalty = function(q, callback) {
+    const overlay = document.getElementById('message-overlay');
+    if (!overlay) return;
+    
+    const correctText = q.options[q.ans];
+    const explanation = q.exp ? q.exp : "Review your notes.";
+    
+    document.getElementById('message-text').innerHTML = `
+        <span style="color:var(--walton-red); font-size:14px; font-weight:bold;">INCORRECT</span><br><br>
+        <span style="color:var(--walton-blue);">Correct Answer:</span><br>${correctText}<br><br>
+        <span style="color:var(--walton-blue);">Explanation:</span><br>${explanation}
+    `;
+    
+    const btnOk = document.getElementById('msg-btn-ok');
+    const btnCancel = document.getElementById('msg-btn-cancel');
+    btnCancel.classList.add('hidden');
+    
+    // Disable button and start countdown
+    btnOk.disabled = true;
+    btnOk.style.opacity = '0.5';
+    btnOk.style.cursor = 'not-allowed';
+    
+    let timeLeft = 5;
+    btnOk.textContent = `Wait (${timeLeft}s)...`;
+    
+    const timer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            btnOk.disabled = false;
+            btnOk.style.opacity = '1';
+            btnOk.style.cursor = 'pointer';
+            btnOk.textContent = 'OK';
+        } else {
+            btnOk.textContent = `Wait (${timeLeft}s)...`;
+        }
+    }, 1000);
+
+    btnOk.onclick = () => {
+        if(timeLeft <= 0) {
+            overlay.classList.add('hidden');
+            if (callback) callback();
+        }
     };
     overlay.classList.remove('hidden');
 };
@@ -255,7 +308,6 @@ window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
         ctx.fillRect(x + 27*s, y + 17*s, 2*s, 2*s);
         ctx.fillRect(x + 23*s, y + 17*s, 4*s, 2*s); 
         
-        // Eyepatch
         ctx.fillStyle = "#000000";
         ctx.fillRect(x + 15*s, y + 15*s, 6*s, 5*s);
         ctx.fillRect(x + 12*s, y + 16*s, 14*s, 2*s); 
@@ -935,13 +987,11 @@ window.unlockQuestion = function(qId) {
 // 7. MAP BUILDINGS (CLINIC & STATION)
 // ==========================================
 window.triggerClinic = function() {
-    let qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
-    if (!qArray || qArray.length === 0) {
+    const q = window.getQuestionObject('regular');
+    if (!q) {
         playerPos.y += 1; targetPos.y += 1; 
         return window.showMessage("Under Construction!", () => { window.showScreen('map'); });
     }
-
-    const q = qArray[Math.floor(Math.random() * qArray.length)];
     
     window.showScreen('battle');
     document.querySelector('.battle-stage').style.display = 'none';
@@ -971,9 +1021,11 @@ window.triggerClinic = function() {
                 });
             } else {
                 window.saveGame();
-                window.showMessage("Incorrect. Study your notes and try again!", () => {
-                    playerPos.y += 1; targetPos.y += 1; 
-                    window.showScreen('map');
+                window.showPenalty(q, () => {
+                    window.showMessage("Study your notes and try again!", () => {
+                        playerPos.y += 1; targetPos.y += 1; 
+                        window.showScreen('map');
+                    });
                 });
             }
         };
@@ -1212,15 +1264,22 @@ window.renderBattleMenu = function() {
     window.updateHP(); 
 };
 
-window.getQuestion = function() {
-    let qArray = [];
-    if (gameState.currentTrainer) {
-        qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].gym : [];
-    } else {
-        qArray = questionBank[gameState.currentUnit] ? questionBank[gameState.currentUnit].regular : [];
+// NEW: Shuffle Bag Question Logic
+window.getQuestionObject = function(type) {
+    const unit = gameState.currentUnit;
+    const bagKey = `${unit}_${type}`;
+    
+    if (!window.questionBags[bagKey] || window.questionBags[bagKey].length === 0) {
+        let pool = questionBank[unit] ? questionBank[unit][type] : [];
+        if (!pool || pool.length === 0) return null;
+        window.questionBags[bagKey] = [...pool].sort(() => Math.random() - 0.5);
     }
-    if (!qArray || qArray.length === 0) return null;
-    return qArray[Math.floor(Math.random() * qArray.length)];
+    
+    return window.questionBags[bagKey].pop();
+};
+
+window.getQuestion = function() {
+    return window.getQuestionObject(gameState.currentTrainer ? 'gym' : 'regular');
 };
 
 window.prepareAttack = function(type) {
@@ -1256,7 +1315,9 @@ window.prepareAttack = function(type) {
                 gameState.stats.questionsCorrect++; 
                 window.executeAttack(gameState.queuedAttack, true, true);
             } else {
-                window.executeAttack(gameState.queuedAttack, false, false);
+                window.showPenalty(q, () => {
+                    window.executeAttack(gameState.queuedAttack, false, false);
+                });
             }
         };
         grid.appendChild(btn);
@@ -1288,7 +1349,9 @@ window.prepareEscape = function() {
                 if (Math.random() < 0.5) window.showMessage("Got away safely!", () => window.endBattle());
                 else window.showMessage("Couldn't escape!", () => window.enemyTurn());
             } else {
-                window.showMessage("Incorrect! You stumbled and couldn't escape!", () => window.enemyTurn());
+                window.showPenalty(q, () => {
+                    window.enemyTurn();
+                });
             }
         };
         grid.appendChild(btn);
@@ -1318,10 +1381,10 @@ window.executeAttack = function(type, success, earnXP) {
     } else {
         if (Math.random() > 0.5) {
             dmg = Math.max(1, Math.floor((mon.baseAtk || 5) / 2)); 
-            msg = `Incorrect! ${mon.name} stumbled and only dealt ${dmg} damage.`;
+            msg = `${mon.name} stumbled and only dealt ${dmg} damage.`;
         } else {
             dmg = 0;
-            msg = `Incorrect! ${mon.name}'s attack missed completely!`;
+            msg = `${mon.name}'s attack missed completely!`;
         }
     }
 
@@ -1407,7 +1470,7 @@ window.attemptCapture = function() {
                     });
                 }
             } else {
-                window.showMessage("Incorrect! It broke free!", () => {
+                window.showPenalty(q, () => {
                     document.getElementById('question-container').classList.add('hidden');
                     window.enemyTurn();
                 });
