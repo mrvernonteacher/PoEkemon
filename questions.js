@@ -502,6 +502,7 @@ const questionBank = {
             { id: "u6_g19", q: "If your app uses a graphical slider to let a user select a launch angle, the degree value chosen is the...", options: ["Output", "Algorithm", "Input", "Constraint"], ans: 2, exp: "Any data or parameter provided by the user to the program is an input." },
             { id: "u6_g20", q: "In all basic kinematic projectile problems, if air resistance is neglected, the horizontal acceleration is...", options: ["$9.8\\text{ m/s}^2$", "$-9.8\\text{ m/s}^2$", "Constantly increasing", "Always $0\\text{ m/s}^2$"], ans: 3, exp: "Without drag pushing against the object, there is no force to change its horizontal speed, meaning acceleration is zero." }
         ],
+    },
     // ------------------------------------------
     // UNIT 7: END OF COURSE (EOC) REVIEW
     // ------------------------------------------
