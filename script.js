@@ -27,7 +27,7 @@ let gameState = {
     inBattle: false
 };
 
-// NEW: Quiz Mode State & Settings
+// Quiz Mode State & Settings
 let quizState = {
     active: false,
     unit: 1,
@@ -146,6 +146,7 @@ window.showConfirm = function(text, onYes, onNo) {
     overlay.classList.remove('hidden');
 };
 
+// Standard Penalty for Game/Battle Mode
 window.showPenalty = function(q, callback) {
     const overlay = document.getElementById('message-overlay');
     if (!overlay) return;
@@ -194,6 +195,70 @@ window.showPenalty = function(q, callback) {
     overlay.classList.remove('hidden');
 };
 
+// NEW: Quiz-Specific Feedback (Pauses for both Correct and Incorrect)
+window.showQuizFeedback = function(isCorrect, q, callback) {
+    const overlay = document.getElementById('message-overlay');
+    if (!overlay) return;
+    
+    const correctText = q.options[q.ans];
+    const explanation = q.exp ? q.exp : (isCorrect ? "Well done!" : "Review your notes.");
+    
+    const btnOk = document.getElementById('msg-btn-ok');
+    const btnCancel = document.getElementById('msg-btn-cancel');
+    btnCancel.classList.add('hidden');
+    
+    if (window.penaltyTimer) clearInterval(window.penaltyTimer);
+
+    if (isCorrect) {
+        document.getElementById('message-text').innerHTML = `
+            <span style="color:#2ecc71; font-size:14px; font-weight:bold;">CORRECT!</span><br><br>
+            <span style="color:var(--walton-blue); font-size:10px;">${explanation}</span>
+        `;
+        btnOk.disabled = false;
+        btnOk.style.opacity = '1';
+        btnOk.style.cursor = 'pointer';
+        btnOk.textContent = 'Continue';
+
+        btnOk.onclick = () => {
+            overlay.classList.add('hidden');
+            if (callback) callback();
+        };
+    } else {
+        document.getElementById('message-text').innerHTML = `
+            <span style="color:var(--walton-red); font-size:14px; font-weight:bold;">INCORRECT</span><br><br>
+            <span style="color:var(--walton-blue);">Correct Answer:</span><br>${correctText}<br><br>
+            <span style="color:var(--walton-blue);">Explanation:</span><br>${explanation}
+        `;
+        btnOk.disabled = true;
+        btnOk.style.opacity = '0.5';
+        btnOk.style.cursor = 'not-allowed';
+
+        let timeLeft = 5;
+        btnOk.textContent = `Wait (${timeLeft}s)...`;
+
+        window.penaltyTimer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(window.penaltyTimer);
+                btnOk.disabled = false;
+                btnOk.style.opacity = '1';
+                btnOk.style.cursor = 'pointer';
+                btnOk.textContent = 'Continue';
+            } else {
+                btnOk.textContent = `Wait (${timeLeft}s)...`;
+            }
+        }, 1000);
+
+        btnOk.onclick = () => {
+            if (timeLeft <= 0) {
+                overlay.classList.add('hidden');
+                if (callback) callback();
+            }
+        };
+    }
+    
+    overlay.classList.remove('hidden');
+};
 
 // ==========================================
 // 4. ANIMATED SPRITE ENGINE
@@ -1868,7 +1933,7 @@ window.renderQuedex = function() {
 };
 
 // ==========================================
-// 11. CERTIFICATION EXAM (QUIZ) MODE
+// 11. QUIZ REVIEW MODE
 // ==========================================
 
 // Anti-Cheat Visibility API
@@ -1972,7 +2037,7 @@ window.renderQuizQuestion = function() {
         timerDisplay.textContent = `Time: ${quizState.timer}s`;
         if (quizState.timer <= 0) {
             clearInterval(quizState.interval);
-            window.showPenalty(q, () => {
+            window.showQuizFeedback(false, q, () => {
                 quizState.currentIndex++;
                 window.renderQuizQuestion();
             });
@@ -1986,10 +2051,12 @@ window.handleQuizAnswer = function(q, selectedIndex) {
     
     if (selectedIndex === q.ans) {
         quizState.correctCount++;
-        quizState.currentIndex++;
-        window.renderQuizQuestion();
+        window.showQuizFeedback(true, q, () => {
+            quizState.currentIndex++;
+            window.renderQuizQuestion();
+        });
     } else {
-        window.showPenalty(q, () => {
+        window.showQuizFeedback(false, q, () => {
             quizState.currentIndex++;
             window.renderQuizQuestion();
         });
@@ -2013,7 +2080,15 @@ window.endQuiz = function(isBanned) {
     
     document.getElementById('quiz-upload-status').textContent = "Saving to Walton Arcade...";
     
-    // Fetch IP and submit payload to Google Sheets
+    // NEW: Lock the Return Button until save is complete
+    const returnBtn = document.getElementById('quiz-return-btn');
+    if (returnBtn) {
+        returnBtn.disabled = true;
+        returnBtn.style.background = '#95a5a6';
+        returnBtn.style.cursor = 'not-allowed';
+        returnBtn.textContent = 'Saving Score... Please Wait.';
+    }
+    
     fetch("https://api.ipify.org?format=json")
         .then(res => res.json())
         .then(data => data.ip)
@@ -2038,6 +2113,14 @@ window.endQuiz = function(isBanned) {
                 document.getElementById('quiz-upload-status').textContent = "Score successfully saved to Walton Arcade!";
             }).catch(err => {
                 document.getElementById('quiz-upload-status').textContent = "Score saved locally. (Offline mode)";
+            }).finally(() => {
+                // Unlock the Return Button regardless of success or failure
+                if (returnBtn) {
+                    returnBtn.disabled = false;
+                    returnBtn.style.background = ''; // Reverts to CSS class default
+                    returnBtn.style.cursor = 'pointer';
+                    returnBtn.textContent = 'Return to Station';
+                }
             });
         });
 };
