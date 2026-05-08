@@ -55,7 +55,6 @@ const spriteCache = {};
 let musicEnabled = false;
 let currentBGM = null;
 
-
 // ==========================================
 // 2. AUDIO MANAGER
 // ==========================================
@@ -195,7 +194,7 @@ window.showPenalty = function(q, callback) {
     overlay.classList.remove('hidden');
 };
 
-// NEW: Quiz-Specific Feedback (Pauses for both Correct and Incorrect)
+// Quiz-Specific Feedback (Pauses for both Correct and Incorrect)
 window.showQuizFeedback = function(isCorrect, q, callback) {
     const overlay = document.getElementById('message-overlay');
     if (!overlay) return;
@@ -221,7 +220,7 @@ window.showQuizFeedback = function(isCorrect, q, callback) {
 
         btnOk.onclick = () => {
             overlay.classList.add('hidden');
-            if (callback) callback();
+            if (quizState.active && callback) callback(); // Only advance if quiz wasn't aborted
         };
     } else {
         document.getElementById('message-text').innerHTML = `
@@ -252,7 +251,7 @@ window.showQuizFeedback = function(isCorrect, q, callback) {
         btnOk.onclick = () => {
             if (timeLeft <= 0) {
                 overlay.classList.add('hidden');
-                if (callback) callback();
+                if (quizState.active && callback) callback(); // Only advance if quiz wasn't aborted
             }
         };
     }
@@ -1949,7 +1948,7 @@ document.addEventListener("visibilitychange", () => {
             quizState.banned = true;
             window.endQuiz(true);
         } else {
-            document.getElementById('quiz-anti-cheat-warning').textContent = `WARNING: Tab left ${quizState.tabLeaves}/3 times. Do not leave the exam!`;
+            document.getElementById('quiz-anti-cheat-warning').textContent = `Note: Exam tab left ${quizState.tabLeaves}/3 times. Leaving the tab will invalidate your score.`;
         }
     }
 });
@@ -2067,20 +2066,27 @@ window.endQuiz = function(isBanned) {
     quizState.active = false;
     clearInterval(quizState.interval);
     
+    // Kill any lingering penalty timers
+    if (window.penaltyTimer) clearInterval(window.penaltyTimer);
+    
+    // Force close any feedback overlays so they don't pop up over the results
+    const overlay = document.getElementById('message-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    
     document.getElementById('quiz-active-area').classList.add('hidden');
     document.getElementById('quiz-results-area').classList.remove('hidden');
     
     let percentage = Math.round((quizState.correctCount / Math.min(25, quizState.questions.length)) * 100) || 0;
     if (isBanned) percentage = 0;
     
-    document.getElementById('quiz-final-score').textContent = isBanned ? "0% (FLAGGED FOR CHEATING)" : `${percentage}%`;
+    document.getElementById('quiz-final-score').textContent = isBanned ? "Invalidated (Exam Focus Lost)" : `${percentage}%`;
     
     const code = Math.floor(100000 + Math.random() * 900000);
-    document.getElementById('quiz-selfie-code').textContent = isBanned ? "BANNED" : code;
+    document.getElementById('quiz-selfie-code').textContent = isBanned ? "INVALID" : code;
     
     document.getElementById('quiz-upload-status').textContent = "Saving to Walton Arcade...";
     
-    // NEW: Lock the Return Button until save is complete
+    // Lock the Return Button until save is complete
     const returnBtn = document.getElementById('quiz-return-btn');
     if (returnBtn) {
         returnBtn.disabled = true;
@@ -2098,7 +2104,7 @@ window.endQuiz = function(isBanned) {
                 game: "PoEkemon",
                 name: quizState.studentName,
                 score: percentage,
-                selfieCode: isBanned ? "BANNED" : code,
+                selfieCode: isBanned ? "INVALID" : code,
                 unit: quizState.unit,
                 ip: ip,
                 banned: isBanned
