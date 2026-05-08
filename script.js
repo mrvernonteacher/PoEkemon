@@ -12,7 +12,7 @@ let gameState = {
     answeredQuestions: [], 
     badges: [],
     kennel: [], // PC Storage
-    trainerUpgrades: {}, 
+    trainerUpgrades: {}, // Tracks how many times trainers have been defeated
     stats: {
         questionsAnswered: 0,
         questionsCorrect: 0,
@@ -27,6 +27,24 @@ let gameState = {
     inBattle: false
 };
 
+// NEW: Quiz Mode State & Settings
+let quizState = {
+    active: false,
+    unit: 1,
+    questions: [],
+    currentIndex: 0,
+    correctCount: 0,
+    timer: 0,
+    interval: null,
+    tabLeaves: 0,
+    leaveTime: 0,
+    banned: false,
+    studentName: ""
+};
+
+window.questionBags = {};
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxxLX5imVOH0Xl0NeWNMKzUsB-YLacOiSUjAu2j7FrGgyLZvGH2ANB3pNzPk_oYYFO1Lg/exec";
+
 let playerPos = { x: 25, y: 25 };
 let targetPos = { x: 25, y: 25 };
 let isMoving = false;
@@ -37,7 +55,6 @@ const spriteCache = {};
 let musicEnabled = false;
 let currentBGM = null;
 
-window.questionBags = {};
 
 // ==========================================
 // 2. AUDIO MANAGER
@@ -153,10 +170,12 @@ window.showPenalty = function(q, callback) {
     let timeLeft = 5;
     btnOk.textContent = `Wait (${timeLeft}s)...`;
     
-    const timer = setInterval(() => {
+    if (window.penaltyTimer) clearInterval(window.penaltyTimer);
+    
+    window.penaltyTimer = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
-            clearInterval(timer);
+            clearInterval(window.penaltyTimer);
             btnOk.disabled = false;
             btnOk.style.opacity = '1';
             btnOk.style.cursor = 'pointer';
@@ -174,6 +193,7 @@ window.showPenalty = function(q, callback) {
     };
     overlay.classList.remove('hidden');
 };
+
 
 // ==========================================
 // 4. ANIMATED SPRITE ENGINE
@@ -295,16 +315,13 @@ window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
         ctx.fillRect(x + 16*s, y + 20*s, 18*s, 8*s); 
         ctx.fillStyle = "#e0ac69"; 
         ctx.fillRect(x + 22*s, y + 22*s, 6*s, 2*s);
-        
         ctx.fillStyle = "#ffffff"; 
-        ctx.fillRect(x + 18*s, y + 16*s, 5*s, 4*s); 
-        ctx.fillRect(x + 27*s, y + 16*s, 5*s, 4*s);
+        ctx.fillRect(x + 18*s, y + 16*s, 5*s, 4*s); ctx.fillRect(x + 27*s, y + 16*s, 5*s, 4*s);
         ctx.fillStyle = "#000000";
-        ctx.fillRect(x + 20*s, y + 17*s, 2*s, 2*s); 
-        ctx.fillRect(x + 27*s, y + 17*s, 2*s, 2*s);
+        ctx.fillRect(x + 20*s, y + 17*s, 2*s, 2*s); ctx.fillRect(x + 27*s, y + 17*s, 2*s, 2*s);
         ctx.fillRect(x + 23*s, y + 17*s, 4*s, 2*s); 
         
-        ctx.fillStyle = "#000000";
+        ctx.fillStyle = "#000000"; // Eyepatch
         ctx.fillRect(x + 15*s, y + 15*s, 6*s, 5*s);
         ctx.fillRect(x + 12*s, y + 16*s, 14*s, 2*s); 
 
@@ -316,133 +333,50 @@ window.drawTrainerSprite = function(ctx, trainerId, x, y, size) {
         ctx.fillRect(x + 8*s, y + 28*s, 4*s, 12*s); ctx.fillRect(x + 38*s, y + 28*s, 4*s, 12*s);
         ctx.fillStyle = "#d2b48c"; 
         ctx.fillRect(x + 14*s, y + 42*s, 8*s, 12*s); ctx.fillRect(x + 28*s, y + 42*s, 8*s, 12*s);
-        
     } else if (trainerId === 'vu') {
-        ctx.fillStyle = "#222222"; 
-        ctx.fillRect(x + 14*s, y + 4*s, 22*s, 16*s); 
-        ctx.fillStyle = "#f5cbad"; 
-        ctx.fillRect(x + 16*s, y + 8*s, 18*s, 12*s);
-        ctx.fillStyle = "#222222"; 
-        ctx.fillRect(x + 14*s, y + 8*s, 4*s, 12*s);
-        ctx.fillRect(x + 32*s, y + 8*s, 4*s, 12*s);
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(x + 17*s, y + 12*s, 6*s, 4*s);
-        ctx.fillRect(x + 27*s, y + 12*s, 6*s, 4*s);
-        ctx.fillRect(x + 23*s, y + 13*s, 4*s, 2*s);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 18*s, y + 13*s, 4*s, 2*s);
-        ctx.fillRect(x + 28*s, y + 13*s, 4*s, 2*s);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 12*s, y + 20*s, 26*s, 16*s);
-        ctx.fillStyle = "#95a5a6";
-        ctx.fillRect(x + 8*s, y + 20*s, 4*s, 10*s);
-        ctx.strokeRect(x + 7*s, y + 16*s, 6*s, 6*s);
-        ctx.fillStyle = "#2ecc71";
-        ctx.fillRect(x + 36*s, y + 22*s, 8*s, 8*s);
-        ctx.fillStyle = "#000";
-        ctx.fillRect(x + 38*s, y + 24*s, 2*s, 2*s);
-        ctx.fillStyle = "#333333";
-        ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s);
-        ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
-
+        ctx.fillStyle = "#222222"; ctx.fillRect(x + 14*s, y + 4*s, 22*s, 16*s); 
+        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + 16*s, y + 8*s, 18*s, 12*s);
+        ctx.fillStyle = "#222222"; ctx.fillRect(x + 14*s, y + 8*s, 4*s, 12*s); ctx.fillRect(x + 32*s, y + 8*s, 4*s, 12*s);
+        ctx.fillStyle = "#000000"; ctx.fillRect(x + 17*s, y + 12*s, 6*s, 4*s); ctx.fillRect(x + 27*s, y + 12*s, 6*s, 4*s); ctx.fillRect(x + 23*s, y + 13*s, 4*s, 2*s);
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + 18*s, y + 13*s, 4*s, 2*s); ctx.fillRect(x + 28*s, y + 13*s, 4*s, 2*s);
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + 12*s, y + 20*s, 26*s, 16*s);
+        ctx.fillStyle = "#95a5a6"; ctx.fillRect(x + 8*s, y + 20*s, 4*s, 10*s); ctx.strokeRect(x + 7*s, y + 16*s, 6*s, 6*s);
+        ctx.fillStyle = "#2ecc71"; ctx.fillRect(x + 36*s, y + 22*s, 8*s, 8*s); ctx.fillStyle = "#000"; ctx.fillRect(x + 38*s, y + 24*s, 2*s, 2*s);
+        ctx.fillStyle = "#333333"; ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s); ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
     } else if (trainerId === 'vernon') {
-        ctx.fillStyle = "#5d4037"; 
-        ctx.fillRect(x + 14*s, y + 4*s, 22*s, 16*s);
-        ctx.fillStyle = "#e0ac69"; 
-        ctx.fillRect(x + 16*s, y + 6*s, 18*s, 14*s);
-        ctx.fillStyle = "#5d4037";
-        ctx.fillRect(x + 15*s, y + 16*s, 20*s, 6*s);
-        ctx.fillStyle = "#000000"; 
-        ctx.fillRect(x + 17*s, y + 10*s, 6*s, 4*s); 
-        ctx.fillRect(x + 27*s, y + 10*s, 6*s, 4*s); 
-        ctx.fillRect(x + 23*s, y + 11*s, 4*s, 2*s); 
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 18*s, y + 11*s, 4*s, 2*s); 
-        ctx.fillRect(x + 28*s, y + 11*s, 4*s, 2*s); 
-        ctx.fillStyle = "#1a237e"; 
-        ctx.fillRect(x + 12*s, y + 22*s, 26*s, 14*s);
-        ctx.fillStyle = "#000080"; 
-        ctx.fillRect(x + 16*s, y + 22*s, 2*s, 14*s);
-        ctx.fillRect(x + 24*s, y + 22*s, 2*s, 14*s);
-        ctx.fillRect(x + 32*s, y + 22*s, 2*s, 14*s);
-        ctx.fillRect(x + 12*s, y + 26*s, 26*s, 2*s);
-        ctx.fillRect(x + 12*s, y + 32*s, 26*s, 2*s);
-        ctx.fillStyle = "#333333";
-        ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s);
-        ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
-
+        ctx.fillStyle = "#5d4037"; ctx.fillRect(x + 14*s, y + 4*s, 22*s, 16*s);
+        ctx.fillStyle = "#e0ac69"; ctx.fillRect(x + 16*s, y + 6*s, 18*s, 14*s);
+        ctx.fillStyle = "#5d4037"; ctx.fillRect(x + 15*s, y + 16*s, 20*s, 6*s);
+        ctx.fillStyle = "#000000"; ctx.fillRect(x + 17*s, y + 10*s, 6*s, 4*s); ctx.fillRect(x + 27*s, y + 10*s, 6*s, 4*s); ctx.fillRect(x + 23*s, y + 11*s, 4*s, 2*s); 
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + 18*s, y + 11*s, 4*s, 2*s); ctx.fillRect(x + 28*s, y + 11*s, 4*s, 2*s); 
+        ctx.fillStyle = "#1a237e"; ctx.fillRect(x + 12*s, y + 22*s, 26*s, 14*s);
+        ctx.fillStyle = "#000080"; ctx.fillRect(x + 16*s, y + 22*s, 2*s, 14*s); ctx.fillRect(x + 24*s, y + 22*s, 2*s, 14*s); ctx.fillRect(x + 32*s, y + 22*s, 2*s, 14*s); ctx.fillRect(x + 12*s, y + 26*s, 26*s, 2*s); ctx.fillRect(x + 12*s, y + 32*s, 26*s, 2*s);
+        ctx.fillStyle = "#333333"; ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s); ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
     } else if (trainerId === 'guie') {
-        ctx.fillStyle = "#4e342e"; 
-        ctx.fillRect(x + 12*s, y + 4*s, 26*s, 18*s);
-        ctx.fillStyle = "#ff69b4"; 
-        ctx.beginPath();
-        ctx.moveTo(x + 14*s, y + 4*s);
-        ctx.lineTo(x + 18*s, y - 2*s);
-        ctx.lineTo(x + 22*s, y + 4*s);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(x + 28*s, y + 4*s);
-        ctx.lineTo(x + 32*s, y - 2*s);
-        ctx.lineTo(x + 36*s, y + 4*s);
-        ctx.fill();
-        ctx.fillStyle = "#f5cbad"; 
-        ctx.fillRect(x + 16*s, y + 8*s, 18*s, 12*s);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 18*s, y + 12*s, 4*s, 4*s); 
-        ctx.fillRect(x + 28*s, y + 12*s, 4*s, 4*s); 
-        ctx.fillStyle = "#000";
-        ctx.fillRect(x + 19*s, y + 13*s, 2*s, 2*s); 
-        ctx.fillRect(x + 29*s, y + 13*s, 2*s, 2*s);
-        ctx.fillStyle = "#ffb6c1"; 
-        ctx.fillRect(x + 12*s, y + 22*s, 26*s, 14*s);
-        ctx.fillStyle = "#f5cbad";
-        ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s);
-        ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
-
+        ctx.fillStyle = "#4e342e"; ctx.fillRect(x + 12*s, y + 4*s, 26*s, 18*s);
+        ctx.fillStyle = "#ff69b4"; ctx.beginPath(); ctx.moveTo(x + 14*s, y + 4*s); ctx.lineTo(x + 18*s, y - 2*s); ctx.lineTo(x + 22*s, y + 4*s); ctx.fill(); ctx.beginPath(); ctx.moveTo(x + 28*s, y + 4*s); ctx.lineTo(x + 32*s, y - 2*s); ctx.lineTo(x + 36*s, y + 4*s); ctx.fill();
+        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + 16*s, y + 8*s, 18*s, 12*s);
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + 18*s, y + 12*s, 4*s, 4*s); ctx.fillRect(x + 28*s, y + 12*s, 4*s, 4*s); 
+        ctx.fillStyle = "#000"; ctx.fillRect(x + 19*s, y + 13*s, 2*s, 2*s); ctx.fillRect(x + 29*s, y + 13*s, 2*s, 2*s);
+        ctx.fillStyle = "#ffb6c1"; ctx.fillRect(x + 12*s, y + 22*s, 26*s, 14*s);
+        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s); ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
     } else if (trainerId === 'tim') {
-        ctx.fillStyle = "#222222"; 
-        ctx.fillRect(x + 14*s, y + 4*s, 22*s, 10*s);
-        ctx.fillStyle = "#f5cbad"; 
-        ctx.fillRect(x + 16*s, y + 8*s, 18*s, 12*s);
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(x + 19*s, y + 12*s, 2*s, 2*s); 
-        ctx.fillRect(x + 29*s, y + 12*s, 2*s, 2*s);
-        ctx.fillStyle = "#2c3e50"; 
-        ctx.fillRect(x + 12*s, y + 20*s, 26*s, 16*s);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 20*s, y + 20*s, 10*s, 16*s);
-        ctx.fillStyle = "#8b4513";
-        ctx.fillRect(x + 40*s, y + 20*s, 6*s, 20*s);
-        ctx.fillStyle = "#333";
-        ctx.fillRect(x + 38*s, y + 22*s, 2*s, 4*s);
-        ctx.fillRect(x + 38*s, y + 34*s, 2*s, 4*s);
-        ctx.fillStyle = "#333333";
-        ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s);
-        ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
-
+        ctx.fillStyle = "#222222"; ctx.fillRect(x + 14*s, y + 4*s, 22*s, 10*s);
+        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + 16*s, y + 8*s, 18*s, 12*s);
+        ctx.fillStyle = "#000000"; ctx.fillRect(x + 19*s, y + 12*s, 2*s, 2*s); ctx.fillRect(x + 29*s, y + 12*s, 2*s, 2*s);
+        ctx.fillStyle = "#2c3e50"; ctx.fillRect(x + 12*s, y + 20*s, 26*s, 16*s);
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(x + 20*s, y + 20*s, 10*s, 16*s);
+        ctx.fillStyle = "#8b4513"; ctx.fillRect(x + 40*s, y + 20*s, 6*s, 20*s); ctx.fillStyle = "#333"; ctx.fillRect(x + 38*s, y + 22*s, 2*s, 4*s); ctx.fillRect(x + 38*s, y + 34*s, 2*s, 4*s);
+        ctx.fillStyle = "#333333"; ctx.fillRect(x + 16*s, y + 36*s, 6*s, 10*s); ctx.fillRect(x + 28*s, y + 36*s, 6*s, 10*s);
     } else if (trainerId === 'hubbard') {
-        ctx.fillStyle = "#555555"; 
-        ctx.fillRect(x + 16*s, y + 4*s, 18*s, 8*s); 
-        ctx.fillStyle = "#f5cbad"; 
-        ctx.fillRect(x + 25*s, y + 8*s, 9*s, 12*s);
-        ctx.fillStyle = "#7f8c8d"; 
-        ctx.fillRect(x + 16*s, y + 8*s, 9*s, 12*s);
-        
-        ctx.fillStyle = "#00ffff";
-        ctx.fillRect(x + 18*s, y + 12*s, 4*s, 4*s);
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(x + 27*s, y + 12*s, 5*s, 4*s);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 28*s, y + 13*s, 3*s, 2*s);
-        
-        ctx.fillStyle = "#2e7d32"; 
-        ctx.fillRect(x + 25*s, y + 20*s, 13*s, 16*s);
-        ctx.fillStyle = "#34495e"; 
-        ctx.fillRect(x + 12*s, y + 20*s, 13*s, 16*s);
-        
-        ctx.fillStyle = "#333333"; 
-        ctx.fillRect(x + 14*s, y + 36*s, 8*s, 10*s); 
-        ctx.fillRect(x + 28*s, y + 36*s, 8*s, 10*s);
+        ctx.fillStyle = "#555555"; ctx.fillRect(x + 16*s, y + 4*s, 18*s, 8*s); 
+        ctx.fillStyle = "#f5cbad"; ctx.fillRect(x + 25*s, y + 8*s, 9*s, 12*s);
+        ctx.fillStyle = "#7f8c8d"; ctx.fillRect(x + 16*s, y + 8*s, 9*s, 12*s);
+        ctx.fillStyle = "#00ffff"; ctx.fillRect(x + 18*s, y + 12*s, 4*s, 4*s);
+        ctx.fillStyle = "#000000"; ctx.fillRect(x + 27*s, y + 12*s, 5*s, 4*s); ctx.fillStyle = "#ffffff"; ctx.fillRect(x + 28*s, y + 13*s, 3*s, 2*s);
+        ctx.fillStyle = "#2e7d32"; ctx.fillRect(x + 25*s, y + 20*s, 13*s, 16*s);
+        ctx.fillStyle = "#34495e"; ctx.fillRect(x + 12*s, y + 20*s, 13*s, 16*s);
+        ctx.fillStyle = "#333333"; ctx.fillRect(x + 14*s, y + 36*s, 8*s, 10*s); ctx.fillRect(x + 28*s, y + 36*s, 8*s, 10*s);
     }
     ctx.restore();
 };
@@ -459,6 +393,7 @@ window.drawPoekemonSprite = function(ctx, mon, x, y, size) {
         
         img.onload = () => {
             spriteCache[spriteKey] = img;
+            
             ctx.clearRect(x, y, size, size);
             ctx.drawImage(img, x, y, size, size);
             
@@ -558,7 +493,7 @@ function gameLoop() {
     const dt = now - lastTime;
     lastTime = now;
 
-    if (document.getElementById('screen-map').classList.contains('active') && !gameState.inBattle) {
+    if (document.getElementById('screen-map').classList.contains('active') && !gameState.inBattle && !quizState.active) {
         
         if (!isMoving) {
             let dx = 0, dy = 0;
@@ -624,6 +559,7 @@ function gameLoop() {
                 }
             }
         }
+        
         window.drawMap();
     }
     requestAnimationFrame(gameLoop);
@@ -633,10 +569,12 @@ window.addEventListener('keydown', (e) => {
     activeKeys[e.key.toLowerCase()] = true;
     activeKeys[e.key] = true; 
 });
+
 window.addEventListener('keyup', (e) => {
     activeKeys[e.key.toLowerCase()] = false;
     activeKeys[e.key] = false;
 });
+
 
 // ==========================================
 // 6. FILE I/O & UI INITIALIZATION
@@ -952,8 +890,8 @@ window.onload = () => {
 
     const btnQuedex = document.getElementById('btn-quedex');
     if (btnQuedex) btnQuedex.onclick = () => {
-        if (gameState.inBattle) {
-            window.showMessage("No studying during a battle! Focus on your opponent!");
+        if (gameState.inBattle || quizState.active) {
+            window.showMessage("No studying right now! Focus on the task at hand!");
             return;
         }
         window.renderQuedex();
@@ -1080,7 +1018,6 @@ window.triggerTrainStation = function() {
 // ==========================================
 // 8. ENCOUNTER LOGIC & MULTI-BATTLE SYSTEM
 // ==========================================
-
 window.generateEnemy = function(id, level) {
     const masterMon = poekedex.find(p => p.id === id);
     let enemy = JSON.parse(JSON.stringify(masterMon)); 
@@ -1933,21 +1870,6 @@ window.renderQuedex = function() {
 // ==========================================
 // 11. CERTIFICATION EXAM (QUIZ) MODE
 // ==========================================
-let quizState = {
-    active: false,
-    unit: 1,
-    questions: [],
-    currentIndex: 0,
-    correctCount: 0,
-    timer: 0,
-    interval: null,
-    tabLeaves: 0,
-    leaveTime: 0,
-    banned: false,
-    studentName: ""
-};
-
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxxLX5imVOH0Xl0NeWNMKzUsB-YLacOiSUjAu2j7FrGgyLZvGH2ANB3pNzPk_oYYFO1Lg/exec";
 
 // Anti-Cheat Visibility API
 document.addEventListener("visibilitychange", () => {
@@ -1973,6 +1895,11 @@ window.startQuizMode = function() {
     
     const unit = parseInt(document.getElementById('quiz-unit-select').value);
     
+    if (!questionBank[unit]) {
+        alert("Error: Question bank for Unit " + unit + " not found in the database!");
+        return;
+    }
+
     quizState.studentName = nameInput;
     quizState.unit = unit;
     quizState.active = true;
@@ -1982,16 +1909,29 @@ window.startQuizMode = function() {
     quizState.banned = false;
     
     // Generate fresh bag of all unit questions, shuffle, and pull 25
-    let allQ = [...questionBank[unit].regular, ...questionBank[unit].gym];
+    let allQ = [];
+    if (questionBank[unit].regular) allQ = allQ.concat(questionBank[unit].regular);
+    if (questionBank[unit].gym) allQ = allQ.concat(questionBank[unit].gym);
+    
+    if (allQ.length === 0) {
+        alert("Error: No questions inside Unit " + unit + " bank!");
+        return;
+    }
+
     allQ.sort(() => Math.random() - 0.5);
     quizState.questions = allQ.slice(0, 25);
     
     document.getElementById('quiz-setup-overlay').classList.add('hidden');
+    
+    // Hide all normal screens and show the quiz screen
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById('screen-quiz').classList.remove('hidden');
+    
     document.getElementById('quiz-results-area').classList.add('hidden');
     document.getElementById('quiz-active-area').classList.remove('hidden');
     document.getElementById('quiz-anti-cheat-warning').textContent = '';
     
-    window.showScreen('quiz');
+    window.stopBGM(); // Exams require absolute focus!
     window.renderQuizQuestion();
 };
 
@@ -2007,7 +1947,7 @@ window.renderQuizQuestion = function() {
     const pct = quizState.currentIndex === 0 ? 0 : Math.round((quizState.correctCount / quizState.currentIndex) * 100);
     document.getElementById('quiz-progress').textContent = `${quizState.currentIndex}/25 (${pct}%)`;
     
-    // Timer Logic: 60s for math/calcs, 30s for vocab
+    // Regex Timer Logic: 60s for math/calcs, 30s for vocab
     const isCalc = /(\d|[\+\-\*\/\^\=])/.test(q.q);
     quizState.timer = isCalc ? 60 : 30;
     
@@ -2063,7 +2003,7 @@ window.endQuiz = function(isBanned) {
     document.getElementById('quiz-active-area').classList.add('hidden');
     document.getElementById('quiz-results-area').classList.remove('hidden');
     
-    let percentage = Math.round((quizState.correctCount / 25) * 100) || 0;
+    let percentage = Math.round((quizState.correctCount / Math.min(25, quizState.questions.length)) * 100) || 0;
     if (isBanned) percentage = 0;
     
     document.getElementById('quiz-final-score').textContent = isBanned ? "0% (FLAGGED FOR CHEATING)" : `${percentage}%`;
