@@ -34,6 +34,7 @@ let quizState = {
     questions: [],
     currentIndex: 0,
     correctCount: 0,
+    incorrectCount: 0, // NEW: Tracks missed questions
     timer: 0,
     interval: null,
     tabLeaves: 0,
@@ -54,6 +55,7 @@ let lastTime = Date.now();
 const spriteCache = {}; 
 let musicEnabled = false;
 let currentBGM = null;
+
 
 // ==========================================
 // 2. AUDIO MANAGER
@@ -1953,6 +1955,33 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
+window.restartQuiz = function() {
+    window.showConfirm("Are you sure you want to restart? This attempt will not be saved.", () => {
+        clearInterval(quizState.interval);
+        if (window.penaltyTimer) clearInterval(window.penaltyTimer);
+        
+        const overlay = document.getElementById('message-overlay');
+        if (overlay) overlay.classList.add('hidden');
+        
+        quizState.currentIndex = 0;
+        quizState.correctCount = 0;
+        quizState.incorrectCount = 0; // NEW: Reset the missed tracker
+        quizState.tabLeaves = 0;
+        quizState.banned = false;
+        
+        let allQ = [];
+        if (questionBank[quizState.unit].regular) allQ = allQ.concat(questionBank[quizState.unit].regular);
+        if (questionBank[quizState.unit].gym) allQ = allQ.concat(questionBank[quizState.unit].gym);
+        
+        allQ.sort(() => Math.random() - 0.5);
+        let totalQuestions = (quizState.unit === 7) ? 50 : 25; // NEW: Unit 7 draws 50 questions
+        quizState.questions = allQ.slice(0, Math.min(totalQuestions, allQ.length));
+        
+        document.getElementById('quiz-anti-cheat-warning').textContent = '';
+        window.renderQuizQuestion();
+    });
+};
+
 window.startQuizMode = function() {
     const nameInput = prompt("Enter your First and Last Name for the arcade leaderboard:");
     if (!nameInput || nameInput.trim() === "") return;
@@ -1969,10 +1998,11 @@ window.startQuizMode = function() {
     quizState.active = true;
     quizState.currentIndex = 0;
     quizState.correctCount = 0;
+    quizState.incorrectCount = 0; // NEW: Initializes missed tracker
     quizState.tabLeaves = 0;
     quizState.banned = false;
     
-    // Generate fresh bag of all unit questions, shuffle, and pull 25
+    // Generate fresh bag of all unit questions, shuffle
     let allQ = [];
     if (questionBank[unit].regular) allQ = allQ.concat(questionBank[unit].regular);
     if (questionBank[unit].gym) allQ = allQ.concat(questionBank[unit].gym);
@@ -1983,7 +2013,10 @@ window.startQuizMode = function() {
     }
 
     allQ.sort(() => Math.random() - 0.5);
-    quizState.questions = allQ.slice(0, 25);
+    
+    // NEW: Unit 7 pulls 50 questions, all others pull 25
+    let totalQuestions = (unit === 7) ? 50 : 25;
+    quizState.questions = allQ.slice(0, Math.min(totalQuestions, allQ.length));
     
     document.getElementById('quiz-setup-overlay').classList.add('hidden');
     
@@ -1991,11 +2024,28 @@ window.startQuizMode = function() {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById('screen-quiz').classList.remove('hidden');
     
+    // Dynamically Inject the Restart Button into the Header if it isn't there
+    const header = document.querySelector('.quiz-header');
+    if (header && !document.getElementById('quiz-restart-btn')) {
+        const restartBtn = document.createElement('button');
+        restartBtn.id = 'quiz-restart-btn';
+        restartBtn.className = 'action-btn catch-btn';
+        restartBtn.style.padding = '5px 10px';
+        restartBtn.style.fontSize = '10px';
+        restartBtn.style.background = '#e74c3c'; 
+        restartBtn.style.color = 'white';
+        restartBtn.style.border = '2px solid #c0392b';
+        restartBtn.style.margin = '0 10px';
+        restartBtn.textContent = 'Restart Exam';
+        restartBtn.onclick = () => window.restartQuiz();
+        header.insertBefore(restartBtn, document.getElementById('quiz-timer'));
+    }
+
     document.getElementById('quiz-results-area').classList.add('hidden');
     document.getElementById('quiz-active-area').classList.remove('hidden');
     document.getElementById('quiz-anti-cheat-warning').textContent = '';
     
-    window.stopBGM(); // Exams require absolute focus!
+    window.stopBGM(); 
     window.renderQuizQuestion();
 };
 
@@ -2007,11 +2057,12 @@ window.renderQuizQuestion = function() {
     if (quizState.interval) clearInterval(quizState.interval);
     
     const q = quizState.questions[quizState.currentIndex];
+    const totalQ = quizState.questions.length;
     
-    const pct = quizState.currentIndex === 0 ? 0 : Math.round((quizState.correctCount / quizState.currentIndex) * 100);
-    document.getElementById('quiz-progress').textContent = `${quizState.currentIndex}/25 (${pct}%)`;
+    // NEW: Detailed Progress tracking with Correct/Missed visualization
+    document.getElementById('quiz-progress').innerHTML = 
+        `Q: ${quizState.currentIndex}/${totalQ} &nbsp;|&nbsp; <span style="color:#2ecc71;">✔ ${quizState.correctCount}</span> &nbsp;|&nbsp; <span style="color:#e74c3c;">✖ ${quizState.incorrectCount}</span>`;
     
-    // Regex Timer Logic: 60s for math/calcs, 30s for vocab
     const isCalc = /(\d|[\+\-\*\/\^\=])/.test(q.q);
     quizState.timer = isCalc ? 60 : 30;
     
@@ -2036,6 +2087,7 @@ window.renderQuizQuestion = function() {
         timerDisplay.textContent = `Time: ${quizState.timer}s`;
         if (quizState.timer <= 0) {
             clearInterval(quizState.interval);
+            quizState.incorrectCount++; // Timeout counts as a missed question
             window.showQuizFeedback(false, q, () => {
                 quizState.currentIndex++;
                 window.renderQuizQuestion();
@@ -2046,7 +2098,7 @@ window.renderQuizQuestion = function() {
 
 window.handleQuizAnswer = function(q, selectedIndex) {
     clearInterval(quizState.interval);
-    window.unlockQuestion(q.id); // Give them dex credit
+    window.unlockQuestion(q.id); 
     
     if (selectedIndex === q.ans) {
         quizState.correctCount++;
@@ -2055,6 +2107,7 @@ window.handleQuizAnswer = function(q, selectedIndex) {
             window.renderQuizQuestion();
         });
     } else {
+        quizState.incorrectCount++; // Increment missed tracker
         window.showQuizFeedback(false, q, () => {
             quizState.currentIndex++;
             window.renderQuizQuestion();
@@ -2066,17 +2119,16 @@ window.endQuiz = function(isBanned) {
     quizState.active = false;
     clearInterval(quizState.interval);
     
-    // Kill any lingering penalty timers
     if (window.penaltyTimer) clearInterval(window.penaltyTimer);
     
-    // Force close any feedback overlays so they don't pop up over the results
     const overlay = document.getElementById('message-overlay');
     if (overlay) overlay.classList.add('hidden');
     
     document.getElementById('quiz-active-area').classList.add('hidden');
     document.getElementById('quiz-results-area').classList.remove('hidden');
     
-    let percentage = Math.round((quizState.correctCount / Math.min(25, quizState.questions.length)) * 100) || 0;
+    const totalQ = quizState.questions.length;
+    let percentage = Math.round((quizState.correctCount / totalQ) * 100) || 0;
     if (isBanned) percentage = 0;
     
     document.getElementById('quiz-final-score').textContent = isBanned ? "Invalidated (Exam Focus Lost)" : `${percentage}%`;
@@ -2086,7 +2138,6 @@ window.endQuiz = function(isBanned) {
     
     document.getElementById('quiz-upload-status').textContent = "Saving to Walton Arcade...";
     
-    // Lock the Return Button until save is complete
     const returnBtn = document.getElementById('quiz-return-btn');
     if (returnBtn) {
         returnBtn.disabled = true;
@@ -2120,10 +2171,9 @@ window.endQuiz = function(isBanned) {
             }).catch(err => {
                 document.getElementById('quiz-upload-status').textContent = "Score saved locally. (Offline mode)";
             }).finally(() => {
-                // Unlock the Return Button regardless of success or failure
                 if (returnBtn) {
                     returnBtn.disabled = false;
-                    returnBtn.style.background = ''; // Reverts to CSS class default
+                    returnBtn.style.background = ''; 
                     returnBtn.style.cursor = 'pointer';
                     returnBtn.textContent = 'Return to Station';
                 }
